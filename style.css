@@ -1,0 +1,85 @@
+/* === Global Styles === */
+body {
+  font-family: "Open Sans", Arial, sans-serif;
+  background-color: #000; /* old-school dark bg */
+  color: #A8ADB4; /* Pantone 429C */
+  margin: 0;
+  padding: 20px;
+}
+
+/* === Header / Title === */
+h1, h2, h3 {
+  font-family: "Open Sans", Arial, sans-serif;
+  color: #9F2D20; /* Pantone 484C */
+  text-transform: uppercase;
+  text-shadow: 1px 1px 0 #000;
+  border-bottom: 2px dashed #9F2D20;
+  padding-bottom: 5px;
+  margin-bottom: 15px;
+}
+
+/* === Links (the 2000s vibe) === */
+a {
+  color: #9F2D20;
+  text-decoration: none;
+  font-weight: bold;
+  border-bottom: 1px dotted #A8ADB4;
+}
+
+a:hover {
+  color: #A8ADB4;
+  background-color: #9F2D20;
+  text-decoration: underline;
+}
+
+/* === Navigation (list of links) === */
+.nav {
+  margin: 20px 0;
+  padding: 0;
+  list-style-type: none;
+}
+
+.nav li {
+  margin: 5px 0;
+  padding: 5px;
+  background: #111;
+  border: 1px solid #9F2D20;
+}
+
+.nav li:hover {
+  background: #9F2D20;
+  color: #fff;
+}
+
+/* === Hacky 2000s effects === */
+.blink {
+  animation: blink 1s steps(2, start) infinite;
+}
+
+@keyframes blink {
+  to {
+    visibility: hidden;
+  }
+}
+
+.marquee {
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  box-sizing: border-box;
+  border-top: 2px solid #9F2D20;
+  border-bottom: 2px solid #9F2D20;
+  color: #A8ADB4;
+  font-weight: bold;
+}
+
+.marquee span {
+  display: inline-block;
+  padding-left: 100%;
+  animation: marquee 12s linear infinite;
+}
+
+@keyframes marquee {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(-100%, 0); }
+}
