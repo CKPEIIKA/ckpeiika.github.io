@@ -5,6 +5,10 @@ body {
   color: #9F2D20;
   margin: 0;
   padding: 20px;
+
+  max-width: 600px;   /* column width */
+  margin-left: auto;  /* center horizontally */
+  margin-right: auto;
 }
 
 /* === Header / Title === */
