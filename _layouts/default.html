@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
   <title>{{ page.title }}</title>
@@ -9,6 +9,8 @@
 <body>
 
   <h1>{{ page.title }}</h1>
+
+  {% include nav.html %}
 
   <main>
     {{ content }}

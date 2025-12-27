@@ -1,0 +1,13 @@
+<nav>
+  <ul class="nav">
+    {% assign subpages = site.pages | where_exp: "p", "p.path contains 'pages/'" | sort: "title" %}
+    {% for p in subpages %}
+      {% unless p.nav_exclude %}
+        <li>
+          <a href="{{ p.url }}">{{ p.nav_label | default: p.title }}</a>
+        </li>
+      {% endunless %}
+    {% endfor %}
+  </ul>
+</nav>
+

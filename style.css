@@ -1,41 +1,46 @@
 /* === Global Styles === */
+:root {
+  --bg-color: #A8ADB4;    /* Pantone 429C */
+  --accent-color: #9F2D20; /* Pantone 484C */
+}
+
 body {
   font-family: "Open Sans", Arial, sans-serif;
-  background-color: #A8ADB4; /* Pantone 429C */
-  color: #9F2D20;
+  background-color: var(--bg-color);
+  color: var(--accent-color);
   margin: 0;
   padding: 20px;
-
   max-width: 600px;   /* column width */
   margin-left: auto;  /* center horizontally */
   margin-right: auto;
+  line-height: 1.5;
 }
 
 /* === Header / Title === */
 h1, h2, h3 {
   font-family: "Open Sans", Arial, sans-serif;
-  color: #9F2D20; /* Pantone 484C */
+  color: var(--accent-color);
   text-transform: uppercase;
   text-shadow: 1px 1px 0 #000;
-  border-bottom: 2px dashed #9F2D20;
+  border-bottom: 2px dashed var(--accent-color);
   padding-bottom: 5px;
   margin-bottom: 15px;
 }
 
 p {
-    color: #9F2D20;
+  color: var(--accent-color);
 }
 
 a {
-  color: #9F2D20;
+  color: var(--accent-color);
   text-decoration: none;
   font-weight: bold;
-  border-bottom: 1px dotted #A8ADB4;
+  border-bottom: 1px dotted var(--bg-color);
 }
 
 a:hover {
-  color: #A8ADB4;
-  background-color: #9F2D20;
+  color: var(--bg-color);
+  background-color: var(--accent-color);
   text-decoration: underline;
 }
 
@@ -50,11 +55,19 @@ a:hover {
   margin: 5px 0;
   padding: 5px;
   background: #111;
-  border: 1px solid #9F2D20;
+  border: 1px solid var(--accent-color);
 }
 
 .nav li:hover {
-  background: #9F2D20;
+  background: var(--accent-color);
+}
+
+.nav li a {
+  display: block;
+  color: var(--accent-color);
+}
+
+.nav li:hover a {
   color: #fff;
 }
 
@@ -74,9 +87,9 @@ a:hover {
   overflow: hidden;
   white-space: nowrap;
   box-sizing: border-box;
-  border-top: 2px solid #9F2D20;
-  border-bottom: 2px solid #9F2D20;
-  color: #9F2D20;
+  border-top: 2px solid var(--accent-color);
+  border-bottom: 2px solid var(--accent-color);
+  color: var(--accent-color);
   font-weight: bold;
 }
 
