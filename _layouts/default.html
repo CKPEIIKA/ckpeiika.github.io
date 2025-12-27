@@ -10,7 +10,14 @@
 
   <h1>{{ page.title }}</h1>
 
-  {% include nav.html %}
+  {% if page.url != "/" and page.url != "/index.html" %}
+    <details class="nav-collapsible" open>
+      <summary>Меню</summary>
+      {% include nav.html %}
+    </details>
+  {% else %}
+    {% include nav.html %}
+  {% endif %}
 
   <main>
     {{ content }}

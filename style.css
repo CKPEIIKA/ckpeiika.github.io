@@ -71,6 +71,25 @@ a:hover {
   color: #fff;
 }
 
+.nav-collapsible {
+  margin: 10px 0 20px;
+}
+
+.nav-collapsible > summary {
+  cursor: pointer;
+  font-weight: bold;
+  color: var(--accent-color);
+  list-style: none;
+}
+
+.nav-collapsible > summary::marker {
+  display: none;
+}
+
+.nav-collapsible[open] > summary {
+  margin-bottom: 5px;
+}
+
 /* === Hacky 2000s effects === */
 .blink {
   animation: blink 1s steps(2, start) infinite;
