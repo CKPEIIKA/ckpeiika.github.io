@@ -1,15 +1,11 @@
-<nav>
-  <ul class="nav">
-    <li class="nav-home">
-      <a href="/index.html">🏠 Главная</a>
-    </li>
+<nav class="nav-inline">
+  <p>
+    <a href="/index.html">🏠 Главная</a>
     {% assign subpages = site.pages | where_exp: "p", "p.path contains 'pages/'" | sort: "title" %}
     {% for p in subpages %}
       {% unless p.nav_exclude %}
-        <li>
-          <a href="{{ p.url }}">{{ p.nav_label | default: p.title }}</a>
-        </li>
+        | <a href="{{ p.url }}">{{ p.nav_label | default: p.title }}</a>
       {% endunless %}
     {% endfor %}
-  </ul>
+  </p>
 </nav>

@@ -53,31 +53,16 @@ a[href^="http"]:not([href*="ckpeiika.github.io"])::after {
   font-weight: normal;
 }
 
-/* === Navigation (list of links) === */
-.nav {
-  margin: 20px 0;
-  padding: 0;
-  list-style-type: none;
+/* === Navigation === */
+.nav-inline {
+  margin: 15px 0 25px;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
-.nav li {
-  margin: 5px 0;
-  padding: 5px;
-  background: #111;
-  border: 1px solid var(--accent-color);
-}
-
-.nav li:hover {
-  background: var(--accent-color);
-}
-
-.nav li a {
-  display: block;
-  color: var(--accent-color);
-}
-
-.nav li:hover a {
-  color: #fff;
+.nav-inline p {
+  margin: 0;
 }
 
 .page-actions {
@@ -100,33 +85,6 @@ a[href^="http"]:not([href*="ckpeiika.github.io"])::after {
 .download-btn:hover {
   background: transparent;
   color: var(--accent-color);
-}
-
-.nav-home {
-  background: var(--accent-color);
-}
-
-.nav-home a {
-  color: #fff;
-}
-
-.nav-collapsible {
-  margin: 10px 0 20px;
-}
-
-.nav-collapsible > summary {
-  cursor: pointer;
-  font-weight: bold;
-  color: var(--accent-color);
-  list-style: none;
-}
-
-.nav-collapsible > summary::marker {
-  display: none;
-}
-
-.nav-collapsible[open] > summary {
-  margin-bottom: 5px;
 }
 
 .page-toc {
