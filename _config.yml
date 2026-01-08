@@ -5,6 +5,7 @@ kramdown:
   input: GFM
   hard_wrap: false
   auto_ids: true
+  math_engine: mathjax
 plugins:
   - kramdown-parser-gfm
 exclude:

@@ -11,14 +11,24 @@ _Сохраняйте, пока их не удалили из интернета
 
 ## OpenFOAM
 
+
 - [OpenFOAM Documentation Overview](https://www.openfoam.com/documentation/overview) — официальная документация и архитектура OpenFOAM.
 - [OpenFOAM Development Wiki](https://develop.openfoam.com/Development/openfoam/-/wikis/home) — разработка, внутреннее устройство, best practices.
-- [OpenFOAM wiki](https://wiki.openfoam.com/) — вики-раздел openfoam с описанием туториалов.
+- [OpenFOAM Community Wiki](https://wiki.openfoam.com/)  
+  Сообщественная база знаний: туториалы, кейсы, расширения, статьи.
+- [CFD Direct Technical Articles](https://www.openfoam.com/documentation/guides/latest/doc/technical-guides.html)  
+  Продвинутые материалы от разработчиков OpenFOAM.
 - [Basics of C++ for OpenFOAM (Håkan Nilsson)](https://wiki.openfoam.com/Basics_of_C%2B%2B_by_Hakan_Nilsson) — база для написания собственных солверов.
 - [“3 weeks” OpenFOAM series](https://wiki.openfoam.com/%223_weeks%22_series) — интенсив по OpenFOAM.
 - [Curiosity Fluids](https://curiosityfluids.com/) — практические кейсы и обучающие материалы.
 - [Wolf Dynamics Tutorials](http://www.wolfdynamics.com/index.php) — пошаговые уроки по OpenFOAM.
 - [OpenFOAM Jozsef Nagy (YouTube)](https://www.youtube.com/@OpenFOAMJozsefNagy) — видеоразборы физики и численных методов.
+
+> 📝 Примечание о форках OpenFOAM  
+> Проект OpenFOAM изначально развивался как единая открытая кодовая база.  
+> Впоследствии часть основателей и ключевых разработчиков продолжила развитие проекта в рамках **OpenFOAM Foundation (.org)**,  
+> тогда как другая часть команды сосредоточилась на коммерческой поддержке и выпуске версий через **OpenCFD / OpenFOAM Ltd (.com)**.  
+
 
 ---
 
@@ -49,14 +59,42 @@ _Сохраняйте, пока их не удалили из интернета
 - [Understanding Deep Learning (UDL Book)](https://udlbook.github.io/udlbook/)
 - [RLHF Book](https://rlhfbook.com/)
 - [ODEs & SDEs for Machine Learning](https://rbcborealis.com/research-blogs/odes-and-sdes-for-machine-learning/)
+- [Awesome AI for CFD](https://github.com/AI4CFD/Awesome-AI4CFD)  
+  Еще один список статей, кодов и датасетов по ML+CFD.
+- [NVIDIA PhysicsNeMo (ex-Modulus)](https://developer.nvidia.com/physicsnemo)  
+  Physics-informed ML, PINNs, neural operators, ускорение CFD на GPU.
+- [DeepXDE](https://github.com/lululxvi/deepxde)  
+  PINN-фреймворк для решения PDE и задач CFD.
+- [PhiFlow](https://github.com/tum-pbs/PhiFlow)  
+  Дифференцируемый фреймворк для симуляции уравнений в частных производных.
+- [CFDML](https://github.com/IBM/CFDML)  
+  In-situ ML для CFD: online-обучение моделей во время расчёта.
 
+## Высокоскоростные потоки
+
+- [hy2Foam](https://github.com/vitormorais/hy2Foam)  
+  Гиперзвуковой солвер на базе OpenFOAM: 2T-модели, химия, MHD.
+
+- [Eilmer (University of Queensland)](https://github.com/gdtk-uq/gdtk)  
+  Реальный газ, гиперзвуковые течения, ударные трубы, CHT.
+
+- [SU2](https://su2code.github.io/)  
+  Open-source CFD + adjoint + оптимизация формы.
+
+- [SU2 Documentation](https://su2code.github.io/docs/)  
+  Подробная официальная документация и туториалы.
+
+- [COOLFluiD](https://github.com/COOLFluiD/COOLFluiD)  
+  Объектно-ориентированная HPC-платформа для CFD и мультифизики.
+
+- [Introduction to Hypersonic Flows (FAMU–FSU)](https://aero.famu.fsu.edu/people/faculty/john-hu/teaching/)  
+  Университетский курс по высокоскоростной аэродинамике.
 ---
 
-## Математика и классическая механика
+## Математика и механика
 
 - [Structure and Interpretation of Classical Mechanics (SICM)](https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/9579/sicm_edition_2.zip/toc.html)  
   Лагранжева и гамильтонова механика, ОДУ, вариационные принципы.  
-
 - [Classics of Probability & Statistics (UChicago)](http://www.stat.uchicago.edu/~lekheng/courses/302/classics/index.html)  
   Классические тексты по вероятности и статистике.
 
@@ -65,13 +103,10 @@ _Сохраняйте, пока их не удалили из интернета
 ## Прочее
 
 - [Structure and Interpretation of Computer Programs (SICP)](https://sarabander.github.io/sicp/html/index.xhtml)  
-  Абстракции, интерпретаторы, DSL, мышление в терминах операторов.  
-
+ Новый завет для computer science.
 - [SciPy Examples](https://scipython.com/book2/chapter-8-scipy/examples/)  
-  Практика scientific Python.
-
+  Примеры по SciPy.
 - [Russian PhD LaTeX Dissertation Template](https://github.com/AndreyAkinshin/Russian-Phd-LaTeX-Dissertation-Template)  
   Шаблон для научных текстов.
-
 - [LaTeX G7-32](https://github.com/latex-g7-32/latex-g7-32)  
   ГОСТ-ориентированная верстка.
