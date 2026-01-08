@@ -1,0 +1,10 @@
+title: Sitecity CKPEIIKA
+description: Notes and resources on gas dynamics and ML
+markdown: kramdown
+kramdown:
+  input: GFM
+  hard_wrap: false
+  auto_ids: true
+exclude:
+  - README.md
+  - todo

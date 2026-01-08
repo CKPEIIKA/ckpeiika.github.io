@@ -1,6 +1,6 @@
 /* === Global Styles === */
 :root {
-  --bg-color: #A8ADB4;    /* Pantone 429C */
+  --bg-color: #D8DDE3;    /* Softer gray */
   --accent-color: #9F2D20; /* Pantone 484C */
 }
 
@@ -116,6 +116,30 @@ a:hover {
 .page-toc__item--h3 {
   margin-left: 15px;
   font-size: 0.95em;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+th, td {
+  border: 1px solid var(--accent-color);
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  background: rgba(159, 45, 32, 0.1);
+  text-transform: uppercase;
+  font-size: 0.9em;
+}
+
+tbody tr:nth-child(even) {
+  background: rgba(0, 0, 0, 0.075);
 }
 
 /* === Hacky 2000s effects === */
