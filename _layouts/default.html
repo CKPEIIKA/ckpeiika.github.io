@@ -33,8 +33,11 @@
     {{ content }}
   </main>
 
-  <p><a href="/index.html">⬅ Обратно на домашнюю страничку</a></p>
-  <p class="back-to-top-link"><a href="#top">↑ Наверх</a></p>
+  <p class="footer-links">
+    <a href="/index.html">⬅ Обратно на домашнюю страничку</a>
+    <span>|</span>
+    <a href="#top">↑ Наверх</a>
+  </p>
   <footer class="site-meta">
     <p>Обновлено: {{ site.time | date: "%d.%m.%Y" }}. Лицензия: MIT</p>
   </footer>
@@ -79,6 +82,17 @@
 
         toc.appendChild(list);
         main.insertBefore(toc, main.firstChild);
+      }
+
+      const body = document.body;
+      const toggle = document.querySelector('.theme-toggle');
+      if (toggle) {
+        body.classList.remove('theme-dark');
+        toggle.textContent = 'Темно';
+        toggle.addEventListener('click', () => {
+          const isDark = body.classList.toggle('theme-dark');
+          toggle.textContent = isDark ? 'Светло' : 'Темно';
+        });
       }
     });
   </script>

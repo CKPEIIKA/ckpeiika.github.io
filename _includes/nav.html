@@ -7,5 +7,6 @@
         | <a href="{{ p.url }}">{{ p.nav_label | default: p.title }}</a>
       {% endunless %}
     {% endfor %}
+    | <button class="theme-toggle" type="button" aria-label="Переключить тему">Темно</button>
   </p>
 </nav>
