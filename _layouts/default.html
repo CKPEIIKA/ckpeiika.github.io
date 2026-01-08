@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ page.title }}</title>
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/style.css">
@@ -23,6 +24,7 @@
 </head>
 <body>
 
+  <a id="top"></a>
   <h1>{{ page.title }}</h1>
 
   {% if page.url != "/" and page.url != "/index.html" %}
@@ -39,7 +41,7 @@
   </main>
 
   <p><a href="/index.html">⬅ Обратно на домашнюю страничку</a></p>
-  <button class="back-to-top" type="button" aria-label="Наверх">↑</button>
+  <p class="back-to-top-link"><a href="#top">↑ Наверх</a></p>
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -81,24 +83,6 @@
 
         toc.appendChild(list);
         main.insertBefore(toc, main.firstChild);
-      }
-
-      const backToTop = document.querySelector('.back-to-top');
-      if (backToTop) {
-        const toggleVisibility = () => {
-          if (window.scrollY > 200) {
-            backToTop.classList.add('back-to-top--visible');
-          } else {
-            backToTop.classList.remove('back-to-top--visible');
-          }
-        };
-
-        backToTop.addEventListener('click', () => {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-
-        window.addEventListener('scroll', toggleVisibility);
-        toggleVisibility();
       }
     });
   </script>

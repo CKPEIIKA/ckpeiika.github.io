@@ -10,7 +10,7 @@ body {
   color: var(--accent-color);
   margin: 0;
   padding: 20px;
-  max-width: 600px;   /* column width */
+  max-width: 70ch;   /* column width */
   margin-left: auto;  /* center horizontally */
   margin-right: auto;
   line-height: 1.5;
@@ -69,6 +69,28 @@ a:hover {
 
 .nav li:hover a {
   color: #fff;
+}
+
+.page-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+.download-btn {
+  display: inline-block;
+  padding: 6px 12px;
+  border: 1px solid var(--accent-color);
+  color: #fff;
+  background: var(--accent-color);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.download-btn:hover {
+  background: transparent;
+  color: var(--accent-color);
 }
 
 .nav-home {
@@ -151,28 +173,9 @@ a:hover {
   font-size: 0.95em;
 }
 
-.back-to-top {
-  position: fixed;
-  left: 15px;
-  bottom: 20px;
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  border: none;
-  background: var(--accent-color);
-  color: #fff;
-  font-size: 1.5rem;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease;
-  z-index: 100;
-}
-
-.back-to-top--visible {
-  opacity: 1;
-  pointer-events: auto;
+.back-to-top-link {
+  text-align: right;
+  margin-top: 20px;
 }
 
 table {
