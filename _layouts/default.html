@@ -87,11 +87,30 @@
       const body = document.body;
       const toggle = document.querySelector('.theme-toggle');
       if (toggle) {
-        body.classList.remove('theme-dark');
-        toggle.textContent = 'Темно';
+        const storageKey = 'site-theme';
+        const setLabel = () => {
+          const isDark = body.classList.contains('theme-dark');
+          toggle.textContent = isDark ? 'Светло' : 'Темно';
+        };
+
+        try {
+          const saved = localStorage.getItem(storageKey);
+          if (saved === 'dark') {
+            body.classList.add('theme-dark');
+          }
+        } catch (e) {
+          console.warn('Theme storage unavailable', e);
+        }
+        setLabel();
+
         toggle.addEventListener('click', () => {
           const isDark = body.classList.toggle('theme-dark');
-          toggle.textContent = isDark ? 'Светло' : 'Темно';
+          try {
+            localStorage.setItem(storageKey, isDark ? 'dark' : 'light');
+          } catch (e) {
+            console.warn('Theme storage unavailable', e);
+          }
+          setLabel();
         });
       }
     });
