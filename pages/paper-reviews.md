@@ -13,6 +13,7 @@ nav_label: "📚 Обзоры статей"
 ---
 
 ### 1. Slender Cone Drag (Ballistic Ranges)
+
 | Feature | Technical Specifications |
 | :--- | :--- |
 | **Article** | Deiwert et al. (1989) - Slender Cone Drag Experiments |
@@ -25,6 +26,7 @@ nav_label: "📚 Обзоры статей"
 ---
 
 ### 2. Oblique Detonation Wave Engine (ODWE)
+
 | Feature | Technical Specifications |
 | :--- | :--- |
 | **Article** | Deiwert et al. (1989) - ODWE NASA TM-100093 |
@@ -37,6 +39,7 @@ nav_label: "📚 Обзоры статей"
 ---
 
 ### 3. Electric Arc Shock Tube (EAST) - Species & Radiation
+
 | Feature | Technical Specifications |
 | :--- | :--- |
 | **Article** | Deiwert et al. (1989) - EAST Species & Radiation |
@@ -49,6 +52,7 @@ nav_label: "📚 Обзоры статей"
 ---
 
 ### 4. RAM-C II Flight Probe Validation
+
 | Feature | Technical Specifications |
 | :--- | :--- |
 | **Article** | Deiwert et al. (1989) - RAM-C II Validation |
@@ -61,6 +65,7 @@ nav_label: "📚 Обзоры статей"
 ---
 
 ### 5. High-Velocity Flight Radiometry (Fire 2 & PAET)
+
 | Feature | Technical Specifications |
 | :--- | :--- |
 | **Article** | Deiwert et al. (1989) - Fire 2 & PAET |
@@ -73,6 +78,7 @@ nav_label: "📚 Обзоры статей"
 ---
 
 ### 6. 3.5-Foot Hypersonic Wind Tunnel (HWT)
+
 | Feature        | Technical Specifications                                                                                               |
 | :---           | :---                                                                                                                   |
 | **Article**    | Deiwert et al. (1989) - 3.5-Foot HWT TAV Validation                                                                    |
@@ -83,6 +89,7 @@ nav_label: "📚 Обзоры статей"
 | **Validation** | **Plots:** Surface P & Heat transfer vs. position; **Metrics:** BL transition, Separation points ($\alpha=0-15^\circ$) |
 
 ### 7. EAST Shock-Tube Radiation (New Air Model)
+
 | Feature        | Technical Specifications                                                                                                                                                                                              |
 | :---           | :---                                                                                                                                                                                                                  |
 | **Article**    | Johnston, C.O. (2008) - A Comparison of EAST Measurements with a New Air Radiation Model                                                                                                                              |
@@ -91,7 +98,9 @@ nav_label: "📚 Обзоры статей"
 | **Domain**     | 1D shock-tube (modeled as stagnation line of 5 m sphere); **Res:** Spatial smearing $\Delta z_s = 0.078–0.98 \text{ cm}$; Spectral slit width $\Delta\lambda_T = 0.8–2.0 \text{ nm}$                                  |
 | **Method**     | **Sim:** LAURA (Navier-Stokes) + HARA (Radiation); Non-Boltzmann population modeling; **Exp:** NASA Ames EAST; Wavelength range 200–1300 nm                                                                           |
 | **Validation** | **Plots:** $J_\lambda$ vs. $\lambda$; Integrated Intensity $J_c$ vs. $z$; $N_i$ & $T$ vs. $z$; **Tables:** Shot conditions, Atomic multiplet data ($f_{ij}$, $S_{0,0}$), Integrated intensity components              |
-                                                                                                                            ### 8. Orion-Class Air Radiation (VUV to IR)
+
+### 8. Orion-Class Air Radiation (VUV to IR)
+
 | Feature | Technical Specifications |
 | :--- | :--- |
 | **Article** | Bose et al. (2010) - Comparisons of Air Radiation Model with Shock Tube Measurements |
@@ -102,6 +111,7 @@ nav_label: "📚 Обзоры статей"
 | **Validation** | **Plots:** Spectral Intensity (9 ranges: VUV to IR), Integrated Intensity vs. Time; **Metrics:** VUV contribution (~40% total), Nonequilibrium zone (2-3 cm) |
 
 ### 9. Superorbital Expanding Flow (X2 Tunnel)
+
 | Feature | Technical Specifications |
 | :--- | :--- |
 | **Article** | Han et al. (2017) - Air Radiation in Superorbital Expanding Flow |
@@ -112,6 +122,7 @@ nav_label: "📚 Обзоры статей"
 | **Validation** | **Plots:** Spectral Radiance vs. $\lambda$ (VUV); Integrated Radiance vs. distance (149 nm, 174 nm, 777 nm lines); **Tables:** Shock speeds, Inflow properties, Mole fractions |
 
 ### 10. Titan Atmospheric Entry (NASA EAST Test 61)
+
 | Feature | Technical Specifications |
 | :--- | :--- |
 | **Article** | Brandis, A. M., and Cruden, B. A. (2017) - Titan Atmospheric Entry Radiative Heating |
@@ -122,6 +133,7 @@ nav_label: "📚 Обзоры статей"
 | **Validation** | **Plots:** Radiance vs. Velocity (VUV to IR), Radiance Profiles vs. distance, Spectral Radiance (CN Violet/Red); **Metrics:** CN Violet > 60% of total radiance |
 
 ### 11. Quasi-1D Shock Tube Modeling (HEGEL)
+
 | Feature | Technical Specifications |
 | :--- | :--- |
 | **Article** | Sharma et al. (2019) - One-dimensional modeling methodology for shock tubes |
@@ -132,6 +144,7 @@ nav_label: "📚 Обзоры статей"
 | **Validation** | **Plots:** X-T diagram, Velocity vs. $x$, Mole fractions vs. $x$, Spectral radiance vs. $x$ (VUV/UV/Red/IR); **Metrics:** $\delta \approx 14 \text{ mm}$ (BL thickness) |
 
 ### 12. Unsteady vs. Steady Shock Tube Modeling (COOLFluiD)
+
 | Feature | Technical Specifications |
 | :--- | :--- |
 | **Article** | Bensassi et al. (2019) - Computational Modeling for Non-equilibrium Shock Tube Flows |
@@ -143,6 +156,7 @@ nav_label: "📚 Обзоры статей"
 | **Key Metrics** | **Equiv. T:** $9992\text{ K}$ (Inviscid) vs $9509\text{ K}$ (Viscous); **Equilibrium dist:** Steady $\approx 2.5\text{ cm}$, Unsteady (viscous) $\approx 1\text{ cm}$ |
 
 ### 13. Hypersonic Boundary Layer Stability (JAXA-HIEST)
+
 | Feature | Technical Specifications |
 | :--- | :--- |
 | **Article** | Tanno et al. (2011/2012) - Surface pressure fluctuation in hypersonic boundary layer |
@@ -154,6 +168,7 @@ nav_label: "📚 Обзоры статей"
 | **Key Metrics** | **2nd Mode:** $300–600$ kHz; **Transition Re:** $2\times 10^6$ to $6\times 10^6$; **Real Gas:** No major air/$N_2$ transition delta observed |
 
 ### 14. Pitot Pressure Correction in Non-equilibrium Flow (T6 Stalker)
+
 | Feature | Technical Specifications |
 | :--- | :--- |
 | **Article** | Sopek et al. (2024) - Effect of non-equilibrium thermochemistry on Pitot pressure |
@@ -165,6 +180,7 @@ nav_label: "📚 Обзоры статей"
 | **Key Metrics** | **Mach:** $\approx 7.1$; **BL Transition:** $377–380\text{ mm}$ post-throat; **Result:** $C \approx 0.94$ for $H > 2.6\text{ MJ/kg}$ (revising the standard 0.92) |
 
 ### 15. State-to-State Oxygen Kinetics (Reflected Shock)
+
 | Feature | Technical Specifications |
 | :--- | :--- |
 | **Article** | Kravchenko et al. (2022) - Modeling of state-to-state oxygen kinetics behind reflected shock waves |
@@ -176,6 +192,7 @@ nav_label: "📚 Обзоры статей"
 | **Key Metrics** | **Best Model:** SSH + Marrone-Treanor ($U=3T$); **Pre-shock effect:** Frozen assumptions underpredict $P_0$ by $10–20\%$ |
 
 ### 16. Hypervelocity Shock Standoff on Spheres (X2 Tunnel)
+
 | Feature | Technical Specifications |
 | :--- | :--- |
 | **Article** | Zander et al. (2014) - Hypervelocity shock standoff on spheres in air |
@@ -187,6 +204,7 @@ nav_label: "📚 Обзоры статей"
 | **Key Metrics** | **$\Delta/D$ Range:** $0.03-0.04$; **Correlation:** $\Delta/D = 0.41(\rho_1/\rho_2)$; **Resolution:** Sub-pixel accuracy via geometric fitting |
 
 ### 17. Park’s Two-Temperature Kinetic Model (Ionizing Air)
+
 | Feature | Technical Specifications |
 | :--- | :--- |
 | **Article** | Park, C. (1989) - Assessment of Two-Temperature Kinetic Model for Ionizing Air |
@@ -197,6 +215,7 @@ nav_label: "📚 Обзоры статей"
 | **Validation** | **Plots:** $T, T_v$ and Emission vs. Distance, Species Mole Fractions vs. $x$, Spectral Intensity (0.2–1.5 $\mu$m); **Tables:** Pre-exponential factors ($C$), exponents ($n$), and $E/k$ for all reactions |
 
 ### 18. High Enthalpy Double-Wedge (T5 Tunnel)
+
 | Feature | Technical Specifications |
 | :--- | :--- |
 | **Article** | Olejniczak et al. (1996) - High Enthalpy Double-Wedge Experiments |
@@ -207,6 +226,7 @@ nav_label: "📚 Обзоры статей"
 | **Validation** | **Plots:** Interferograms (shock positions), Surface maps ($P$ and $q$ vs. $s, y$), Symmetry plane distributions; **Diagnostics:** 18 pressure / 29 heat gauges |
 
 ### 19. NO TDLAS Freestream Characterization (T5 Tunnel)
+
 | Feature | Technical Specifications |
 | :--- | :--- |
 | **Article** | Girard et al. (2020) - Time-Resolved NO Rotational, Vibrational Temperature and Concentration in T5 |
@@ -219,6 +239,7 @@ nav_label: "📚 Обзоры статей"
 
 
 ### 20. Translational Eucken Factor from Light Scattering (RBS)
+
 | Feature | Technical Specifications |
 | :--- | :--- |
 | **Article** | Wu et al. (2020) - Extraction of the translational Eucken factor from light scattering |
@@ -229,6 +250,7 @@ nav_label: "📚 Обзоры статей"
 | **Validation** | **Plots:** RBS Spectrum vs. Frequency Shift; Residuals (<1% error); Error function contours; **Tables:** Extracted values for $\mu_b$, $f_{tr}$, and $f_{int}$ for $N_2$ |
 
 ### 21. Electron Density in Re-entry Shocks (NASA EAST)
+
 | Feature | Technical Specifications |
 | :--- | :--- |
 | **Article** | Cruden et al. (2011) - Electron Density Measurement for Lunar Return |
@@ -239,6 +261,7 @@ nav_label: "📚 Обзоры статей"
 | **Validation** | **Plots:** $n_e$ vs. Velocity, $n_e(Measured)/n_e(Equilibrium)$ ratio, Spatially resolved $n_e$ vs. $x$; **Metrics:** Nonequilibrium $n_e$ overshoot (20–30% above CEA) |
 
 ### 22. Benchmark Radiative Heating (Earth Re-entry)
+
 | Feature        | Technical Specifications                                                                                                                                                                                                       |
 | :---           | :---                                                                                                                                                                                                                           |
 | **Article**    | Brandis & Cruden (2017) - Benchmark Shock Tube Experiments                                                                                                                                                                     |
@@ -249,6 +272,7 @@ nav_label: "📚 Обзоры статей"
 | **Validation** | **Plots:** Radiance vs. Distance, Equilibrium Radiance vs. $U_s$, Spectral Radiance vs. $\lambda$; **Tables:** 45+ benchmark shots; **Appendix:** Reconstruction parameters for ILS/SRF kernels                                |
 
 ### 23. Finite-Rate Catalysis and Heat Flux Prediction
+
 | Feature | Technical Specifications |
 | :--- | :--- |
 | **Article** | Bonelli et al. (2021) - Effect of finite-rate catalysis on wall heat flux |
@@ -259,6 +283,7 @@ nav_label: "📚 Обзоры статей"
 | **Validation** | **Plots:** Nozzle centerline profiles ($T, T_v, M$), Stagnation line profiles ($Y_i, T, T_v$), Pressure contours; **Tables:** Exp vs. Sim comparison for $P_{stag}$ (17.9 mbar) and $q_w$ (1543 kW/m²) |
 
 ### 24. Evaluation of Kinetic Models for FIRE II Trajectory
+
 | Feature | Technical Specifications |
 | :--- | :--- |
 | **Article** | Zhao et al. (2023) - Evaluation of Thermodynamic and Chemical Kinetic Models |
@@ -270,6 +295,7 @@ nav_label: "📚 Обзоры статей"
 | **Key Metrics** | **Ionization Effect:** 11-species models act as "heat sponges," lowering peak $T$ via endothermic ionization; **Model Sensitivity:** Heat flux varies by up to $25\%$ based on chemistry choice |
 
 ### 25. NO Relaxation and Decomposition (High-Temp Argon Dilution)
+
 | Feature | Technical Specifications |
 | :--- | :--- |
 | **Article** | Streicher et al. (2022) - NO Vibrational Relaxation and Decomposition |
@@ -280,6 +306,7 @@ nav_label: "📚 Обзоры статей"
 | **Validation** | **Plots:** Absorbance vs. Time (3-stage behavior), Landau–Teller ($\tau$ vs. $T^{-1/3}$), Arrhenius ($k$ vs. $1/T$), Sensitivity analysis; **Tables:** Rate parameters for dissociation and exchange |
 
 ### 26. Martian After-Body Radiative Heating (InSight/MSL)
+
 | Feature | Technical Specifications |
 | :--- | :--- |
 | **Article** | Brandis et al. (2020) - Radiative Heating on the After-Body of Martian Entry Vehicles |
@@ -291,6 +318,7 @@ nav_label: "📚 Обзоры статей"
 | **Key Metrics** | **Tangent-Slab Error:** $25\%–58\%$ overprediction on after-body; **Code Agreement:** NEQAIR vs. HARA within $14\%$; **Result:** Radiative flux can dominate convective flux on backshell components |
 
 ### 27. Equilibrium Radiative Heating (9.5 to 15.5 km/s)
+
 | Feature | Technical Specifications |
 | :--- | :--- |
 | **Article** | Brandis et al. (2016) - Equilibrium Radiative Heating for Earth Atmospheric Entry |
