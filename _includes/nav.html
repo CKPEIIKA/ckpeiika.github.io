@@ -1,5 +1,8 @@
 <nav>
   <ul class="nav">
+    <li class="nav-home">
+      <a href="/index.html">🏠 Главная</a>
+    </li>
     {% assign subpages = site.pages | where_exp: "p", "p.path contains 'pages/'" | sort: "title" %}
     {% for p in subpages %}
       {% unless p.nav_exclude %}
@@ -10,4 +13,3 @@
     {% endfor %}
   </ul>
 </nav>
-

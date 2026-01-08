@@ -49,3 +49,29 @@ _Сохраняйте, пока их не удалили из интернета
 - [Understanding Deep Learning (UDL Book)](https://udlbook.github.io/udlbook/)
 - [RLHF Book](https://rlhfbook.com/)
 - [ODEs & SDEs for Machine Learning](https://rbcborealis.com/research-blogs/odes-and-sdes-for-machine-learning/)
+
+---
+
+## Математика и классическая механика
+
+- [Structure and Interpretation of Classical Mechanics (SICM)](https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/9579/sicm_edition_2.zip/toc.html)  
+  Лагранжева и гамильтонова механика, ОДУ, вариационные принципы.  
+
+- [Classics of Probability & Statistics (UChicago)](http://www.stat.uchicago.edu/~lekheng/courses/302/classics/index.html)  
+  Классические тексты по вероятности и статистике.
+
+---
+
+## Прочее
+
+- [Structure and Interpretation of Computer Programs (SICP)](https://sarabander.github.io/sicp/html/index.xhtml)  
+  Абстракции, интерпретаторы, DSL, мышление в терминах операторов.  
+
+- [SciPy Examples](https://scipython.com/book2/chapter-8-scipy/examples/)  
+  Практика scientific Python.
+
+- [Russian PhD LaTeX Dissertation Template](https://github.com/AndreyAkinshin/Russian-Phd-LaTeX-Dissertation-Template)  
+  Шаблон для научных текстов.
+
+- [LaTeX G7-32](https://github.com/latex-g7-32/latex-g7-32)  
+  ГОСТ-ориентированная верстка.

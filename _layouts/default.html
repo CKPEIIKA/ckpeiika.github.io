@@ -24,6 +24,7 @@
   </main>
 
   <p><a href="/index.html">⬅ Обратно на домашнюю страничку</a></p>
+  <button class="back-to-top" type="button" aria-label="Наверх">↑</button>
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -31,41 +32,60 @@
       if (!main) return;
 
       const headings = Array.from(main.querySelectorAll('h2, h3')).filter(h => h.textContent.trim().length);
-      if (headings.length < 2) return;
+      if (headings.length >= 2) {
+        const toc = document.createElement('details');
+        toc.className = 'page-toc';
+        toc.open = true;
 
-      const toc = document.createElement('nav');
-      toc.className = 'page-toc';
-      toc.setAttribute('aria-label', 'Краткое содержание');
+        const summary = document.createElement('summary');
+        summary.className = 'page-toc__summary';
+        summary.textContent = 'Краткое содержание';
+        toc.appendChild(summary);
 
-      const title = document.createElement('p');
-      title.className = 'page-toc__title';
-      title.textContent = 'Краткое содержание';
-      toc.appendChild(title);
+        const list = document.createElement('ul');
+        list.className = 'page-toc__list';
 
-      const list = document.createElement('ul');
+        headings.forEach(heading => {
+          if (!heading.id) {
+            heading.id = heading.textContent
+              .toLowerCase()
+              .trim()
+              .replace(/[^a-zа-я0-9\s-]/g, '')
+              .replace(/\s+/g, '-');
+          }
 
-      headings.forEach(heading => {
-        if (!heading.id) {
-          heading.id = heading.textContent
-            .toLowerCase()
-            .trim()
-            .replace(/[^a-zа-я0-9\s-]/g, '')
-            .replace(/\s+/g, '-');
-        }
+          const item = document.createElement('li');
+          item.classList.add('page-toc__item', `page-toc__item--${heading.tagName.toLowerCase()}`);
 
-        const item = document.createElement('li');
-        item.classList.add('page-toc__item', `page-toc__item--${heading.tagName.toLowerCase()}`);
+          const link = document.createElement('a');
+          link.href = `#${heading.id}`;
+          link.textContent = heading.textContent.trim();
 
-        const link = document.createElement('a');
-        link.href = `#${heading.id}`;
-        link.textContent = heading.textContent.trim();
+          item.appendChild(link);
+          list.appendChild(item);
+        });
 
-        item.appendChild(link);
-        list.appendChild(item);
-      });
+        toc.appendChild(list);
+        main.insertBefore(toc, main.firstChild);
+      }
 
-      toc.appendChild(list);
-      main.insertBefore(toc, main.firstChild);
+      const backToTop = document.querySelector('.back-to-top');
+      if (backToTop) {
+        const toggleVisibility = () => {
+          if (window.scrollY > 200) {
+            backToTop.classList.add('back-to-top--visible');
+          } else {
+            backToTop.classList.remove('back-to-top--visible');
+          }
+        };
+
+        backToTop.addEventListener('click', () => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        window.addEventListener('scroll', toggleVisibility);
+        toggleVisibility();
+      }
     });
   </script>
 

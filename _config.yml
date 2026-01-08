@@ -5,6 +5,8 @@ kramdown:
   input: GFM
   hard_wrap: false
   auto_ids: true
+plugins:
+  - kramdown-parser-gfm
 exclude:
   - README.md
   - todo

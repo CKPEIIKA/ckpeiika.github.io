@@ -71,6 +71,14 @@ a:hover {
   color: #fff;
 }
 
+.nav-home {
+  background: var(--accent-color);
+}
+
+.nav-home a {
+  color: #fff;
+}
+
 .nav-collapsible {
   margin: 10px 0 20px;
 }
@@ -95,15 +103,40 @@ a:hover {
   background: rgba(0, 0, 0, 0.15);
   padding: 10px 15px;
   margin: 20px 0;
+  cursor: default;
 }
 
-.page-toc__title {
-  margin: 0 0 10px;
+.page-toc__summary {
   font-weight: bold;
   text-transform: uppercase;
+  cursor: pointer;
+  list-style: none;
+  outline: none;
 }
 
-.page-toc ul {
+.page-toc[open] .page-toc__summary {
+  margin-bottom: 10px;
+}
+
+.page-toc__summary::marker,
+.page-toc__summary::-webkit-details-marker {
+  display: none;
+}
+
+.page-toc__summary::before {
+  content: "▼";
+  display: inline-block;
+  margin-right: 8px;
+  font-size: 0.8em;
+  transform: rotate(-90deg);
+  transition: transform 0.2s ease;
+}
+
+.page-toc[open] .page-toc__summary::before {
+  transform: rotate(0deg);
+}
+
+.page-toc__list {
   list-style: none;
   padding-left: 0;
   margin: 0;
@@ -116,6 +149,30 @@ a:hover {
 .page-toc__item--h3 {
   margin-left: 15px;
   font-size: 0.95em;
+}
+
+.back-to-top {
+  position: fixed;
+  left: 15px;
+  bottom: 20px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent-color);
+  color: #fff;
+  font-size: 1.5rem;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 100;
+}
+
+.back-to-top--visible {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 table {
