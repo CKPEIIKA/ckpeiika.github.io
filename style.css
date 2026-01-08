@@ -19,7 +19,7 @@ body {
 main > * + * {
   margin-top: 1rem;
 }
-
+/*
 @media (min-width: 900px) {
   body {
     display: grid;
@@ -41,6 +41,7 @@ main > * + * {
     margin: 0;
   }
 }
+  */
 
 /* === Header / Title === */
 h1, h2, h3 {
