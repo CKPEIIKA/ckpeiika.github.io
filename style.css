@@ -230,10 +230,16 @@ tbody tr:nth-child(even) {
 
 .hero-image {
   border: 2px dashed var(--accent-color);
-  padding: 40px;
-  text-align: center;
-  font-size: 1.1rem;
+  padding: 20px;
   margin-bottom: 20px;
+  text-align: center;
+}
+
+.hero-image img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
 }
 
 .page-status {
