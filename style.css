@@ -90,6 +90,34 @@ a:hover {
   margin-bottom: 5px;
 }
 
+.page-toc {
+  border: 1px dashed var(--accent-color);
+  background: rgba(0, 0, 0, 0.15);
+  padding: 10px 15px;
+  margin: 20px 0;
+}
+
+.page-toc__title {
+  margin: 0 0 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.page-toc ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.page-toc__item {
+  margin: 5px 0;
+}
+
+.page-toc__item--h3 {
+  margin-left: 15px;
+  font-size: 0.95em;
+}
+
 /* === Hacky 2000s effects === */
 .blink {
   animation: blink 1s steps(2, start) infinite;
