@@ -25,9 +25,9 @@ _Сохраняйте, пока их не удалили из интернета
 - [OpenFOAM Jozsef Nagy (YouTube)](https://www.youtube.com/@OpenFOAMJozsefNagy) — видеоразборы физики и численных методов.
 
 > 📝 Примечание о форках OpenFOAM  
-> Проект OpenFOAM изначально развивался как единая открытая кодовая база.  
 > Впоследствии часть основателей и ключевых разработчиков продолжила развитие проекта в рамках **OpenFOAM Foundation (.org)**,  
 > тогда как другая часть команды сосредоточилась на коммерческой поддержке и выпуске версий через **OpenCFD / OpenFOAM Ltd (.com)**.  
+>Подробнее [см.](https://www.cfd-online.com/Forums/openfoam/197150-openfoam-com-versus-openfoam-org-version-use.html)
 
 
 ---
@@ -41,7 +41,6 @@ _Сохраняйте, пока их не удалили из интернета
 - [Milovan Perić CFD (YouTube)](https://www.youtube.com/@MilovanPericCFD/videos) — численные методы и физическая интерпретация.
 - [CFD-ZJW Blog](http://cfd-zjw.blogspot.com/) — практические CFD-примеры.
 - [A Complete Learning Path for CFD](https://jahid-hasan.com/writings/a-complete-learning-path-for-cfd/) — карта дисциплины.
-- [Rankine–Hugoniot Conditions](https://gidropraktikum.narod.ru/equations-of-hydrodynamics.htm#Rankine-Hugoniot) — ударные волны.
 - [Method of Characteristics](https://kyleniemeyer.github.io/gas-dynamics-notes/compressible-flows/method-characteristics.html) — газовая динамика, метод характеристик.
 - [Pipe Flow Verification (Barba Group)](https://github.com/barbagroup/pipe_verification/tree/main) — верификация численных схем.
 - [Capella CFD Archive](http://web.archive.org/web/20060208175919/http://capella.colorado.edu/~laney/otherbooks.htm) — архив классических CFD-книг авторства  в т.ч.Laney.
@@ -59,7 +58,7 @@ _Сохраняйте, пока их не удалили из интернета
 - [Understanding Deep Learning (UDL Book)](https://udlbook.github.io/udlbook/)
 - [RLHF Book](https://rlhfbook.com/)
 - [ODEs & SDEs for Machine Learning](https://rbcborealis.com/research-blogs/odes-and-sdes-for-machine-learning/)
-- [Awesome AI for CFD](https://github.com/AI4CFD/Awesome-AI4CFD)  
+- [Awesome AI for CFD](https://github.com/WillDreamer/Awesome-AI4CFD)  
   Еще один список статей, кодов и датасетов по ML+CFD.
 - [NVIDIA PhysicsNeMo (ex-Modulus)](https://developer.nvidia.com/physicsnemo)  
   Physics-informed ML, PINNs, neural operators, ускорение CFD на GPU.
@@ -67,12 +66,10 @@ _Сохраняйте, пока их не удалили из интернета
   PINN-фреймворк для решения PDE и задач CFD.
 - [PhiFlow](https://github.com/tum-pbs/PhiFlow)  
   Дифференцируемый фреймворк для симуляции уравнений в частных производных.
-- [CFDML](https://github.com/IBM/CFDML)  
-  In-situ ML для CFD: online-обучение моделей во время расчёта.
 
 ## Высокоскоростные потоки
 
-- [hy2Foam](https://github.com/vitormorais/hy2Foam)  
+- [hy2Foam](https://hystrath.github.io/solvers/fleming/hy2foam/)  
   Гиперзвуковой солвер на базе OpenFOAM: 2T-модели, химия, MHD.
 
 - [Eilmer (University of Queensland)](https://github.com/gdtk-uq/gdtk)  
@@ -84,11 +81,10 @@ _Сохраняйте, пока их не удалили из интернета
 - [SU2 Documentation](https://su2code.github.io/docs/)  
   Подробная официальная документация и туториалы.
 
-- [COOLFluiD](https://github.com/COOLFluiD/COOLFluiD)  
+- [COOLFluiD](https://andrealani.github.io/COOLFluiD/)  
   Объектно-ориентированная HPC-платформа для CFD и мультифизики.
 
-- [Introduction to Hypersonic Flows (FAMU–FSU)](https://aero.famu.fsu.edu/people/faculty/john-hu/teaching/)  
-  Университетский курс по высокоскоростной аэродинамике.
+- [Clawpack Riemann Book](http://www.clawpack.org/riemann_book/) -- книга по решению задачи Римана с примерами на Python
 ---
 
 ## Математика и механика
@@ -97,6 +93,7 @@ _Сохраняйте, пока их не удалили из интернета
   Лагранжева и гамильтонова механика, ОДУ, вариационные принципы.  
 - [Classics of Probability & Statistics (UChicago)](http://www.stat.uchicago.edu/~lekheng/courses/302/classics/index.html)  
   Классические тексты по вероятности и статистике.
+- [Практикум МГУ](https://gidropraktikum.narod.ru/equations-of-hydrodynamics.htm)
 
 ---
 
