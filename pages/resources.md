@@ -71,19 +71,15 @@ _Сохраняйте, пока их не удалили из интернета
 
 - [hy2Foam](https://hystrath.github.io/solvers/fleming/hy2foam/)  
   Гиперзвуковой солвер на базе OpenFOAM: 2T-модели, химия, MHD.
-
 - [Eilmer (University of Queensland)](https://github.com/gdtk-uq/gdtk)  
   Реальный газ, гиперзвуковые течения, ударные трубы, CHT.
-
 - [SU2](https://su2code.github.io/)  
-  Open-source CFD + adjoint + оптимизация формы.
-
+  Продвинутый Стэнфордский решатель, тоже с 2Т и химией.
 - [SU2 Documentation](https://su2code.github.io/docs/)  
   Подробная официальная документация и туториалы.
-
 - [COOLFluiD](https://andrealani.github.io/COOLFluiD/)  
   Объектно-ориентированная HPC-платформа для CFD и мультифизики.
-
+- [COREFL-CPC](https://github.com/Liangerty/COREFL-CPC) -- решатель на GPU (CUDA).
 - [Clawpack Riemann Book](http://www.clawpack.org/riemann_book/) -- книга по решению задачи Римана с примерами на Python
 ---
 
