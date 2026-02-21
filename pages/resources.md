@@ -45,9 +45,7 @@ _Сохраняйте, пока их не удалили из интернета
 - [Pipe Flow Verification (Barba Group)](https://github.com/barbagroup/pipe_verification/tree/main) — верификация численных схем.
 - [Capella CFD Archive](http://web.archive.org/web/20060208175919/http://capella.colorado.edu/~laney/otherbooks.htm) — архив классических CFD-книг авторства  в т.ч.Laney.
 
----
-
-## ML + CFD / Scientific ML
+## ML + CFD 
 
 - [Machine Learning Applied to CFD — Literature](https://github.com/AndreWeiner/machine-learning-applied-to-cfd/blob/master/literature.md) — отличный литобзор.
 - [TensorFlowFoam](https://github.com/argonne-lcf/TensorFlowFoam) — Пример ML-интеграция с OpenFOAM.
@@ -80,8 +78,7 @@ _Сохраняйте, пока их не удалили из интернета
 - [COOLFluiD](https://andrealani.github.io/COOLFluiD/)  
   Объектно-ориентированная HPC-платформа для CFD и мультифизики.
 - [COREFL-CPC](https://github.com/Liangerty/COREFL-CPC) -- решатель на GPU (CUDA).
-- [Clawpack Riemann Book](http://www.clawpack.org/riemann_book/) -- книга по решению задачи Римана с примерами на Python
----
+- [Clawpack Riemann Book](http://www.clawpack.org/riemann_book/) -- книга по решению задачи Римана с примерами на Python.
 
 ## Математика и механика
 
@@ -90,8 +87,6 @@ _Сохраняйте, пока их не удалили из интернета
 - [Classics of Probability & Statistics (UChicago)](http://www.stat.uchicago.edu/~lekheng/courses/302/classics/index.html)  
   Классические тексты по вероятности и статистике.
 - [Практикум МГУ](https://gidropraktikum.narod.ru/equations-of-hydrodynamics.htm)
-
----
 
 ## Прочее
 
