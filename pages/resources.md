@@ -4,14 +4,16 @@ title: Полезные ссылки
 nav_label: "🔗 Полезные ссылки"
 ---
 
-# Коллекция полезных ссылок по CFD, OpenFOAM и ML
-_Сохраняйте, пока их не удалили из интернета._
+Коллекция полезных ссылок по CFD, OpenFOAM и ML.
 
 ---
 
 ## OpenFOAM
 
-
+- [OpenFOAM Foundation (.org)](https://openfoam.org/) — официальный сайт ветки Foundation.
+- [About OpenFOAM (CFD Direct)](https://cfd.direct/openfoam/about/) — кто разрабатывает и распространяет OpenFOAM Foundation.
+- [OpenCFD / OpenFOAM.com](https://www.openfoam.com/) — официальный сайт ветки OpenCFD.
+- [OpenCFD History](https://www.openfoam.com/news/history) — официальная хронология со стороны OpenCFD.
 - [OpenFOAM Documentation Overview](https://www.openfoam.com/documentation/overview) — официальная документация и архитектура OpenFOAM.
 - [OpenFOAM Development Wiki](https://develop.openfoam.com/Development/openfoam/-/wikis/home) — разработка, внутреннее устройство, best practices.
 - [OpenFOAM Community Wiki](https://wiki.openfoam.com/)  
@@ -25,9 +27,12 @@ _Сохраняйте, пока их не удалили из интернета
 - [OpenFOAM Jozsef Nagy (YouTube)](https://www.youtube.com/@OpenFOAMJozsefNagy) — видеоразборы физики и численных методов.
 
 > 📝 Примечание о форках OpenFOAM  
-> Впоследствии часть основателей и ключевых разработчиков продолжила развитие проекта в рамках **OpenFOAM Foundation (.org)**,  
-> тогда как другая часть команды сосредоточилась на коммерческой поддержке и выпуске версий через **OpenCFD / OpenFOAM Ltd (.com)**.  
->Подробнее [см.](https://www.cfd-online.com/Forums/openfoam/197150-openfoam-com-versus-openfoam-org-version-use.html)
+> Сейчас фактически существуют две официально поддерживаемые ветки экосистемы:  
+> **OpenFOAM Foundation / CFD Direct**: [openfoam.org](https://openfoam.org/), [cfd.direct/openfoam/about](https://cfd.direct/openfoam/about/)  
+> **OpenCFD / OpenFOAM Ltd**: [openfoam.com](https://www.openfoam.com/), [openfoam.com/news/history](https://www.openfoam.com/news/history)  
+> Если нужна историческая справка, лучше ссылаться на эти официальные страницы, а не на форумные обсуждения.
+>
+> Но форумный тред все равно жалко выбрасывать: [легендарная ветка на CFD Online](https://www.cfd-online.com/Forums/openfoam/197150-openfoam-com-versus-openfoam-org-version-use.html). Как источник это слабее, как культурный артефакт сообщества вполне годится.
 
 
 ---
