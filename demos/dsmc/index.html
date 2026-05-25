@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Elastic DSMC Demo with Optional Rotational Larsen–Borgnakke Relaxation</title>
+    <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+        <div class="app">
+        <article class="visual-card">
+            <div class="control-strip hud header">
+                <span class="tok neutral">DSMC</span>
+                <button id="tok-case" type="button" class="tok" data-token="case">case <b id="ui-case">mono</b></button>
+                <button id="tok-gas" type="button" class="tok" data-token="gas">gas <b id="ui-gas">Ar:Ar</b></button>
+                <button id="tok-rho" type="button" class="tok" data-token="rho">Kn <b id="ui-rho">.20</b></button>
+                <button id="tok-tl" type="button" class="tok" data-token="tl">TL <b id="ui-tl">300</b></button>
+                <button id="tok-tr" type="button" class="tok" data-token="tr">TR <b id="ui-tr">500</b></button>
+                <button id="tok-wall" type="button" class="tok" data-token="wall">wall <b id="ui-wall">mix α.5</b></button>
+                <button id="tok-n" type="button" class="tok" data-token="n">N <b id="ui-n">3200</b></button>
+                <button id="tok-dx" type="button" class="tok" data-token="dx">dx <b id="ui-dx">.20</b></button>
+                <button id="tok-dt" type="button" class="tok" data-token="dt">dt <b id="ui-dt">5.2e-4</b></button>
+                <button id="tok-model" type="button" class="tok" data-token="model">model <b id="ui-model">VHS</b></button>
+                <button id="tok-plot" type="button" class="tok" data-token="plot">plot <b id="ui-plot">dist</b></button>
+                <button id="tok-help" type="button" class="tok help" data-token="help">?</button>
+                <button id="tok-toggle" type="button" class="tok run" data-token="run">▶</button>
+            </div>
+
+            <div class="backing-controls" aria-hidden="true">
+                <select id="case-id" title="Case" data-kind="medium">
+                    <option value="monospecies_heat_bath" selected>monospecies_heat_bath</option>
+                    <option value="preset_eq_box">preset_eq_box</option>
+                    <option value="preset_diffuse_wall">preset_diffuse_wall</option>
+                    <option value="five_species_heat_bath">five_species_heat_bath</option>
+                    <option value="seven_species_lab_mix">seven_species_lab_mix</option>
+                    <option value="argon_hydrogen_arcs">argon_hydrogen_arcs</option>
+                </select>
+                <input id="species-a" list="species-presets" type="text" inputmode="text" title="Species A" data-kind="species" placeholder="A" />
+                <input id="species-b" list="species-presets" type="text" inputmode="text" title="Species B" data-kind="species" placeholder="B" />
+                <input id="density-scale" type="range" min="0.05" max="1.20" step="0.05" value="0.20" title="Target Knudsen number" />
+                <span id="density-scale-display" class="inline-range-value">0.20</span>
+                <input id="wall-temp-left" list="wall-temp-presets" type="text" inputmode="decimal" data-kind="temp" title="Left wall temperature (K)" value="300" min="50" placeholder="TL" />
+                <input id="wall-temp-right" list="wall-temp-presets" type="text" inputmode="decimal" data-kind="temp" title="Right wall temperature (K)" value="500" min="50" placeholder="TR" />
+                <select id="boundary-mode" title="Wall reflection model" data-kind="medium">
+                    <option value="specular">reflection</option>
+                    <option value="diffuse">diffusion</option>
+                    <option value="mixed">mixed</option>
+                    <option value="periodic">periodic</option>
+                </select>
+                <div id="wall-mixed-row">
+                    <input id="wall-mixed-accom" type="text" inputmode="decimal" data-kind="tiny" title="Mixed-wall accommodation fraction" value="0.5" min="0" max="1" step="0.05" placeholder="α" />
+                </div>
+                <input id="particle-count" list="particle-presets" type="text" inputmode="numeric" title="Total simulated particles" data-kind="medium" value="3200" min="250" max="8000" placeholder="N" />
+                <input id="cell-size" list="cell-size-presets" type="text" inputmode="decimal" title="Cell size in world units" data-kind="cell" value="0.20" min="0.05" step="0.05" placeholder="dx" />
+                <button type="button" class="btn step-btn" id="cell-size-dec" title="Decrease cell size" aria-label="Decrease cell size">-</button>
+                <button type="button" class="btn step-btn" id="cell-size-inc" title="Increase cell size" aria-label="Increase cell size">+</button>
+                <input id="sim-dt" list="dt-presets" type="text" inputmode="decimal" title="Integration step size in seconds" data-kind="medium" value="0.00052" min="1e-6" step="0.00001" placeholder="dt" />
+                <button type="button" class="btn step-btn" id="dt-dec" title="Decrease timestep" aria-label="Decrease timestep">-</button>
+                <button type="button" class="btn step-btn" id="dt-inc" title="Increase timestep" aria-label="Increase timestep">+</button>
+                <select id="render-quality" title="Render performance mode" data-kind="tiny">
+                    <option value="quality">quality</option>
+                    <option value="fast">fast</option>
+                </select>
+                <select id="collision-model" title="Collision model" data-kind="medium">
+                    <option value="hard-sphere">hard sphere</option>
+                    <option value="vhs" selected>VHS</option>
+                    <option value="vss">VSS</option>
+                </select>
+                <select id="mini-view" title="Mini panel view" data-kind="tiny">
+                    <option value="off">off</option>
+                    <option value="dist">dist</option>
+                    <option value="moments" selected>moments</option>
+                    <option value="vpt">v,p,T</option>
+                </select>
+                <span id="count">--</span>
+                <span id="mean-speed">--</span>
+                <span id="cell-occupancy">--</span>
+            </div>
+
+                <datalist id="temp-presets">
+                    <option value="180"></option>
+                    <option value="250"></option>
+                    <option value="300"></option>
+                    <option value="500"></option>
+                    <option value="800"></option>
+                    <option value="1200"></option>
+                </datalist>
+                <datalist id="particle-presets">
+                    <option value="800"></option>
+                    <option value="1200"></option>
+                    <option value="1500"></option>
+                    <option value="1800"></option>
+                    <option value="2200"></option>
+                    <option value="2600"></option>
+                    <option value="3200"></option>
+                    <option value="4000"></option>
+                    <option value="5000"></option>
+                    <option value="6200"></option>
+                    <option value="7600"></option>
+                </datalist>
+                <datalist id="dt-presets">
+                    <option value="0.00030"></option>
+                    <option value="0.00040"></option>
+                    <option value="0.00045"></option>
+                    <option value="0.00052"></option>
+                    <option value="0.00060"></option>
+                    <option value="0.00072"></option>
+                </datalist>
+                <datalist id="cell-size-presets">
+                    <option value="0.12"></option>
+                    <option value="0.16"></option>
+                    <option value="0.20"></option>
+                    <option value="0.24"></option>
+                    <option value="0.30"></option>
+                    <option value="0.40"></option>
+                </datalist>
+                <datalist id="wall-temp-presets">
+                    <option value="200"></option>
+                    <option value="300"></option>
+                    <option value="400"></option>
+                    <option value="500"></option>
+                    <option value="600"></option>
+                    <option value="800"></option>
+                </datalist>
+                <datalist id="species-presets"></datalist>
+            <div id="field-help" class="input-help" aria-hidden="true">
+                <p id="field-help-text"></p>
+                <input id="field-help-entry" class="field-help-entry" type="text" inputmode="text" />
+                <ol id="field-help-items"></ol>
+                <p id="field-help-meta" class="help-meta"></p>
+            </div>
+
+            <canvas id="scene" width="960" height="540"></canvas>
+            <div id="mini-panel" class="mini-panel">
+                <canvas id="minimap" width="275" height="112"></canvas>
+                <div class="mini-metrics">
+                    <span class="mini-metric"><span id="mini-metric-a-label">μv</span> <span id="mini-metric-a">--</span></span>
+                    <span class="mini-metric"><span id="mini-metric-b-label">rms</span> <span id="mini-metric-b">--</span></span>
+                    <span class="mini-metric"><span id="mini-metric-c-label">σT</span> <span id="mini-metric-c">--</span></span>
+                </div>
+            </div>
+            <div class="status-line hud footer">
+                <span class="tok neutral" id="status">ok</span>
+                <span class="tok" id="fps">fps --</span>
+                <span class="tok" id="f-step">step 0</span>
+                <span class="tok" id="diag-temp">T --</span>
+                <span class="tok" id="diag-collisions">col --</span>
+                <span class="tok" id="diag-trot">Trot --</span>
+                <span class="tok" id="diag-rot-events">rot --</span>
+                <span class="tok" id="delta-e">dE/E0 --</span>
+                <span class="tok" id="delta-p">dP/P0 --</span>
+                <span class="tok" id="validity-dx-over-lambda">dx/λ --</span>
+                <span class="tok" id="validity-dt-over-tau">dt/τ --</span>
+                <span class="tok" id="validity-npcell">npc --</span>
+                <span class="tok" id="validity-majorant">maj --</span>
+                <button id="seed" class="tok command" title="Seed [R]">R seed</button>
+                <button id="step" class="tok command" title="Step [S]">S step</button>
+                <button id="toggle" class="tok run" title="Play/Pause [Space]">Space run</button>
+                <button id="tok-help-footer" class="tok command" title="Help [?]">?</button>
+            </div>
+        </article>
+    </div>
+
+    <script src="./dsmc.js"></script>
+    <script src="./dsmc_typed.js"></script>
+    <script src="./app.js"></script>
+</body>
+</html>

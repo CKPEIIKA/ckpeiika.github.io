@@ -251,3 +251,23 @@ tbody tr:nth-child(even) {
   0% { transform: translate(0, 0); }
   100% { transform: translate(-100%, 0); }
 }
+
+
+.demo-callout {
+  border: 2px dashed var(--accent-color);
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.demo-shell {
+  border: 2px dashed var(--accent-color);
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.demo-frame {
+  width: 100%;
+  min-height: 760px;
+  border: 1px solid var(--accent-color);
+  background: #000;
+}
