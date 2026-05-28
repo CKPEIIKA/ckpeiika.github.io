@@ -2,8 +2,32 @@ window.FvmEulerCylinderLab = {
   init() {
   'use strict';
 
-  const TAU = 2 * Math.PI;
-  const EPS = 1e-13;
+  const Engine = window.DgEngine;
+  if (!Engine) throw new Error('dg-engine.js must be loaded before fvm.js');
+  const {
+    TAU,
+    EPS,
+    Q,
+    EQ,
+    clamp,
+    wrap01,
+    legendre: P,
+    dLegendre: dP,
+    minmod3,
+    buildBasis,
+    burgersPhysicalFlux,
+    burgersFlux,
+    advectionNormalFlux,
+    idx1: engineIdx1,
+    cellBase2: engineCellBase2,
+    eval1: engineEval1,
+    eval1AtX: engineEval1AtX,
+    eval2Ref: engineEval2Ref,
+    eval2AtXY: engineEval2AtXY,
+    mean2AtXY: engineMean2AtXY,
+    projectInitial1D: engineProjectInitial1D,
+    projectInitial2D: engineProjectInitial2D,
+  } = Engine;
 
   const canvas = document.getElementById('field');
   const ctx = canvas.getContext('2d', { alpha: false });
@@ -58,18 +82,14 @@ window.FvmEulerCylinderLab = {
     tokenEditorMeta: document.getElementById('tokenEditorMeta'),
   };
 
-  const Q = {
-    x: [-0.9061798459386640, -0.5384693101056831, 0, 0.5384693101056831, 0.9061798459386640],
-    w: [0.2369268850561891, 0.4786286704993665, 0.5688888888888889, 0.4786286704993665, 0.2369268850561891],
-  };
-
-  const CASES = ['euler', 'advection', 'burgers'];
+  const CASES = ['euler', 'diamond', 'advection', 'burgers'];
   const DEGREES = [0, 1, 2, 3];
+  const EULER_DEGREES = [0, 1, 2];
   const ALPHAS = [0, 0.25, 0.5, 1.0, 1.5];
   const ALPHASE = [0.65, 1.0, 1.25, 1.6, 2.0];
   const CFLS = [0.08, 0.14, 0.20, 0.32, 0.48, 0.72, 1.00];
   const FLOWS = ['swirl', 'shear', 'uniform'];
-  const INIT2 = ['blob', 'two', 'vortex', 'square'];
+  const INIT2 = ['diamond', 'blob', 'two', 'vortex', 'square'];
   const INIT1 = ['sine', 'riemann', 'bump', 'square'];
   const DISPLAY2 = ['field', 'mean', 'jump', 'modes', 'residual', 'error'];
   const DISPLAY1 = ['field', 'mean', 'jump', 'modes', 'residual', 'history'];
@@ -78,27 +98,27 @@ window.FvmEulerCylinderLab = {
     [28, 18], [40, 26], [56, 36], [72, 46], [92, 58],
   ];
   const MESHE = [
-    [160, 80], [220, 110], [320, 160], [420, 210], [560, 280],
+    [48, 24], [72, 36], [96, 48], [128, 64], [160, 80],
   ];
   const MESH1 = [96, 160, 240, 360, 520];
 
   const sim = {
     running: true,
     caseName: 'euler',
-    p: 0,
+    p: 1,
     meshIndex: 1,
-    nx: 220,
-    ny: 110,
+    nx: 72,
+    ny: 36,
     cfl: 0.35,
     alpha: 1.0,
     flow: 'swirl',
     init: 'blob',
     stab: 'off',
     display: 'schlieren',
-    stepsPerFrame: 2,
+    stepsPerFrame: 1,
     gamma: 1.4,
     mach: 1.5,
-    cylR: 0.22,
+    cylR: 0.10,
     Lx: 4.0,
     Ly: 2.0,
     cylX: 1.0,
@@ -107,6 +127,11 @@ window.FvmEulerCylinderLab = {
     eA: null,
     eR: null,
     solid: null,
+    eFluidCells: null,
+    eVFaces: null,
+    eVFaceFlags: null,
+    eHFaces: null,
+    eHFaceFlags: null,
     posFix: 0,
     t: 0,
     dt: 0,
@@ -127,6 +152,8 @@ window.FvmEulerCylinderLab = {
     scratch: {
       eFlux: new Float64Array(4),
       eGhost: new Float64Array(4),
+      eLeft: new Float64Array(4),
+      eRight: new Float64Array(4),
       rhs2: new Float64Array(1),
       miniBins: new Float64Array(1),
       miniCounts: new Float64Array(1),
@@ -139,70 +166,11 @@ window.FvmEulerCylinderLab = {
   let lastFrame = performance.now();
   let fpsEMA = 60;
 
-  function P(n, x) {
-    if (n === 0) return 1;
-    if (n === 1) return x;
-    if (n === 2) return 0.5 * (3 * x * x - 1);
-    if (n === 3) return 0.5 * (5 * x * x * x - 3 * x);
-    return 0;
-  }
-
-  function dP(n, x) {
-    if (n === 0) return 0;
-    if (n === 1) return 1;
-    if (n === 2) return 3 * x;
-    if (n === 3) return 0.5 * (15 * x * x - 3);
-    return 0;
-  }
-
-  function wrap01(x) {
-    x -= Math.floor(x);
-    return x < 0 ? x + 1 : x;
-  }
-
-  function clamp(x, lo, hi) {
-    return x < lo ? lo : (x > hi ? hi : x);
-  }
-
-  function cycleValue(list, value, dir = 1) {
-    let k = list.indexOf(value);
-    if (k < 0) k = 0;
-    return list[(k + dir + list.length) % list.length];
-  }
-
-  function minmod3(a, b, c) {
-    if (a > 0 && b > 0 && c > 0) return Math.min(a, b, c);
-    if (a < 0 && b < 0 && c < 0) return Math.max(a, b, c);
-    return 0;
-  }
-
-  function buildBasis(p) {
-    const np = p + 1;
-    const phi = [];
-    const dphi = [];
-    for (let q = 0; q < Q.x.length; q++) {
-      phi[q] = new Float64Array(np);
-      dphi[q] = new Float64Array(np);
-      for (let m = 0; m < np; m++) {
-        phi[q][m] = P(m, Q.x[q]);
-        dphi[q][m] = dP(m, Q.x[q]);
-      }
-    }
-    const left = new Float64Array(np);
-    const right = new Float64Array(np);
-    const mass = new Float64Array(np);
-    for (let m = 0; m < np; m++) {
-      left[m] = P(m, -1);
-      right[m] = P(m, 1);
-      mass[m] = 2 / (2 * m + 1);
-    }
-    return { p, np, nm1: np, nm2: np * np, phi, dphi, left, right, mass };
-  }
-
   function isEuler() { return sim.caseName === 'euler'; }
   function is1D() { return sim.caseName === 'burgers'; }
   function is2D() { return !is1D(); }
   function isScalar2D() { return !isEuler() && !is1D(); }
+  function isConstantAdvection() { return sim.caseName === 'advection' || sim.caseName === 'diamond'; }
 
   function applyMeshFromIndex() {
     if (sim.meshIndex < 0) {
@@ -224,13 +192,13 @@ window.FvmEulerCylinderLab = {
   }
 
   function coeffCount() {
-    if (isEuler()) return sim.nx * sim.ny * 4;
+    if (isEuler()) return sim.nx * sim.ny * sim.basis.nm2 * 4;
     const np = sim.p + 1;
     return is1D() ? sim.nx * np : sim.nx * sim.ny * np * np;
   }
 
   function idx1(i, m) {
-    return i * sim.basis.np + m;
+    return engineIdx1(sim, i, m);
   }
 
   function idx2(i, j, a, b) {
@@ -239,69 +207,43 @@ window.FvmEulerCylinderLab = {
   }
 
   function cellBase2(i, j) {
-    return (j * sim.nx + i) * sim.basis.nm2;
+    return engineCellBase2(sim, i, j);
   }
 
   function eval1(U, i, xi) {
-    const np = sim.basis.np;
-    const base = i * np;
-    let s = 0;
-    for (let m = 0; m < np; m++) s += U[base + m] * P(m, xi);
-    return s;
+    return engineEval1(sim, U, i, xi);
   }
 
   function eval1AtX(U, x) {
-    x = wrap01(x);
-    const xx = x * sim.nx;
-    let i = Math.floor(xx);
-    if (i >= sim.nx) i = sim.nx - 1;
-    const xi = 2 * (xx - i) - 1;
-    return eval1(U, i, xi);
+    return engineEval1AtX(sim, U, x);
   }
 
   function eval2Ref(U, base, xi, eta) {
-    const np = sim.basis.np;
-    let s = 0;
-    for (let a = 0; a < np; a++) {
-      const pa = P(a, xi);
-      const row = base + a * np;
-      for (let b = 0; b < np; b++) s += U[row + b] * pa * P(b, eta);
-    }
-    return s;
+    return engineEval2Ref(sim, U, base, xi, eta);
   }
 
   function eval2AtXY(U, x, y) {
-    x = wrap01(x); y = wrap01(y);
-    const gx = x * sim.nx;
-    const gy = y * sim.ny;
-    let i = Math.floor(gx), j = Math.floor(gy);
-    if (i >= sim.nx) i = sim.nx - 1;
-    if (j >= sim.ny) j = sim.ny - 1;
-    const xi = 2 * (gx - i) - 1;
-    const eta = 2 * (gy - j) - 1;
-    return eval2Ref(U, cellBase2(i, j), xi, eta);
+    return engineEval2AtXY(sim, U, x, y);
   }
 
   function mean2AtXY(U, x, y) {
-    x = wrap01(x); y = wrap01(y);
-    const i = Math.min(sim.nx - 1, Math.floor(x * sim.nx));
-    const j = Math.min(sim.ny - 1, Math.floor(y * sim.ny));
-    return U[cellBase2(i, j)];
+    return engineMean2AtXY(sim, U, x, y);
   }
 
-  function fluxB(u) { return 0.5 * u * u; }
-
   function fluxBurgers(um, up) {
-    const c = Math.max(Math.abs(um), Math.abs(up));
-    return 0.5 * (fluxB(um) + fluxB(up)) + 0.5 * sim.alpha * c * (um - up);
+    return burgersFlux(um, up, sim.alpha);
+  }
+
+  function fluxB(u) {
+    return burgersPhysicalFlux(u);
   }
 
   function fluxAdvectionNormal(s, um, up) {
-    return 0.5 * s * (um + up) + 0.5 * sim.alpha * Math.abs(s) * (um - up);
+    return advectionNormalFlux(s, um, up, sim.alpha);
   }
 
   function velocity(x, y) {
-    if (sim.caseName === 'advection') {
+    if (isConstantAdvection()) {
       return [1.0, 0.38];
     }
     if (sim.flow === 'uniform') return [1.0, 0.38];
@@ -311,7 +253,7 @@ window.FvmEulerCylinderLab = {
   }
 
   function maxVelocity() {
-    if (sim.caseName === 'advection' || sim.flow === 'uniform') return Math.hypot(1.0, 0.38);
+    if (isConstantAdvection() || sim.flow === 'uniform') return Math.hypot(1.0, 0.38);
     if (sim.flow === 'shear') return Math.hypot(1.0, 0.52);
     return Math.SQRT2;
   }
@@ -323,6 +265,10 @@ window.FvmEulerCylinderLab = {
   }
 
   function init2D(x, y) {
+    if (sim.init === 'diamond') {
+      const d = Math.abs(periodicDelta(x, 0.50)) + Math.abs(periodicDelta(y, 0.50));
+      return d < 0.24 ? 1.0 : 0.0;
+    }
     if (sim.init === 'two') {
       const r1 = periodicDelta(x, 0.32) ** 2 + periodicDelta(y, 0.52) ** 2;
       const r2 = periodicDelta(x, 0.72) ** 2 + periodicDelta(y, 0.32) ** 2;
@@ -360,57 +306,23 @@ window.FvmEulerCylinderLab = {
   }
 
   function projectInitial1D() {
-    const { np, phi } = sim.basis;
-    const U = sim.U;
-    U.fill(0);
-    for (let i = 0; i < sim.nx; i++) {
-      const x0 = i / sim.nx;
-      const h = 1 / sim.nx;
-      for (let m = 0; m < np; m++) {
-        let integral = 0;
-        for (let q = 0; q < Q.x.length; q++) {
-          const x = x0 + 0.5 * h * (Q.x[q] + 1);
-          integral += Q.w[q] * init1D(wrap01(x)) * phi[q][m];
-        }
-        U[idx1(i, m)] = 0.5 * (2 * m + 1) * integral;
-      }
-    }
+    engineProjectInitial1D(sim, sim.U, init1D);
   }
 
   function projectInitial2D() {
-    const { np, phi } = sim.basis;
-    const U = sim.U;
-    U.fill(0);
-    const hx = 1 / sim.nx, hy = 1 / sim.ny;
-    for (let j = 0; j < sim.ny; j++) {
-      for (let i = 0; i < sim.nx; i++) {
-        const base = cellBase2(i, j);
-        for (let a = 0; a < np; a++) {
-          for (let b = 0; b < np; b++) {
-            let integral = 0;
-            for (let qx = 0; qx < Q.x.length; qx++) {
-              const x = (i + 0.5 * (Q.x[qx] + 1)) * hx;
-              for (let qy = 0; qy < Q.x.length; qy++) {
-                const y = (j + 0.5 * (Q.x[qy] + 1)) * hy;
-                integral += Q.w[qx] * Q.w[qy] * init2D(wrap01(x), wrap01(y)) * phi[qx][a] * phi[qy][b];
-              }
-            }
-            U[base + a * np + b] = 0.25 * (2 * a + 1) * (2 * b + 1) * integral;
-          }
-        }
-      }
-    }
+    engineProjectInitial2D(sim, sim.U, init2D);
   }
 
   // ---------------------------------------------------------------------------
-  // Compressible Euler cylinder case. This is the DG-P0 / finite-volume member
-  // of the same conservative face-flux family used by DG. It solves
+  // Compressible Euler cylinder case. Modal tensor-product DG for conservative
+  // coefficients; P0 is the finite-volume limit of the same weak form. It solves
   //   ∂t U + ∂x F(U) + ∂y G(U) = 0,
   //   U=(ρ,ρu,ρv,E), p=(γ-1)(E-ρ(u²+v²)/2),
   // with local Lax-Friedrichs/Rusanov numerical fluxes.
 
   function eCell(i, j) { return j * sim.nx + i; }
-  function eBase(i, j) { return 4 * (j * sim.nx + i); }
+  function eBase(i, j) { return 4 * (eCell(i, j) * sim.basis.nm2); }
+  function eModeBase(i, j, mode) { return 4 * (eCell(i, j) * sim.basis.nm2 + mode); }
 
   function eFarVars() {
     const g = sim.gamma;
@@ -432,6 +344,57 @@ window.FvmEulerCylinderLab = {
     p = Math.max(1e-8, p);
     const c = Math.sqrt(g * p / rho);
     return [rho, u, v, p, c];
+  }
+
+  function eEvalState(U, i, j, xi, eta, out) {
+    out[0] = 0; out[1] = 0; out[2] = 0; out[3] = 0;
+    const np = sim.basis.np;
+    for (let a = 0; a < np; a++) {
+      const pa = P(a, xi);
+      for (let b = 0; b < np; b++) {
+        const pb = P(b, eta);
+        const w = pa * pb;
+        const k = eModeBase(i, j, a * np + b);
+        out[0] += U[k] * w;
+        out[1] += U[k + 1] * w;
+        out[2] += U[k + 2] * w;
+        out[3] += U[k + 3] * w;
+      }
+    }
+  }
+
+  function eEvalModal(U, base, coeffs, coeffOffset, out) {
+    const nm2 = sim.basis.nm2;
+    if (nm2 === 1) {
+      out[0] = U[base];
+      out[1] = U[base + 1];
+      out[2] = U[base + 2];
+      out[3] = U[base + 3];
+      return;
+    }
+    if (nm2 === 4) {
+      const c0 = coeffs[coeffOffset], c1 = coeffs[coeffOffset + 1];
+      const c2 = coeffs[coeffOffset + 2], c3 = coeffs[coeffOffset + 3];
+      const b1 = base + 4, b2 = base + 8, b3 = base + 12;
+      out[0] = U[base] * c0 + U[b1] * c1 + U[b2] * c2 + U[b3] * c3;
+      out[1] = U[base + 1] * c0 + U[b1 + 1] * c1 + U[b2 + 1] * c2 + U[b3 + 1] * c3;
+      out[2] = U[base + 2] * c0 + U[b1 + 2] * c1 + U[b2 + 2] * c2 + U[b3 + 2] * c3;
+      out[3] = U[base + 3] * c0 + U[b1 + 3] * c1 + U[b2 + 3] * c2 + U[b3 + 3] * c3;
+      return;
+    }
+    let r = 0, ru = 0, rv = 0, E = 0;
+    for (let mode = 0; mode < nm2; mode++) {
+      const c = coeffs[coeffOffset + mode];
+      const k = base + 4 * mode;
+      r += U[k] * c;
+      ru += U[k + 1] * c;
+      rv += U[k + 2] * c;
+      E += U[k + 3] * c;
+    }
+    out[0] = r;
+    out[1] = ru;
+    out[2] = rv;
+    out[3] = E;
   }
 
   function ePressureVars(r, ru, rv, E) {
@@ -510,10 +473,12 @@ window.FvmEulerCylinderLab = {
 
   function initEuler() {
     const n = sim.nx * sim.ny;
-    sim.eU = new Float64Array(4 * n);
-    sim.eA = new Float64Array(4 * n);
-    sim.eR = new Float64Array(4 * n);
+    const nm2 = sim.basis.nm2;
+    sim.eU = new Float64Array(4 * n * nm2);
+    sim.eA = new Float64Array(4 * n * nm2);
+    sim.eR = new Float64Array(4 * n * nm2);
     sim.solid = new Uint8Array(n);
+    const fluid = [];
     const far = eFarVars();
     const dx = sim.Lx / sim.nx, dy = sim.Ly / sim.ny;
     for (let j = 0; j < sim.ny; j++) {
@@ -521,15 +486,69 @@ window.FvmEulerCylinderLab = {
       for (let i = 0; i < sim.nx; i++) {
         const x = (i + 0.5) * dx;
         const c = eCell(i, j);
-        const b = 4 * c;
+        const b = 4 * c * nm2;
         const inside = Math.hypot(x - sim.cylX, y - sim.cylY) < sim.cylR;
         sim.solid[c] = inside ? 1 : 0;
         sim.eU[b] = far[0];
         sim.eU[b + 1] = inside ? 0 : far[1];
         sim.eU[b + 2] = 0;
         sim.eU[b + 3] = far[3];
+        if (!inside) fluid.push(c);
       }
     }
+    sim.eFluidCells = Int32Array.from(fluid);
+    const vFaces = [];
+    const vFlags = [];
+    const vLeftBase = [];
+    const vRightBase = [];
+    const vX = [];
+    const vY = [];
+    for (let j = 0; j < sim.ny; j++) {
+      for (let i = 0; i <= sim.nx; i++) {
+        const hasL = i > 0 && !eSolidAt(i - 1, j);
+        const hasR = i < sim.nx && !eSolidAt(i, j);
+        if (hasL || hasR) {
+          vFaces.push(j * (sim.nx + 1) + i);
+          vFlags.push((hasL ? 1 : 0) | (hasR ? 2 : 0));
+          vLeftBase.push(i > 0 ? eBase(i - 1, j) : -1);
+          vRightBase.push(i < sim.nx ? eBase(i, j) : -1);
+          vX.push(i * dx);
+          vY.push((j + 0.5) * dy);
+        }
+      }
+    }
+    const hFaces = [];
+    const hFlags = [];
+    const hBottomBase = [];
+    const hTopBase = [];
+    const hX = [];
+    const hY = [];
+    for (let j = 0; j <= sim.ny; j++) {
+      for (let i = 0; i < sim.nx; i++) {
+        const hasB = j > 0 && !eSolidAt(i, j - 1);
+        const hasT = j < sim.ny && !eSolidAt(i, j);
+        if (hasB || hasT) {
+          hFaces.push(j * sim.nx + i);
+          hFlags.push((hasB ? 1 : 0) | (hasT ? 2 : 0));
+          hBottomBase.push(j > 0 ? eBase(i, j - 1) : -1);
+          hTopBase.push(j < sim.ny ? eBase(i, j) : -1);
+          hX.push((i + 0.5) * dx);
+          hY.push(j * dy);
+        }
+      }
+    }
+    sim.eVFaces = Int32Array.from(vFaces);
+    sim.eVFaceFlags = Uint8Array.from(vFlags);
+    sim.eVLeftBase = Int32Array.from(vLeftBase);
+    sim.eVRightBase = Int32Array.from(vRightBase);
+    sim.eVX = Float64Array.from(vX);
+    sim.eVY = Float64Array.from(vY);
+    sim.eHFaces = Int32Array.from(hFaces);
+    sim.eHFaceFlags = Uint8Array.from(hFlags);
+    sim.eHBottomBase = Int32Array.from(hBottomBase);
+    sim.eHTopBase = Int32Array.from(hTopBase);
+    sim.eHX = Float64Array.from(hX);
+    sim.eHY = Float64Array.from(hY);
     sim.t = 0;
     sim.dt = 0;
     sim.step = 0;
@@ -541,22 +560,21 @@ window.FvmEulerCylinderLab = {
     const g = sim.gamma;
     const dx = sim.Lx / sim.nx, dy = sim.Ly / sim.ny;
     let lam = 1e-12;
-    for (let j = 0; j < sim.ny; j++) {
-      for (let i = 0; i < sim.nx; i++) {
-        if (eSolidAt(i, j)) continue;
-        const b = eBase(i, j);
+    const fluidCells = sim.eFluidCells || [];
+    const stride = 4 * sim.basis.nm2;
+    for (let ci = 0; ci < fluidCells.length; ci++) {
+        const b = fluidCells[ci] * stride;
         const rho = Math.max(1e-12, U[b]);
         const u = U[b + 1] / rho, v = U[b + 2] / rho;
         const p = Math.max(1e-10, (g - 1) * (U[b + 3] - 0.5 * rho * (u * u + v * v)));
         const c = Math.sqrt(g * p / rho);
         lam = Math.max(lam, (Math.abs(u) + c) / dx + (Math.abs(v) + c) / dy);
-      }
     }
     return lam;
   }
 
   function computeEulerDt() {
-    sim.dt = sim.cfl / eulerMaxLambda(sim.eU);
+    sim.dt = sim.cfl / ((2 * sim.p + 1) * eulerMaxLambda(sim.eU));
     sim.dt = Math.min(sim.dt, 0.02);
     return sim.dt;
   }
@@ -567,87 +585,157 @@ window.FvmEulerCylinderLab = {
     const far = eFarVars();
     const f = sim.scratch.eFlux;
     const gstate = sim.scratch.eGhost;
+    const left = sim.scratch.eLeft;
+    const right = sim.scratch.eRight;
+    const {
+      np, nm2, eVolPhi, eVolDxi, eVolDeta, eVolW,
+      eInvMassUnit, eFaceL, eFaceR, eFaceB, eFaceT,
+    } = sim.basis;
+    const qn = EQ.x.length;
     R.fill(0);
 
-    // Vertical faces: flux in x direction, from left state to right state.
-    for (let j = 0; j < ny; j++) {
-      const y = (j + 0.5) * dy;
-      for (let i = 0; i <= nx; i++) {
-        const hasL = i > 0 && !eSolidAt(i - 1, j);
-        const hasR = i < nx && !eSolidAt(i, j);
-        if (!hasL && !hasR) continue;
-        let rL, ruL, rvL, EL, rR, ruR, rvR, ER;
-        const xFace = i * dx;
-        if (hasL) {
-          const b = eBase(i - 1, j);
-          rL = U[b]; ruL = U[b + 1]; rvL = U[b + 2]; EL = U[b + 3];
-        } else if (i === 0) {
-          [rL, ruL, rvL, EL] = far;
-        } else {
-          const b = eBase(i, j);
-          eReflectVars(U[b], U[b + 1], U[b + 2], U[b + 3], xFace, y, gstate);
-          rL = gstate[0]; ruL = gstate[1]; rvL = gstate[2]; EL = gstate[3];
-        }
-        if (hasR) {
-          const b = eBase(i, j);
-          rR = U[b]; ruR = U[b + 1]; rvR = U[b + 2]; ER = U[b + 3];
-        } else if (i === nx) {
-          // Zero-gradient outflow on the right.
-          rR = rL; ruR = ruL; rvR = rvL; ER = EL;
-        } else {
-          const b = eBase(i - 1, j);
-          eReflectVars(U[b], U[b + 1], U[b + 2], U[b + 3], xFace, y, gstate);
-          rR = gstate[0]; ruR = gstate[1]; rvR = gstate[2]; ER = gstate[3];
-        }
-        eFluxX(rL, ruL, rvL, EL, rR, ruR, rvR, ER, f);
-        if (hasL) {
-          const b = eBase(i - 1, j);
-          R[b] -= f[0] / dx; R[b + 1] -= f[1] / dx; R[b + 2] -= f[2] / dx; R[b + 3] -= f[3] / dx;
-        }
-        if (hasR) {
-          const b = eBase(i, j);
-          R[b] += f[0] / dx; R[b + 1] += f[1] / dx; R[b + 2] += f[2] / dx; R[b + 3] += f[3] / dx;
-        }
+    if (np > 1) {
+      const fluidCells = sim.eFluidCells || [];
+      for (let ci = 0; ci < fluidCells.length; ci++) {
+        const cellBase = fluidCells[ci] * 4 * nm2;
+          for (let q = 0; q < eVolW.length; q++) {
+            const qo = q * nm2;
+            const w = eVolW[q];
+            eEvalModal(U, cellBase, eVolPhi, qo, left);
+            eFluxX(left[0], left[1], left[2], left[3], left[0], left[1], left[2], left[3], f);
+            eFluxY(left[0], left[1], left[2], left[3], left[0], left[1], left[2], left[3], gstate);
+            for (let mode = 0; mode < nm2; mode++) {
+              const rb = cellBase + 4 * mode;
+              const wx = 0.5 * dy * w * eVolDxi[qo + mode];
+              const wy = 0.5 * dx * w * eVolDeta[qo + mode];
+              R[rb] += wx * f[0] + wy * gstate[0];
+              R[rb + 1] += wx * f[1] + wy * gstate[1];
+              R[rb + 2] += wx * f[2] + wy * gstate[2];
+              R[rb + 3] += wx * f[3] + wy * gstate[3];
+            }
+          }
       }
     }
 
-    // Horizontal faces: flux in y direction, from lower state to upper state.
-    for (let j = 0; j <= ny; j++) {
-      const yFace = j * dy;
-      for (let i = 0; i < nx; i++) {
-        const x = (i + 0.5) * dx;
-        const hasB = j > 0 && !eSolidAt(i, j - 1);
-        const hasT = j < ny && !eSolidAt(i, j);
-        if (!hasB && !hasT) continue;
-        let rB, ruB, rvB, EB, rT, ruT, rvT, ET;
-        if (hasB) {
-          const b = eBase(i, j - 1);
-          rB = U[b]; ruB = U[b + 1]; rvB = U[b + 2]; EB = U[b + 3];
-        } else if (j === 0) {
-          [rB, ruB, rvB, EB] = far;
-        } else {
-          const b = eBase(i, j);
-          eReflectVars(U[b], U[b + 1], U[b + 2], U[b + 3], x, yFace, gstate);
-          rB = gstate[0]; ruB = gstate[1]; rvB = gstate[2]; EB = gstate[3];
-        }
-        if (hasT) {
-          const b = eBase(i, j);
-          rT = U[b]; ruT = U[b + 1]; rvT = U[b + 2]; ET = U[b + 3];
-        } else if (j === ny) {
-          [rT, ruT, rvT, ET] = far;
-        } else {
-          const b = eBase(i, j - 1);
-          eReflectVars(U[b], U[b + 1], U[b + 2], U[b + 3], x, yFace, gstate);
-          rT = gstate[0]; ruT = gstate[1]; rvT = gstate[2]; ET = gstate[3];
-        }
-        eFluxY(rB, ruB, rvB, EB, rT, ruT, rvT, ET, f);
-        if (hasB) {
-          const b = eBase(i, j - 1);
-          R[b] -= f[0] / dy; R[b + 1] -= f[1] / dy; R[b + 2] -= f[2] / dy; R[b + 3] -= f[3] / dy;
-        }
-        if (hasT) {
-          const b = eBase(i, j);
-          R[b] += f[0] / dy; R[b + 1] += f[1] / dy; R[b + 2] += f[2] / dy; R[b + 3] += f[3] / dy;
+    const vFaces = sim.eVFaces || [];
+    const vFaceFlags = sim.eVFaceFlags || [];
+    const vLeftBase = sim.eVLeftBase || [];
+    const vRightBase = sim.eVRightBase || [];
+    const vX = sim.eVX || [];
+    const vY = sim.eVY || [];
+    for (let fi = 0; fi < vFaces.length; fi++) {
+      const flags = vFaceFlags[fi];
+      const hasL = (flags & 1) !== 0;
+      const hasR = (flags & 2) !== 0;
+      const leftBase = vLeftBase[fi];
+      const rightBase = vRightBase[fi];
+      const xFace = vX[fi];
+      const y = vY[fi];
+      for (let q = 0; q < qn; q++) {
+          const qo = q * nm2;
+          if (hasL) eEvalModal(U, leftBase, eFaceR, qo, left);
+          else if (leftBase < 0) left.set(far);
+          else {
+            eEvalModal(U, rightBase, eFaceL, qo, right);
+            eReflectVars(right[0], right[1], right[2], right[3], xFace, y, left);
+          }
+          if (hasR) eEvalModal(U, rightBase, eFaceL, qo, right);
+          else if (rightBase < 0) right.set(left);
+          else {
+            eEvalModal(U, leftBase, eFaceR, qo, left);
+            eReflectVars(left[0], left[1], left[2], left[3], xFace, y, right);
+          }
+          eFluxX(left[0], left[1], left[2], left[3], right[0], right[1], right[2], right[3], f);
+          const s = 0.5 * dy * EQ.w[q];
+          if (hasL) {
+            for (let mode = 0; mode < nm2; mode++) {
+              const fac = s * eFaceR[qo + mode];
+              const rb = leftBase + 4 * mode;
+              R[rb] -= fac * f[0];
+              R[rb + 1] -= fac * f[1];
+              R[rb + 2] -= fac * f[2];
+              R[rb + 3] -= fac * f[3];
+            }
+          }
+          if (hasR) {
+            for (let mode = 0; mode < nm2; mode++) {
+              const fac = s * eFaceL[qo + mode];
+              const rb = rightBase + 4 * mode;
+              R[rb] += fac * f[0];
+              R[rb + 1] += fac * f[1];
+              R[rb + 2] += fac * f[2];
+              R[rb + 3] += fac * f[3];
+            }
+          }
+      }
+    }
+
+    const hFaces = sim.eHFaces || [];
+    const hFaceFlags = sim.eHFaceFlags || [];
+    const hBottomBase = sim.eHBottomBase || [];
+    const hTopBase = sim.eHTopBase || [];
+    const hX = sim.eHX || [];
+    const hY = sim.eHY || [];
+    for (let fi = 0; fi < hFaces.length; fi++) {
+      const flags = hFaceFlags[fi];
+      const hasB = (flags & 1) !== 0;
+      const hasT = (flags & 2) !== 0;
+      const bottomBase = hBottomBase[fi];
+      const topBase = hTopBase[fi];
+      const x = hX[fi];
+      const yFace = hY[fi];
+      for (let q = 0; q < qn; q++) {
+          const qo = q * nm2;
+          if (hasB) eEvalModal(U, bottomBase, eFaceT, qo, left);
+          else if (bottomBase < 0) left.set(far);
+          else {
+            eEvalModal(U, topBase, eFaceB, qo, right);
+            eReflectVars(right[0], right[1], right[2], right[3], x, yFace, left);
+          }
+          if (hasT) eEvalModal(U, topBase, eFaceB, qo, right);
+          else if (topBase < 0) right.set(far);
+          else {
+            eEvalModal(U, bottomBase, eFaceT, qo, left);
+            eReflectVars(left[0], left[1], left[2], left[3], x, yFace, right);
+          }
+          eFluxY(left[0], left[1], left[2], left[3], right[0], right[1], right[2], right[3], f);
+          const s = 0.5 * dx * EQ.w[q];
+          if (hasB) {
+            for (let mode = 0; mode < nm2; mode++) {
+              const fac = s * eFaceT[qo + mode];
+              const rb = bottomBase + 4 * mode;
+              R[rb] -= fac * f[0];
+              R[rb + 1] -= fac * f[1];
+              R[rb + 2] -= fac * f[2];
+              R[rb + 3] -= fac * f[3];
+            }
+          }
+          if (hasT) {
+            for (let mode = 0; mode < nm2; mode++) {
+              const fac = s * eFaceB[qo + mode];
+              const rb = topBase + 4 * mode;
+              R[rb] += fac * f[0];
+              R[rb + 1] += fac * f[1];
+              R[rb + 2] += fac * f[2];
+              R[rb + 3] += fac * f[3];
+            }
+          }
+      }
+    }
+
+    const fluidCells = sim.eFluidCells || [];
+    const invCellMass = 1 / (dx * dy);
+    for (let ci = 0; ci < fluidCells.length; ci++) {
+      const cellBase = fluidCells[ci] * 4 * nm2;
+      for (let a = 0; a < np; a++) {
+        for (let b = 0; b < np; b++) {
+          const mode = a * np + b;
+          const fac = eInvMassUnit[mode] * invCellMass;
+          const rb = cellBase + 4 * mode;
+          R[rb] *= fac;
+          R[rb + 1] *= fac;
+          R[rb + 2] *= fac;
+          R[rb + 3] *= fac;
         }
       }
     }
@@ -656,29 +744,50 @@ window.FvmEulerCylinderLab = {
   function eulerPositivityFix(U) {
     const g = sim.gamma;
     const far = eFarVars();
+    const { nm2, eVolPhi } = sim.basis;
+    const probe = sim.scratch.eLeft;
     let fixes = 0;
-    for (let j = 0; j < sim.ny; j++) {
-      for (let i = 0; i < sim.nx; i++) {
-        const c = eCell(i, j);
-        const b = 4 * c;
-        if (sim.solid[c]) {
-          U[b] = far[0]; U[b + 1] = 0; U[b + 2] = 0; U[b + 3] = far[3];
-          continue;
-        }
-        let rho = U[b];
+    const fluidCells = sim.eFluidCells || [];
+    for (let ci = 0; ci < fluidCells.length; ci++) {
+        const base = fluidCells[ci] * 4 * nm2;
+        let rho = U[base];
         if (!Number.isFinite(rho) || rho < 1e-6) {
-          U[b] = far[0]; U[b + 1] = far[1]; U[b + 2] = 0; U[b + 3] = far[3];
+          U[base] = far[0]; U[base + 1] = far[1]; U[base + 2] = 0; U[base + 3] = far[3];
+          for (let mode = 1; mode < nm2; mode++) {
+            const mb = base + 4 * mode;
+            U[mb] = 0; U[mb + 1] = 0; U[mb + 2] = 0; U[mb + 3] = 0;
+          }
           fixes++; continue;
         }
-        const u = U[b + 1] / rho;
-        const v = U[b + 2] / rho;
-        let p = (g - 1) * (U[b + 3] - 0.5 * rho * (u * u + v * v));
+        const u = U[base + 1] / rho;
+        const v = U[base + 2] / rho;
+        let p = (g - 1) * (U[base + 3] - 0.5 * rho * (u * u + v * v));
         if (!Number.isFinite(p) || p < 1e-7) {
           p = 1e-7;
-          U[b + 3] = p / (g - 1) + 0.5 * rho * (u * u + v * v);
+          U[base + 3] = p / (g - 1) + 0.5 * rho * (u * u + v * v);
           fixes++;
         }
-      }
+        let troubled = false;
+        if (nm2 > 1) {
+          for (let q = 0; q < EQ.x.length * EQ.x.length; q++) {
+              eEvalModal(U, base, eVolPhi, q * nm2, probe);
+              const rr = probe[0];
+              const uu = probe[1] / Math.max(1e-12, rr);
+              const vv = probe[2] / Math.max(1e-12, rr);
+              const pp = (g - 1) * (probe[3] - 0.5 * rr * (uu * uu + vv * vv));
+              if (!(rr > 1e-7) || !(pp > 1e-7) || !Number.isFinite(pp)) {
+                troubled = true;
+                break;
+              }
+          }
+        }
+        if (troubled) {
+          for (let mode = 1; mode < nm2; mode++) {
+            const mb = base + 4 * mode;
+            U[mb] = 0; U[mb + 1] = 0; U[mb + 2] = 0; U[mb + 3] = 0;
+          }
+          fixes++;
+        }
     }
     sim.posFix += fixes;
   }
@@ -714,10 +823,13 @@ window.FvmEulerCylinderLab = {
     const dx = sim.Lx / sim.nx, dy = sim.Ly / sim.ny;
     let mass = 0, minR = Infinity, maxR = -Infinity, minP = Infinity, maxP = -Infinity, maxM = 0, fluid = 0;
     let grad = 0, gradN = 0;
-    for (let j = 0; j < sim.ny; j++) {
-      for (let i = 0; i < sim.nx; i++) {
-        if (eSolidAt(i, j)) continue;
-        const b = eBase(i, j);
+    const fluidCells = sim.eFluidCells || [];
+    const stride = 4 * sim.basis.nm2;
+    for (let ci = 0; ci < fluidCells.length; ci++) {
+        const cidx = fluidCells[ci];
+        const i = cidx % sim.nx;
+        const j = (cidx / sim.nx) | 0;
+        const b = cidx * stride;
         const rho = Math.max(1e-12, U[b]);
         const u = U[b + 1] / rho;
         const v = U[b + 2] / rho;
@@ -735,7 +847,6 @@ window.FvmEulerCylinderLab = {
           const gy = (U[eBase(i, jt)] - U[eBase(i, jb)]) / (Math.max(1, jt - jb) * dy);
           grad += gx * gx + gy * gy; gradN++;
         }
-      }
     }
     sim.rhoMin = minR; sim.rhoMax = maxR; sim.pMin = minP; sim.pMax = maxP; sim.machMax = maxM;
     return {
@@ -746,7 +857,7 @@ window.FvmEulerCylinderLab = {
       residual: 0,
       maxAbs: maxM,
       error: NaN,
-      dof: fluid * 4,
+      dof: fluid * sim.basis.nm2 * 4,
       rhoMin: minR, rhoMax: maxR, pMin: minP, pMax: maxP, machMax: maxM,
     };
   }
@@ -818,8 +929,8 @@ window.FvmEulerCylinderLab = {
 
   function drawEuler() {
     const W = canvas.width, H = canvas.height;
-    const rw = Math.min(sim.nx, 900);
-    const rh = Math.min(sim.ny, 520);
+    const rw = Math.min(sim.nx, 360);
+    const rh = Math.min(sim.ny, 180);
     if (off.width !== rw || off.height !== rh) { off.width = rw; off.height = rh; }
     const img = offCtx.createImageData(rw, rh);
     const data = img.data;
@@ -896,8 +1007,10 @@ window.FvmEulerCylinderLab = {
 
   function allocate() {
     applyMeshFromIndex();
+    sim.basis = buildBasis(sim.p);
     if (isEuler()) {
-      sim.p = 0;
+      if (!EULER_DEGREES.includes(sim.p)) sim.p = 1;
+      sim.basis = buildBasis(sim.p);
       if (!DISPLAYE.includes(sim.display)) sim.display = 'schlieren';
       initEuler();
       sim.stats = computeStats();
@@ -906,7 +1019,6 @@ window.FvmEulerCylinderLab = {
       updateUI();
       return;
     }
-    sim.basis = buildBasis(sim.p);
     const n = coeffCount();
     sim.U = new Float64Array(n);
     sim.A = new Float64Array(n);
@@ -925,7 +1037,8 @@ window.FvmEulerCylinderLab = {
       resetHistory();
     } else {
       if (!['off', 'filter'].includes(sim.stab)) sim.stab = 'off';
-      if (!INIT2.includes(sim.init)) sim.init = 'blob';
+      if (sim.caseName === 'diamond') sim.init = 'diamond';
+      else if (!INIT2.includes(sim.init) || sim.init === 'diamond') sim.init = 'blob';
       if (!DISPLAY2.includes(sim.display)) sim.display = 'field';
       projectInitial2D();
       initParticles();
@@ -1666,7 +1779,7 @@ window.FvmEulerCylinderLab = {
 
   function updateUI() {
     ui.caseChip.innerHTML = `case <b>${sim.caseName}</b>`;
-    ui.degreeChip.innerHTML = isEuler() ? `deg <b>P0/FVM</b>` : `deg <b>Q${sim.p}</b>`;
+    ui.degreeChip.innerHTML = isEuler() ? `deg <b>P${sim.p}</b>` : `deg <b>Q${sim.p}</b>`;
     ui.meshChip.innerHTML = is1D() ? `mesh <b>${sim.nx}</b>` : `mesh <b>${sim.nx}×${sim.ny}</b>`;
     if (ui.nxChip) ui.nxChip.innerHTML = `Nx <b>${sim.nx}</b>`;
     if (ui.nyChip) {
@@ -1674,21 +1787,22 @@ window.FvmEulerCylinderLab = {
       ui.nyChip.innerHTML = `Ny <b>${sim.ny}</b>`;
     }
     const fluxName = isEuler() ? 'Rusanov' : (sim.alpha === 0 ? 'central' : (sim.alpha === 1 ? 'upwind' : `LLF`));
+    ui.fluxChip.style.display = isEuler() ? 'none' : '';
     ui.fluxChip.innerHTML = `flux <b>${fluxName}</b>`;
     ui.alphaChip.innerHTML = `α <b>${sim.alpha.toFixed(2)}</b>`;
     ui.cflChip.innerHTML = `CFL <b>${sim.cfl.toFixed(2).replace(/^0/, '')}</b>`;
     if (ui.spfChip) ui.spfChip.innerHTML = `spf <b>${sim.stepsPerFrame}</b>`;
-    ui.initChip.style.display = isEuler() ? 'none' : '';
+    ui.initChip.style.display = isEuler() || sim.caseName === 'diamond' ? 'none' : '';
     ui.initChip.innerHTML = `init <b>${sim.init}</b>`;
-    ui.flowChip.style.display = isEuler() || is1D() ? 'none' : '';
+    ui.flowChip.style.display = isScalar2D() && !isConstantAdvection() ? '' : 'none';
     ui.flowChip.innerHTML = `vel <b>${sim.caseName === 'advection' ? 'constant' : sim.flow}</b>`;
     if (ui.machChip) ui.machChip.innerHTML = `M∞ <b>${sim.mach.toFixed(2)}</b>`;
     if (ui.radiusChip) ui.radiusChip.innerHTML = `R <b>${sim.cylR.toFixed(2).replace(/^0/, '')}</b>`;
     if (ui.gammaChip) ui.gammaChip.innerHTML = `γ <b>${sim.gamma.toFixed(2)}</b>`;
-    ui.limiterChip.innerHTML = isEuler() ? `wall <b>refl</b>` : `${is1D() ? 'lim' : 'stab'} <b>${sim.stab}</b>`;
+    ui.limiterChip.style.display = isEuler() ? 'none' : '';
+    ui.limiterChip.innerHTML = isEuler() ? `stab <b>pos</b>` : `${is1D() ? 'lim' : 'stab'} <b>${sim.stab}</b>`;
     ui.displayChip.innerHTML = `plot <b>${sim.display}</b>`;
     ui.runChip.textContent = sim.running ? 'Ⅱ' : '▶';
-    document.getElementById('spaceRun').textContent = sim.running ? 'Space pause' : 'Space run';
 
     const st = sim.stats || {};
     ui.okChip.textContent = sim.bad ? 'blown' : 'ok';
@@ -1708,7 +1822,7 @@ window.FvmEulerCylinderLab = {
     }
     ui.dofChip.textContent = `dof ${st.dof || '--'}`;
 
-    ui.hudTitle.textContent = isEuler() ? 'Euler cylinder diagnostics' : (is1D() ? 'Burgers diagnostics' : 'DG diagnostics');
+    ui.hudTitle.textContent = isEuler() ? 'DG Euler cylinder diagnostics' : (is1D() ? 'Burgers diagnostics' : 'DG diagnostics');
     ui.hudText.textContent = hudText();
   }
 
@@ -1717,11 +1831,11 @@ window.FvmEulerCylinderLab = {
     if (isEuler()) {
       return [
         `equation   2D compressible Euler`,
-        `scheme     finite volume = DG P0; Rusanov flux α=${sim.alpha}`,
+        `scheme     modal DG P${sim.p}; Rusanov flux α=${sim.alpha}`,
         `domain     ${sim.Lx}×${sim.Ly}; mesh ${sim.nx}×${sim.ny}; cylinder R=${sim.cylR}`,
         `freestream M∞=${sim.mach}, γ=${sim.gamma}; reflective embedded wall`,
         `ranges     ρ [${fmt(st.rhoMin, 3)}, ${fmt(st.rhoMax, 3)}]   p [${fmt(st.pMin, 3)}, ${fmt(st.pMax, 3)}]`,
-        `model      inviscid Euler + stair/immersed wall approximation`,
+        `model      inviscid Euler + embedded reflective wall; positivity fallback`,
       ].join('\n');
     }
     if (is1D()) {
@@ -1747,7 +1861,7 @@ window.FvmEulerCylinderLab = {
       ui.formulaText.innerHTML =
         `<code>∂t U + ∂x F(U) + ∂y G(U) = 0</code><br>` +
         `<code>U=(ρ,ρu,ρv,E)</code>, <code>p=(γ−1)(E−ρ(u²+v²)/2)</code>.<br>` +
-        `Finite volume / DG-P0 update: <code>|K| dU_K/dt + Σ_f |f| F̂_f = 0</code>.<br>` +
+        `Modal DG update: <code>d/dt ∫K U φ dx + Σf ∫f F̂ φ ds = ∫K F(U)·∇φ dx</code>.<br>` +
         `Rusanov face flux: <code>F̂=½(F_L+F_R)−½α a_max(U_R−U_L)</code>.<br>` +
         `Cylinder wall is imposed by a reflected ghost state: normal velocity changes sign, density and pressure are copied.`;
       return;
@@ -1820,86 +1934,69 @@ window.FvmEulerCylinderLab = {
       return;
     }
     if (act === 'case') {
-      sim.caseName = cycleValue(CASES, sim.caseName);
-      sim.meshIndex = Math.max(0, Math.min(1, sim.meshIndex));
-      if (sim.caseName === 'euler') {
-        sim.p = 0;
-        sim.display = 'schlieren';
-      } else if (sim.caseName === 'burgers') {
-        if (!INIT1.includes(sim.init)) sim.init = 'sine';
-        if (!DISPLAY1.includes(sim.display)) sim.display = 'field';
-        if (sim.p < 0) sim.p = 1;
-      } else {
-        if (!INIT2.includes(sim.init)) sim.init = 'blob';
-        if (!DISPLAY2.includes(sim.display)) sim.display = 'field';
-        if (sim.p < 0) sim.p = 1;
-      }
-      allocate();
+      openCasePanel(ui.caseChip);
       return;
     }
     if (act === 'degree') {
-      if (isEuler()) return;
-      sim.p = cycleValue(DEGREES, sim.p);
-      allocate();
+      openOptionPanel('degree', ui.degreeChip);
       return;
     }
     if (act === 'mesh') {
-      sim.meshIndex = (Math.max(0, sim.meshIndex) + 1) % (isEuler() ? MESHE.length : (is1D() ? MESH1.length : MESH2.length));
-      allocate();
+      openOptionPanel('mesh', ui.meshChip);
       return;
     }
     if (act === 'flux') {
-      if (isEuler()) { sim.alpha = cycleValue(ALPHASE, sim.alpha); }
-      else if (sim.alpha === 0) sim.alpha = 1;
-      else if (sim.alpha === 1) sim.alpha = 1.5;
-      else sim.alpha = 0;
-      updateFormula(); updateUI();
+      openOptionPanel('flux', ui.fluxChip);
       return;
     }
     if (act === 'alpha') {
-      sim.alpha = cycleValue(isEuler() ? ALPHASE : ALPHAS, sim.alpha);
-      updateFormula(); updateUI();
+      openOptionPanel('alpha', ui.alphaChip);
       return;
     }
     if (act === 'cfl') {
-      sim.cfl = cycleValue(CFLS, sim.cfl);
-      syncControlsFromSim();
-      updateUI();
+      openTokenEditor('cfl', ui.cflChip);
       return;
     }
     if (act === 'init') {
-      if (isEuler()) return;
-      sim.init = cycleValue(is1D() ? INIT1 : INIT2, sim.init);
-      allocate();
+      if (isEuler() || sim.caseName === 'diamond') return;
+      openOptionPanel('init', ui.initChip);
       return;
     }
     if (act === 'flow') {
       if (isEuler()) {
-        const machs = [0.5, 0.8, 1.2, 1.5, 2.0, 3.0];
-        sim.mach = cycleValue(machs, sim.mach);
-        allocate();
+        openTokenEditor('mach', ui.machChip || ui.flowChip);
         return;
       }
-      if (is1D() || sim.caseName === 'advection') return;
-      sim.flow = cycleValue(FLOWS, sim.flow);
-      allocate();
+      if (is1D() || isConstantAdvection()) return;
+      openOptionPanel('flow', ui.flowChip);
       return;
     }
     if (act === 'limiter') {
       if (isEuler()) return;
-      const list = is1D() ? ['off', 'minmod'] : ['off', 'filter'];
-      if (!list.includes(sim.stab)) sim.stab = list[0];
-      sim.stab = cycleValue(list, sim.stab);
-      updateUI();
+      openOptionPanel('limiter', ui.limiterChip);
       return;
     }
     if (act === 'display') {
-      sim.display = cycleValue(isEuler() ? DISPLAYE : (is1D() ? DISPLAY1 : DISPLAY2), sim.display);
-      if (sim.display === 'error' && sim.caseName !== 'advection') sim.display = 'field';
-      syncPlotSelect();
-      updateUI();
+      openOptionPanel('display', ui.displayChip);
       return;
     }
+  }
+
+  function setCase(name) {
+    if (!CASES.includes(name)) return;
+    sim.caseName = name;
+    sim.meshIndex = Math.max(0, Math.min(1, sim.meshIndex));
+    if (sim.caseName === 'euler') {
+      if (!EULER_DEGREES.includes(sim.p)) sim.p = 1;
+      sim.display = 'schlieren';
+    } else if (sim.caseName === 'burgers') {
+      if (!INIT1.includes(sim.init)) sim.init = 'sine';
+      if (!DISPLAY1.includes(sim.display)) sim.display = 'field';
+    } else {
+      sim.init = sim.caseName === 'diamond' ? 'diamond' : 'blob';
+      if (!DISPLAY2.includes(sim.display)) sim.display = 'field';
+    }
+    allocate();
   }
 
   function currentDisplayList() {
@@ -1944,13 +2041,13 @@ window.FvmEulerCylinderLab = {
 
   function applyTypedControls() {
     sim.meshIndex = -1;
-    const maxNx = isEuler() ? 900 : (is1D() ? 1200 : 360);
+    const maxNx = isEuler() ? 360 : (is1D() ? 1200 : 360);
     sim.nx = readNumInput(ui.nxInput, sim.nx, is1D() ? 16 : 32, maxNx, true);
-    sim.ny = is1D() ? 1 : readNumInput(ui.nyInput, sim.ny, 8, isEuler() ? 500 : 220, true);
+    sim.ny = is1D() ? 1 : readNumInput(ui.nyInput, sim.ny, 8, isEuler() ? 180 : 220, true);
     sim.cfl = readNumInput(ui.cflInput, sim.cfl, 0.01, isEuler() ? 1.2 : 1.4, false);
     sim.stepsPerFrame = readNumInput(ui.spfInput, sim.stepsPerFrame, 1, 50, true);
     sim.mach = readNumInput(ui.machInput, sim.mach, 0.1, 5.0, false);
-    sim.cylR = readNumInput(ui.radiusInput, sim.cylR, 0.04, 0.45, false);
+    sim.cylR = readNumInput(ui.radiusInput, sim.cylR, 0.03, 0.25, false);
     sim.gamma = readNumInput(ui.gammaInput, sim.gamma, 1.05, 1.80, false);
     if (ui.plotSelect && currentDisplayList().includes(ui.plotSelect.value)) sim.display = ui.plotSelect.value;
     allocate();
@@ -1960,13 +2057,13 @@ window.FvmEulerCylinderLab = {
     nx: {
       title: 'Nx cells',
       input: 'nxInput',
-      values: [160, 220, 320, 420, 560],
-      meta: 'Enter applies and resets the mesh',
+      values: [48, 72, 96, 128, 160],
+      meta: 'Enter applies and resets the mesh; higher DG degree should use fewer cells',
     },
     ny: {
       title: 'Ny cells',
       input: 'nyInput',
-      values: [80, 110, 160, 210, 280],
+      values: [24, 36, 48, 64, 80],
       meta: 'Use roughly Nx/2 for the Euler cylinder domain',
     },
     cfl: {
@@ -1990,7 +2087,7 @@ window.FvmEulerCylinderLab = {
     radius: {
       title: 'cylinder radius',
       input: 'radiusInput',
-      values: [0.12, 0.18, 0.22, 0.28, 0.34],
+      values: [0.05, 0.08, 0.10, 0.12, 0.16],
       meta: 'Domain units; changing it resets the case',
     },
     gamma: {
@@ -2001,10 +2098,129 @@ window.FvmEulerCylinderLab = {
     },
   };
 
+  function meshOptions() {
+    const meshes = isEuler() ? MESHE : (is1D() ? MESH1 : MESH2);
+    return meshes.map((mesh, index) => {
+      const label = Array.isArray(mesh) ? `${mesh[0]}×${mesh[1]}` : String(mesh);
+      return { value: String(index), label };
+    });
+  }
+
+  function scalarInitOptions() {
+    return (is1D() ? INIT1 : INIT2.filter(name => name !== 'diamond')).map(name => ({ value: name, label: name }));
+  }
+
+  function optionConfig(key) {
+    if (key === 'degree') {
+      return {
+        title: 'degree',
+        value: String(sim.p),
+        values: (isEuler() ? EULER_DEGREES : DEGREES).map(p => ({ value: String(p), label: isEuler() ? `P${p}` : `Q${p}` })),
+        meta: 'P0/Q0 is the finite-volume limit; higher degree adds modal DG structure',
+      };
+    }
+    if (key === 'mesh') {
+      return {
+        title: 'mesh',
+        value: String(Math.max(0, sim.meshIndex)),
+        values: meshOptions(),
+        meta: 'Mesh presets reset the current case; exact Nx/Ny remain available in the backing controls',
+      };
+    }
+    if (key === 'flux') {
+      return {
+        title: 'flux',
+        value: sim.alpha === 0 ? 'central' : (sim.alpha === 1 ? 'upwind' : 'llf'),
+        values: [
+          { value: 'central', label: 'central' },
+          { value: 'upwind', label: 'upwind' },
+          { value: 'llf', label: 'LLF' },
+        ],
+        meta: 'Scalar numerical flux choice; LLF uses stronger dissipation',
+      };
+    }
+    if (key === 'alpha') {
+      return {
+        title: 'dissipation alpha',
+        value: String(sim.alpha),
+        values: (isEuler() ? ALPHASE : ALPHAS).map(a => ({ value: String(a), label: a.toFixed(2) })),
+        meta: 'Multiplier in the numerical flux dissipation term',
+      };
+    }
+    if (key === 'init') {
+      return {
+        title: 'initial condition',
+        value: sim.init,
+        values: scalarInitOptions(),
+        meta: 'Initial data for scalar DG cases',
+      };
+    }
+    if (key === 'flow') {
+      return {
+        title: 'velocity field',
+        value: sim.flow,
+        values: FLOWS.map(name => ({ value: name, label: name })),
+        meta: 'Velocity field for the variable-coefficient scalar advection case',
+      };
+    }
+    if (key === 'limiter') {
+      const list = is1D() ? ['off', 'minmod'] : ['off', 'filter'];
+      return {
+        title: is1D() ? 'limiter' : 'stabilizer',
+        value: sim.stab,
+        values: list.map(name => ({ value: name, label: name })),
+        meta: is1D() ? 'Mean-preserving troubled-cell limiter for Burgers shocks' : 'Modal filter for scalar 2D cases',
+      };
+    }
+    if (key === 'display') {
+      return {
+        title: 'plot',
+        value: sim.display,
+        values: currentDisplayList().map(name => ({ value: name, label: name })),
+        meta: 'Field shown on the main canvas',
+      };
+    }
+    return null;
+  }
+
+  function applyOptionValue(key, value) {
+    if (key === 'degree') {
+      sim.p = Number(value);
+      allocate();
+    } else if (key === 'mesh') {
+      sim.meshIndex = Number(value) | 0;
+      allocate();
+    } else if (key === 'flux') {
+      sim.alpha = value === 'central' ? 0 : (value === 'upwind' ? 1 : 1.5);
+      updateFormula();
+      updateUI();
+    } else if (key === 'alpha') {
+      sim.alpha = Number(value);
+      updateFormula();
+      updateUI();
+    } else if (key === 'init') {
+      sim.init = value;
+      allocate();
+    } else if (key === 'flow') {
+      sim.flow = value;
+      allocate();
+    } else if (key === 'limiter') {
+      sim.stab = value;
+      updateUI();
+    } else if (key === 'display') {
+      sim.display = value;
+      if (sim.display === 'error' && sim.caseName !== 'advection') sim.display = 'field';
+      syncPlotSelect();
+      updateUI();
+    }
+    hideTokenEditor();
+  }
+
   function hideTokenEditor() {
     if (!ui.tokenEditor) return;
     ui.tokenEditor.classList.remove('visible');
     ui.tokenEditor.setAttribute('aria-hidden', 'true');
+    if (ui.tokenEditorEntry) ui.tokenEditorEntry.style.display = '';
   }
 
   function applyEditorValue(key, value) {
@@ -2035,6 +2251,7 @@ window.FvmEulerCylinderLab = {
     const cfg = editorConfigs[key];
     if (!cfg || !ui.tokenEditor) return;
     const input = ui[cfg.input];
+    ui.tokenEditorEntry.style.display = '';
     ui.tokenEditorTitle.textContent = cfg.title;
     ui.tokenEditorEntry.value = input ? input.value : '';
     ui.tokenEditorEntry.dataset.key = key;
@@ -2064,6 +2281,171 @@ window.FvmEulerCylinderLab = {
     });
   }
 
+  function openOptionPanel(key, anchor) {
+    const cfg = optionConfig(key);
+    if (!cfg || !ui.tokenEditor || !anchor) return;
+    ui.tokenEditorTitle.textContent = cfg.title;
+    ui.tokenEditorEntry.style.display = 'none';
+    ui.tokenEditorEntry.dataset.key = '';
+    ui.tokenEditorItems.innerHTML = '';
+    for (const item of cfg.values) {
+      const li = document.createElement('li');
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'inline-suggestion';
+      button.dataset.optionKey = key;
+      button.dataset.optionValue = item.value;
+      button.textContent = item.label;
+      if (item.value === cfg.value) button.classList.add('selected');
+      li.appendChild(button);
+      ui.tokenEditorItems.appendChild(li);
+    }
+    ui.tokenEditorMeta.textContent = cfg.meta || '';
+    const rect = anchor.getBoundingClientRect();
+    const editorWidth = Math.min(360, window.innerWidth - 24);
+    ui.tokenEditor.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - editorWidth - 8))}px`;
+    ui.tokenEditor.style.top = `${Math.max(54, rect.bottom + 8)}px`;
+    ui.tokenEditor.classList.add('visible');
+    ui.tokenEditor.setAttribute('aria-hidden', 'false');
+  }
+
+  const footerStatusActions = {
+    ok: {
+      title: 'status',
+      meta: 'If this turns bad, reduce CFL, mesh, degree, or reset.',
+      actions: [['edit', 'cfl', 'CFL'], ['act', 'degree', 'degree'], ['edit', 'nx', 'Nx'], ['act', 'reset', 'reset']],
+    },
+    fps: {
+      title: 'performance',
+      meta: 'Most speed comes from fewer cells, lower degree, and fewer solver steps per frame.',
+      actions: [['edit', 'spf', 'spf'], ['act', 'degree', 'degree'], ['edit', 'nx', 'Nx'], ['edit', 'ny', 'Ny']],
+    },
+    step: {
+      title: 'advance',
+      meta: 'Step count changes with run, step, reset, and spf.',
+      actions: [['act', 'run', 'run/pause'], ['act', 'step', 'single step'], ['edit', 'spf', 'spf'], ['act', 'reset', 'reset']],
+    },
+    time: {
+      title: 'physical time',
+      meta: 'Physical time advances by the CFL-limited explicit time step.',
+      actions: [['edit', 'cfl', 'CFL'], ['edit', 'spf', 'spf'], ['act', 'run', 'run/pause'], ['act', 'reset', 'reset']],
+    },
+    dt: {
+      title: 'time step',
+      meta: 'The solver computes dt from CFL, mesh size, degree, and wave speed.',
+      actions: [['edit', 'cfl', 'CFL'], ['act', 'degree', 'degree'], ['edit', 'nx', 'Nx'], ['edit', 'mach', 'Mach']],
+    },
+    mass: {
+      title: 'mass',
+      meta: 'Mass changes should mainly reflect boundary flow in Euler; scalar cases are periodic.',
+      actions: [['edit', 'nx', 'Nx'], ['edit', 'ny', 'Ny'], ['act', 'reset', 'reset'], ['act', 'display', 'plot']],
+    },
+    err: {
+      title: 'error / extrema',
+      meta: 'Use plot, degree, and dissipation to inspect or stabilize the field.',
+      actions: [['act', 'display', 'plot'], ['act', 'degree', 'degree'], ['act', 'alpha', 'alpha'], ['act', 'limiter', 'limiter']],
+    },
+    jump: {
+      title: 'jumps / gradients',
+      meta: 'Large jumps usually need more dissipation, more cells, or a limiter where available.',
+      actions: [['act', 'alpha', 'alpha'], ['act', 'limiter', 'limiter'], ['edit', 'nx', 'Nx'], ['act', 'display', 'plot']],
+    },
+    mode: {
+      title: 'mode / fix',
+      meta: 'High mode content or positivity fixes respond to degree, dissipation, limiter, and CFL.',
+      actions: [['act', 'degree', 'degree'], ['act', 'alpha', 'alpha'], ['edit', 'cfl', 'CFL'], ['act', 'limiter', 'limiter']],
+    },
+    dof: {
+      title: 'degrees of freedom',
+      meta: 'DOF is controlled by mesh size and DG degree.',
+      actions: [['act', 'degree', 'degree'], ['edit', 'nx', 'Nx'], ['edit', 'ny', 'Ny'], ['act', 'mesh', 'mesh']],
+    },
+  };
+
+  const actionAnchors = {
+    degree: 'degreeChip',
+    mesh: 'meshChip',
+    alpha: 'alphaChip',
+    limiter: 'limiterChip',
+    display: 'displayChip',
+    run: 'runChip',
+    reset: null,
+    step: null,
+  };
+
+  const editAnchors = {
+    nx: 'nxChip',
+    ny: 'nyChip',
+    cfl: 'cflChip',
+    spf: 'spfChip',
+    mach: 'machChip',
+    radius: 'radiusChip',
+    gamma: 'gammaChip',
+  };
+
+  function runFooterAction(kind, key, source) {
+    hideTokenEditor();
+    if (kind === 'edit') {
+      const anchor = ui[editAnchors[key]] || source;
+      openTokenEditor(key, anchor);
+      return;
+    }
+    handleAction(key);
+  }
+
+  function openStatusPanel(key, anchor) {
+    const cfg = footerStatusActions[key];
+    if (!cfg || !ui.tokenEditor) return;
+    ui.tokenEditorTitle.textContent = `${cfg.title} ${anchor.textContent.trim()}`;
+    ui.tokenEditorEntry.style.display = 'none';
+    ui.tokenEditorEntry.dataset.key = '';
+    ui.tokenEditorItems.innerHTML = '';
+    for (const [kind, action, label] of cfg.actions) {
+      const li = document.createElement('li');
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'inline-suggestion';
+      button.dataset.statusKind = kind;
+      button.dataset.statusAction = action;
+      button.textContent = label;
+      li.appendChild(button);
+      ui.tokenEditorItems.appendChild(li);
+    }
+    ui.tokenEditorMeta.textContent = cfg.meta;
+    const rect = anchor.getBoundingClientRect();
+    const editorWidth = Math.min(360, window.innerWidth - 24);
+    ui.tokenEditor.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - editorWidth - 8))}px`;
+    ui.tokenEditor.style.top = `${Math.max(54, rect.top - 154)}px`;
+    ui.tokenEditor.classList.add('visible');
+    ui.tokenEditor.setAttribute('aria-hidden', 'false');
+  }
+
+  function openCasePanel(anchor) {
+    if (!ui.tokenEditor) return;
+    ui.tokenEditorTitle.textContent = 'case';
+    ui.tokenEditorEntry.style.display = 'none';
+    ui.tokenEditorEntry.dataset.key = '';
+    ui.tokenEditorItems.innerHTML = '';
+    for (const name of CASES) {
+      const li = document.createElement('li');
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'inline-suggestion';
+      button.dataset.case = name;
+      button.textContent = name;
+      if (name === sim.caseName) button.classList.add('selected');
+      li.appendChild(button);
+      ui.tokenEditorItems.appendChild(li);
+    }
+    ui.tokenEditorMeta.textContent = 'Euler cylinder, diamond, smooth advection, or Burgers';
+    const rect = anchor.getBoundingClientRect();
+    const editorWidth = Math.min(360, window.innerWidth - 24);
+    ui.tokenEditor.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - editorWidth - 8))}px`;
+    ui.tokenEditor.style.top = `${Math.max(54, rect.bottom + 8)}px`;
+    ui.tokenEditor.classList.add('visible');
+    ui.tokenEditor.setAttribute('aria-hidden', 'false');
+  }
+
   function showTipFor(target, ev) {
     if (!ui.tip) return;
     const text = target && target.dataset ? target.dataset.help : '';
@@ -2082,17 +2464,44 @@ window.FvmEulerCylinderLab = {
 
   function bind() {
     document.addEventListener('click', (ev) => {
-      const editTarget = ev.target.closest('[data-edit]');
+      const clickTarget = ev.target instanceof Element ? ev.target : null;
+      const editTarget = clickTarget ? clickTarget.closest('[data-edit]') : null;
       if (editTarget) {
         openTokenEditor(editTarget.dataset.edit, editTarget);
         return;
       }
-      if (ui.tokenEditor && ui.tokenEditor.contains(ev.target)) {
-        const suggestion = ev.target.closest('.inline-suggestion');
+      if (clickTarget && ui.tokenEditor && ui.tokenEditor.contains(clickTarget)) {
+        const optionTarget = clickTarget.closest('[data-option-key]');
+        if (optionTarget) {
+          applyOptionValue(optionTarget.dataset.optionKey, optionTarget.dataset.optionValue);
+          return;
+        }
+        const caseTarget = clickTarget.closest('[data-case]');
+        if (caseTarget) {
+          setCase(caseTarget.dataset.case);
+          hideTokenEditor();
+          return;
+        }
+        const statusAction = clickTarget.closest('[data-status-action]');
+        if (statusAction) {
+          runFooterAction(statusAction.dataset.statusKind, statusAction.dataset.statusAction, statusAction);
+          return;
+        }
+        const suggestion = clickTarget.closest('.inline-suggestion');
         if (suggestion) applyEditorValue(suggestion.dataset.key, suggestion.dataset.value);
         return;
       }
-      const target = ev.target.closest('[data-act]');
+      const caseTarget = clickTarget ? clickTarget.closest('[data-case]') : null;
+      if (caseTarget) {
+        setCase(caseTarget.dataset.case);
+        return;
+      }
+      const statusTarget = clickTarget ? clickTarget.closest('[data-status]') : null;
+      if (statusTarget) {
+        openStatusPanel(statusTarget.dataset.status, statusTarget);
+        return;
+      }
+      const target = clickTarget ? clickTarget.closest('[data-act]') : null;
       if (target) handleAction(target.dataset.act);
       else hideTokenEditor();
     });
@@ -2112,7 +2521,7 @@ window.FvmEulerCylinderLab = {
       el.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') applyTypedControls(); });
     }
     document.addEventListener('mousemove', (ev) => {
-      const target = ev.target.closest('[data-help]');
+      const target = ev.target instanceof Element ? ev.target.closest('[data-help]') : null;
       showTipFor(target, ev);
     });
     document.addEventListener('mouseleave', () => { if (ui.tip) ui.tip.style.display = 'none'; });
@@ -2122,11 +2531,12 @@ window.FvmEulerCylinderLab = {
       if (ev.code === 'Space') { ev.preventDefault(); handleAction('run'); }
       else if (ev.key === 'r' || ev.key === 'R') handleAction('reset');
       else if (ev.key === 's' || ev.key === 'S') handleAction('step');
-      else if (ev.key === '[') { sim.p = Math.max(0, sim.p - 1); allocate(); }
-      else if (ev.key === ']') { sim.p = Math.min(3, sim.p + 1); allocate(); }
-      else if (ev.key === '1') { sim.caseName = 'euler'; sim.display = 'schlieren'; allocate(); }
-      else if (ev.key === '2') { sim.caseName = 'advection'; sim.display = 'field'; allocate(); }
-      else if (ev.key === '3') { sim.caseName = 'burgers'; sim.display = 'field'; allocate(); }
+      else if (ev.key === '[') { sim.p = Math.max(0, sim.p - 1); if (isEuler()) sim.p = Math.min(2, sim.p); allocate(); }
+      else if (ev.key === ']') { sim.p = Math.min(isEuler() ? 2 : 3, sim.p + 1); allocate(); }
+      else if (ev.key === '1') setCase('euler');
+      else if (ev.key === '2') setCase('diamond');
+      else if (ev.key === '3') setCase('advection');
+      else if (ev.key === '4') setCase('burgers');
     });
   }
 

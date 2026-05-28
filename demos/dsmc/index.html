@@ -17,6 +17,8 @@
                 <button id="tok-tl" type="button" class="tok" data-token="tl">TL <b id="ui-tl">300</b></button>
                 <button id="tok-tr" type="button" class="tok" data-token="tr">TR <b id="ui-tr">500</b></button>
                 <button id="tok-wall" type="button" class="tok" data-token="wall">wall <b id="ui-wall">mix α.5</b></button>
+                <button id="tok-rot" type="button" class="tok" data-token="rot">rot <b id="ui-rot">off</b></button>
+                <button id="tok-wall-speed" type="button" class="tok" data-token="uw">Uw <b id="ui-wall-speed">0</b></button>
                 <button id="tok-n" type="button" class="tok" data-token="n">N <b id="ui-n">3200</b></button>
                 <button id="tok-dx" type="button" class="tok" data-token="dx">dx <b id="ui-dx">.20</b></button>
                 <button id="tok-dt" type="button" class="tok" data-token="dt">dt <b id="ui-dt">5.2e-4</b></button>
@@ -28,16 +30,10 @@
 
             <div class="backing-controls" aria-hidden="true">
                 <select id="case-id" title="Case" data-kind="medium">
-                    <option value="monospecies_heat_bath" selected>monospecies_heat_bath</option>
-                    <option value="preset_eq_box">preset_eq_box</option>
-                    <option value="preset_diffuse_wall">preset_diffuse_wall</option>
+                    <option value="preset_eq_box" selected>preset_eq_box</option>
                     <option value="preset_heat_x">preset_heat_x</option>
                     <option value="preset_rot_n2">preset_rot_n2</option>
                     <option value="preset_couette">preset_couette</option>
-                    <option value="preset_bad_dsmc">preset_bad_dsmc</option>
-                    <option value="five_species_heat_bath">five_species_heat_bath</option>
-                    <option value="seven_species_lab_mix">seven_species_lab_mix</option>
-                    <option value="argon_hydrogen_arcs">argon_hydrogen_arcs</option>
                 </select>
                 <input id="species-a" list="species-presets" type="text" inputmode="text" title="Species A" data-kind="species" placeholder="A" />
                 <input id="species-b" list="species-presets" type="text" inputmode="text" title="Species B" data-kind="species" placeholder="B" />
@@ -45,6 +41,7 @@
                 <span id="density-scale-display" class="inline-range-value">0.20</span>
                 <input id="wall-temp-left" list="wall-temp-presets" type="text" inputmode="decimal" data-kind="temp" title="Left wall temperature (K)" value="300" min="50" placeholder="TL" />
                 <input id="wall-temp-right" list="wall-temp-presets" type="text" inputmode="decimal" data-kind="temp" title="Right wall temperature (K)" value="500" min="50" placeholder="TR" />
+                <input id="wall-speed" list="wall-speed-presets" type="text" inputmode="decimal" data-kind="medium" title="Moving wall speed (m/s)" value="0" placeholder="Uw" />
                 <select id="boundary-mode" title="Wall reflection model" data-kind="medium">
                     <option value="specular">reflection</option>
                     <option value="diffuse">diffusion</option>
@@ -125,6 +122,14 @@
                     <option value="500"></option>
                     <option value="600"></option>
                     <option value="800"></option>
+                </datalist>
+                <datalist id="wall-speed-presets">
+                    <option value="0"></option>
+                    <option value="100"></option>
+                    <option value="150"></option>
+                    <option value="250"></option>
+                    <option value="350"></option>
+                    <option value="500"></option>
                 </datalist>
                 <datalist id="species-presets"></datalist>
             <div id="field-help" class="input-help" aria-hidden="true">

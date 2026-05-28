@@ -81,13 +81,21 @@ button, input, select { font: inherit; }
 }
 .chip:active { transform: translateY(1px); }
 .chip b { color: var(--hot2); font-weight: 800; }
+.chip.selected {
+  border-color: rgba(166,255,122,.70);
+  color: var(--hot2);
+  box-shadow: 0 0 18px rgba(166,255,122,.18), inset 0 0 14px rgba(166,255,122,.10);
+}
+.chip.status {
+  cursor: pointer;
+}
 .chip.brand {
   font-weight: 900;
   letter-spacing: .08em;
   color: var(--hot);
   border-color: rgba(68,255,136,.42);
 }
-.chip.run, .chip.action {
+.chip.action {
   margin-left: auto;
   color: #001706;
   background: linear-gradient(180deg, #75ffa2, #2bdc75);
@@ -95,8 +103,14 @@ button, input, select { font: inherit; }
   box-shadow: 0 0 22px rgba(68,255,136,.28);
   font-weight: 900;
 }
-#topbar .help { margin-left: auto; }
-#topbar .help + .run { margin-left: 0; }
+.chip.run {
+  color: #001706;
+  background: linear-gradient(180deg, #75ffa2, #2bdc75);
+  border-color: #9cffb7;
+  box-shadow: 0 0 22px rgba(68,255,136,.28);
+  font-weight: 900;
+  min-width: 42px;
+}
 .chip.small {
   min-height: 31px;
   padding: 5px 12px;
@@ -107,7 +121,6 @@ button, input, select { font: inherit; }
 #fpsChip, #stepChip, #dofChip { color: var(--muted); }
 #timeChip { color: var(--hot); }
 #errChip, #jumpChip, #modeChip { color: var(--bad); }
-#spaceRun { margin-left: auto; }
 .panel {
   position: fixed;
   z-index: 4;
@@ -299,6 +312,11 @@ button, input, select { font: inherit; }
 .inline-suggestion:hover {
   color: var(--hot);
   border-color: var(--line2);
+}
+.inline-suggestion.selected {
+  color: #eaffff;
+  border-color: rgba(69,216,255,.72);
+  background: rgba(69,216,255,.14);
 }
 .help-meta {
   margin-top: 8px !important;

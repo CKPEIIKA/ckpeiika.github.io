@@ -43,6 +43,7 @@
             const densityScaleDisplay = document.getElementById("density-scale-display");
             const wallTempLeftInput = document.getElementById("wall-temp-left");
             const wallTempRightInput = document.getElementById("wall-temp-right");
+            const wallSpeedInput = document.getElementById("wall-speed");
             const wallMixedAccommodationInput = document.getElementById("wall-mixed-accom");
             const wallMixedRow = document.getElementById("wall-mixed-row");
             const cellSizeInput = document.getElementById("cell-size");
@@ -66,6 +67,8 @@
             const tokTlBtn = document.getElementById("tok-tl");
             const tokTrBtn = document.getElementById("tok-tr");
             const tokWallBtn = document.getElementById("tok-wall");
+            const tokRotBtn = document.getElementById("tok-rot");
+            const tokWallSpeedBtn = document.getElementById("tok-wall-speed");
             const tokNBtn = document.getElementById("tok-n");
             const tokDxBtn = document.getElementById("tok-dx");
             const tokDtBtn = document.getElementById("tok-dt");
@@ -80,6 +83,8 @@
             const uiTlEl = document.getElementById("ui-tl");
             const uiTrEl = document.getElementById("ui-tr");
             const uiWallEl = document.getElementById("ui-wall");
+            const uiRotEl = document.getElementById("ui-rot");
+            const uiWallSpeedEl = document.getElementById("ui-wall-speed");
             const uiNEl = document.getElementById("ui-n");
             const uiDxEl = document.getElementById("ui-dx");
             const uiDtEl = document.getElementById("ui-dt");
@@ -160,15 +165,9 @@
             };
             const CASE_LABEL = {
                 preset_eq_box: "eq",
-                preset_diffuse_wall: "wallT",
                 preset_heat_x: "heatX",
                 preset_rot_n2: "rotN2",
                 preset_couette: "Couette",
-                preset_bad_dsmc: "bad",
-                monospecies_heat_bath: "mono",
-                five_species_heat_bath: "5sp",
-                seven_species_lab_mix: "7sp",
-                argon_hydrogen_arcs: "ArH2",
             };
             const WALL_LABEL = {
                 specular: "refl",
@@ -204,22 +203,6 @@
                     plot: "dist",
                     enableRotationalLB: false,
                 },
-                preset_diffuse_wall: {
-                    label: "wallT",
-                    baseCase: "monospecies_heat_bath",
-                    speciesA: "Ar",
-                    speciesB: "Ar",
-                    collisionModel: "vhs",
-                    boundaryMode: "diffuse",
-                    kn: 0.25,
-                    particleCount: 2600,
-                    cellSize: 0.18,
-                    dt: 0.00024,
-                    wallTemps: { left: 260, right: 520 },
-                    wallAccommodation: 0.5,
-                    plot: "moments",
-                    enableRotationalLB: false,
-                },
                 preset_heat_x: {
                     label: "heatX",
                     baseCase: "monospecies_heat_bath",
@@ -242,7 +225,7 @@
                 },
                 preset_rot_n2: {
                     label: "rotN2",
-                    baseCase: "five_species_heat_bath",
+                    baseCase: "n2_heat_bath",
                     speciesA: "N2",
                     speciesB: "N2",
                     collisionModel: "vss",
@@ -276,22 +259,6 @@
                     wallAccommodation: 0.5,
                     wallSpeed: 250.0,
                     plot: "vpt",
-                    enableRotationalLB: false,
-                },
-                preset_bad_dsmc: {
-                    label: "bad",
-                    baseCase: "monospecies_heat_bath",
-                    speciesA: "Ar",
-                    speciesB: "Ar",
-                    collisionModel: "vhs",
-                    boundaryMode: "periodic",
-                    kn: 0.05,
-                    particleCount: 700,
-                    cellSize: 0.80,
-                    dt: 0.00100,
-                    wallTemps: { left: 300, right: 300 },
-                    wallAccommodation: 0.5,
-                    plot: "moments",
                     enableRotationalLB: false,
                 },
             };
@@ -436,6 +403,9 @@
                 return [...new Set([speciesAName, speciesBName])];
             };
 
+            const isRotControlVisible = () => caseSelect.value === "preset_rot_n2";
+            const isWallSpeedControlVisible = () => caseSelect.value === "preset_couette";
+
             const getSpeciesColor = (speciesName) => {
                 if (!speciesName) {
                     return "#94a3b8";
@@ -493,6 +463,9 @@
                     ? preset.initialRotTemperatureK
                     : null;
                 sim.wallSpeed = Number.isFinite(preset.wallSpeed) ? preset.wallSpeed : 0.0;
+                if (wallSpeedInput) {
+                    wallSpeedInput.value = String(sim.wallSpeed);
+                }
                 return true;
             };
 
@@ -616,6 +589,7 @@
                 sim.wallMixedAccommodation = wallAccom;
                 sim.collisionModel = collisionModelSelect.value;
                 sim.renderQuality = renderQualitySelect && renderQualitySelect.value === "fast" ? "fast" : "quality";
+                sim.wallSpeed = wallSpeedInput ? (Number(wallSpeedInput.value) || 0.0) : sim.wallSpeed;
                 cellState.cols = Math.max(8, Math.round(world.width / clamp(cellSize, 0.05, 0.75 * world.width)));
                 updateGridLayout();
                 updatePhysicalScaling();
@@ -853,6 +827,18 @@
                 uiWallEl.textContent = wall === "mixed"
                     ? `${WALL_LABEL[wall] || wall} α${formatCompactDecimal(wallMixedAccommodationInput.value, 2)}`
                     : (WALL_LABEL[wall] || wall);
+                if (tokRotBtn) {
+                    tokRotBtn.style.display = isRotControlVisible() ? "inline-flex" : "none";
+                }
+                if (uiRotEl) {
+                    uiRotEl.textContent = sim.enableRotationalLB ? "on" : "off";
+                }
+                if (tokWallSpeedBtn) {
+                    tokWallSpeedBtn.style.display = isWallSpeedControlVisible() ? "inline-flex" : "none";
+                }
+                if (uiWallSpeedEl) {
+                    uiWallSpeedEl.textContent = String(Math.round(Number(wallSpeedInput?.value ?? sim.wallSpeed) || 0));
+                }
                 uiNEl.textContent = String(Math.round(Number(document.getElementById("particle-count").value) || 0));
                 uiDxEl.textContent = formatCompactDecimal(cellSizeInput.value, 2);
                 uiDtEl.textContent = formatCompactExponential(simDtInput.value, 1);
@@ -982,7 +968,7 @@
                         { value: "", label: "[ / ] tune" },
                     ],
                     withInput: false,
-                    meta: "header edits run, footer judges it | quick cases: eq, heatX, rotN2, Couette, bad",
+                    meta: "header edits run, footer judges it | quick cases: eq, heatX, rotN2, Couette",
                     apply: () => {},
                 });
             };
@@ -1476,11 +1462,12 @@
                         const modelScale = bins / speedSpan;
                         const binWidth = 1 / modelScale;
                         const beta = meanMass / (Dsmc.KB * Math.max(1e-12, translTemp));
+                        const maxwellScale = Math.sqrt(2.0 / Math.PI) * Math.pow(beta, 1.5);
                         const fit = new Float32Array(bins);
                         let maxModel = 1e-12;
                         for (let i = 0; i < bins; i += 1) {
                             const v = (i + 0.5) / modelScale;
-                            const expected = beta * v * Math.exp(-0.5 * beta * v * v) * sampleCount * binWidth;
+                            const expected = maxwellScale * v * v * Math.exp(-0.5 * beta * v * v) * sampleCount * binWidth;
                             fit[i] = expected;
                             if (expected > maxModel) {
                                 maxModel = expected;
@@ -1592,6 +1579,51 @@
             const worldToPixelX = (x) => x * toWorldScaleX;
             const worldToPixelY = (y) => y * toWorldScaleY;
 
+            const temperatureWallColor = (temperatureK, alpha = 0.95) => {
+                const t = clamp01((Number(temperatureK) - 250.0) / 650.0);
+                const cold = [59, 130, 246];
+                const mid = [226, 232, 240];
+                const hot = [248, 113, 113];
+                const mix = t < 0.5
+                    ? [cold, mid, t * 2.0]
+                    : [mid, hot, (t - 0.5) * 2.0];
+                const r = Math.round(mix[0][0] + (mix[1][0] - mix[0][0]) * mix[2]);
+                const g = Math.round(mix[0][1] + (mix[1][1] - mix[0][1]) * mix[2]);
+                const b = Math.round(mix[0][2] + (mix[1][2] - mix[0][2]) * mix[2]);
+                return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+            };
+
+            const drawThermalWalls = () => {
+                const boundaryProfile = getBoundaryProfile();
+                const leftT = Number(wallTempLeftInput.value) || 300;
+                const rightT = Number(wallTempRightInput.value) || 300;
+                const yT = 0.5 * (leftT + rightT);
+                const bgLine = "rgba(2, 6, 23, 0.95)";
+                const line = Math.max(1, Math.round(window.devicePixelRatio || 1));
+                const wallLine = Math.max(2, line + 1);
+                const drawSegment = (x1, y1, x2, y2, color, width) => {
+                    ctx.beginPath();
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = width;
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+                };
+
+                drawSegment(0.5, 0.5, 0.5, canvasHeight - 0.5,
+                    boundaryProfile.xMode === "periodic" ? bgLine : temperatureWallColor(leftT),
+                    boundaryProfile.xMode === "periodic" ? line : wallLine);
+                drawSegment(canvasWidth - 0.5, 0.5, canvasWidth - 0.5, canvasHeight - 0.5,
+                    boundaryProfile.xMode === "periodic" ? bgLine : temperatureWallColor(rightT),
+                    boundaryProfile.xMode === "periodic" ? line : wallLine);
+                drawSegment(0.5, canvasHeight - 0.5, canvasWidth - 0.5, canvasHeight - 0.5,
+                    boundaryProfile.yMode === "periodic" ? bgLine : temperatureWallColor(yT),
+                    boundaryProfile.yMode === "periodic" ? line : wallLine);
+                drawSegment(0.5, 0.5, canvasWidth - 0.5, 0.5,
+                    boundaryProfile.yMode === "periodic" ? bgLine : temperatureWallColor(yT),
+                    boundaryProfile.yMode === "periodic" ? line : wallLine);
+            };
+
             const seed = () => {
                 syncSimInputs();
                 const n = Math.max(250, Math.min(8000, Math.floor(num("particle-count"))));
@@ -1651,12 +1683,35 @@
                         continue;
                     }
                     const sample = Dsmc.maxwellVelocities(indices.length, getSpecies(name).mass_kg, t, [0, 0, 0], simRandom);
+                    let vxMean = 0.0;
+                    let vyMean = 0.0;
+                    let vzMean = 0.0;
+                    for (let i = 0; i < sample.length; i += 1) {
+                        vxMean += sample[i][0];
+                        vyMean += sample[i][1];
+                        vzMean += sample[i][2];
+                    }
+                    const invSampleCount = sample.length > 0 ? 1.0 / sample.length : 0.0;
+                    vxMean *= invSampleCount;
+                    vyMean *= invSampleCount;
+                    vzMean *= invSampleCount;
+                    let thermalVariance = 0.0;
+                    for (let i = 0; i < sample.length; i += 1) {
+                        const cx = sample[i][0] - vxMean;
+                        const cy = sample[i][1] - vyMean;
+                        const cz = sample[i][2] - vzMean;
+                        thermalVariance += cx * cx + cy * cy + cz * cz;
+                    }
+                    const targetVariance = 3.0 * Dsmc.KB * t / getSpecies(name).mass_kg;
+                    const scale = thermalVariance > 0.0
+                        ? Math.sqrt((sample.length * targetVariance) / thermalVariance)
+                        : 1.0;
                     for (let i = 0; i < indices.length; i += 1) {
                         const pIndex = particles[indices[i]];
                         const [vx, vy, vz] = sample[i];
-                        pIndex.vx = vx;
-                        pIndex.vy = vy;
-                        pIndex.vz = vz;
+                        pIndex.vx = (vx - vxMean) * scale;
+                        pIndex.vy = (vy - vyMean) * scale;
+                        pIndex.vz = (vz - vzMean) * scale;
                     }
                 }
                 core.loadParticles(particles);
@@ -1818,9 +1873,6 @@
                 ctx.clearRect(0, 0, canvasWidth, canvasHeight);
                 ctx.fillStyle = "#020617";
                 ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-                ctx.strokeStyle = "rgba(148, 163, 184, 0.72)";
-                ctx.lineWidth = 1.2;
-                ctx.strokeRect(0.5, 0.5, canvasWidth - 1, canvasHeight - 1);
 
                 // Draw cells and occupancy heatmap.
                 const cols = cellState.cols;
@@ -1850,6 +1902,7 @@
                         }
                     }
                 }
+                drawThermalWalls();
 
                 // Draw collision markers.
                 if (!isFastRender) {
@@ -2259,10 +2312,22 @@
                 }
 
                 tokCaseBtn.addEventListener("click", () => {
-                    openSelectPopup(tokCaseBtn, "case", caseSelect, CASE_LABEL, "C/V cycle case | heatX, rotN2, Couette, bad");
+                    openSelectPopup(tokCaseBtn, "case", caseSelect, CASE_LABEL, "C/V cycle case | eq, heatX, rotN2, Couette");
                 });
                 tokGasBtn.addEventListener("click", openGasPopup);
                 tokWallBtn.addEventListener("click", openWallPopup);
+                if (tokRotBtn) {
+                    tokRotBtn.addEventListener("click", () => {
+                        sim.enableRotationalLB = !sim.enableRotationalLB;
+                        syncHudTokens();
+                        setStatus(sim.enableRotationalLB ? "rot on" : "rot off", true);
+                    });
+                }
+                if (tokWallSpeedBtn && wallSpeedInput) {
+                    tokWallSpeedBtn.addEventListener("click", () => {
+                        openValuePopup(tokWallSpeedBtn, "moving wall speed", wallSpeedInput, resolveDatalistValues("wall-speed-presets"), "Couette top/bottom wall speed");
+                    });
+                }
                 tokModelBtn.addEventListener("click", () => {
                     openSelectPopup(tokModelBtn, "collision model", collisionModelSelect, {
                         "hard-sphere": "HS",
@@ -2378,6 +2443,9 @@
             });
             wallTempLeftInput.addEventListener("change", refreshInputs);
             wallTempRightInput.addEventListener("change", refreshInputs);
+            if (wallSpeedInput) {
+                wallSpeedInput.addEventListener("change", refreshInputs);
+            }
             wallMixedAccommodationInput.addEventListener("change", refreshInputs);
             cellSizeInput.addEventListener("change", refreshInputs);
             simDtInput.addEventListener("change", refreshInputs);
@@ -2432,7 +2500,10 @@
                     stepSimulation();
                 });
             });
-            [simDtInput, wallTempLeftInput, wallTempRightInput, wallMixedAccommodationInput, cellSizeInput].forEach((control) => {
+            [simDtInput, wallTempLeftInput, wallTempRightInput, wallSpeedInput, wallMixedAccommodationInput, cellSizeInput].forEach((control) => {
+                if (!control) {
+                    return;
+                }
                 control.addEventListener("change", () => {
                     withTry(syncSimInputs);
                 });

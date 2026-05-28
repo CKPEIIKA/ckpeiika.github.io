@@ -7,7 +7,7 @@ nav_label: DSMC demo
 <p>Небольшая интерактивная демонстрация метода Монте-Карло. </p>
 
 <div class="demo-callout">
-  <p> <code>eq</code> для бесконечного аргонового ящика и <code>wallT</code> для нагрева от диффузных стенок.</p>
+  <p><code>eq</code>, <code>heatX</code>, <code>rotN2</code> и <code>Couette</code> — рабочие режимы для равновесия, теплопроводности, вращательной релаксации и сдвигового течения.</p>
   <p><a class="download-btn" href="/demos/dsmc/">Открыть демо в отдельной вкладке</a></p>
 </div>
 
