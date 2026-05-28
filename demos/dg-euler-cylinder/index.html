@@ -14,15 +14,28 @@
     <button class="chip" id="caseChip" data-act="case" title="Switch equation/case">case <b>euler</b></button>
     <button class="chip" id="degreeChip" data-act="degree" title="Polynomial degree. Euler cylinder is currently DG P0 / FVM; scalar cases use Q0-Q3.">deg <b>P0</b></button>
     <button class="chip" id="meshChip" data-act="mesh" title="Cycle mesh presets. Exact mesh size can be typed below.">mesh <b>220×110</b></button>
+    <button class="chip" id="nxChip" data-edit="nx" title="Edit x-cell count">Nx <b>220</b></button>
+    <button class="chip" id="nyChip" data-edit="ny" title="Edit y-cell count">Ny <b>110</b></button>
     <button class="chip" id="fluxChip" data-act="flux" title="Cycle numerical flux dissipation">flux <b>rusanov</b></button>
     <button class="chip" id="alphaChip" data-act="alpha" title="Flux dissipation multiplier α">α <b>1.00</b></button>
-    <button class="chip" id="cflChip" data-act="cfl" title="Courant number; too large causes explicit instability">CFL <b>.35</b></button>
+    <button class="chip" id="cflChip" data-edit="cfl" title="Edit Courant number">CFL <b>.35</b></button>
+    <button class="chip" id="spfChip" data-edit="spf" title="Edit solver steps per animation frame">spf <b>2</b></button>
     <button class="chip" id="initChip" data-act="init" title="Initial condition for scalar cases">init <b>free</b></button>
     <button class="chip" id="flowChip" data-act="flow" title="Flow setup or velocity field">Mach <b>1.50</b></button>
+    <button class="chip eulerOnly" id="machChip" data-edit="mach" title="Edit freestream Mach number">M∞ <b>1.50</b></button>
+    <button class="chip eulerOnly" id="radiusChip" data-edit="radius" title="Edit cylinder radius">R <b>.22</b></button>
+    <button class="chip eulerOnly" id="gammaChip" data-edit="gamma" title="Edit ratio of specific heats">γ <b>1.40</b></button>
     <button class="chip" id="limiterChip" data-act="limiter" title="Limiter/stabilizer for scalar cases">wall <b>refl</b></button>
     <button class="chip" id="displayChip" data-act="display" title="What field is drawn">plot <b>schlieren</b></button>
     <button class="chip help" data-act="help" title="Help">?</button>
     <button class="chip run" id="runChip" data-act="run">▶</button>
+  </div>
+
+  <div id="tokenEditor" class="input-help" aria-hidden="true">
+    <p id="tokenEditorTitle"></p>
+    <input id="tokenEditorEntry" class="field-help-entry" type="text" inputmode="decimal" />
+    <ol id="tokenEditorItems"></ol>
+    <p id="tokenEditorMeta" class="help-meta"></p>
   </div>
 
   <div id="hud" class="panel">
@@ -31,12 +44,7 @@
     <div id="hudText"></div>
   </div>
 
-  <div id="formula" class="panel">
-    <div class="panel-title">equation / numerical flux</div>
-    <div id="formulaText"></div>
-  </div>
-
-  <div id="configbar" class="bar configbar">
+  <div id="configbar" class="backing-controls" aria-hidden="true">
     <label class="cfg" data-help="Number of cells in x. Larger values show the shock and wake better but cost more.">Nx <input id="nxInput" type="number" min="32" max="900" step="4" value="220"></label>
     <label class="cfg" data-help="Number of cells in y. For Euler cylinder use roughly Nx/2 for the default 4×2 domain.">Ny <input id="nyInput" type="number" min="16" max="500" step="2" value="110"></label>
     <label class="cfg" data-help="Courant number. Explicit schemes require CFL below a stability limit.">CFL <input id="cflInput" type="number" min="0.02" max="1.40" step="0.01" value="0.35"></label>
@@ -73,6 +81,7 @@
       <h1>DG/FVM lab</h1>
       <p><b>Euler cylinder</b> solves the two-dimensional compressible Euler equations with a cell-centred finite-volume scheme, equivalently DG P0. The obstacle is an embedded reflective wall on a Cartesian mesh.</p>
       <p><code>U=(ρ,ρu,ρv,E)</code>, <code>F(U)</code> and <code>G(U)</code> are Euler fluxes, and <code>p=(γ−1)(E−ρ(u²+v²)/2)</code>. The face flux is local Lax–Friedrichs/Rusanov: <code>F̂=½(F_L+F_R)−½α a_max(U_R−U_L)</code>.</p>
+      <div id="formulaText"></div>
       <p><b>Nx, Ny</b> are the mesh dimensions. <b>CFL</b> controls the explicit time step. <b>spf</b> is solver steps per animation frame. <b>M∞</b> is freestream Mach number. <b>R</b> is cylinder radius. <b>γ</b> is the ratio of specific heats.</p>
       <p>The scalar cases remain DG demonstrations: <b>Q0</b> is the finite-volume limit; <b>Q1–Q3</b> add Legendre modes inside each cell; jumps are measured at element faces; Burgers can use a mean-preserving troubled-cell minmod limiter.</p>
       <p>Hotkeys: <b>Space</b> run/pause, <b>R</b> reset, <b>S</b> one step, <b>[</b>/<b>]</b> degree, <b>1</b> Euler cylinder, <b>2</b> scalar advection, <b>3</b> Burgers.</p>

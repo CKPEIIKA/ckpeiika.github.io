@@ -14,11 +14,17 @@ window.FvmEulerCylinderLab = {
     caseChip: document.getElementById('caseChip'),
     degreeChip: document.getElementById('degreeChip'),
     meshChip: document.getElementById('meshChip'),
+    nxChip: document.getElementById('nxChip'),
+    nyChip: document.getElementById('nyChip'),
     fluxChip: document.getElementById('fluxChip'),
     alphaChip: document.getElementById('alphaChip'),
     cflChip: document.getElementById('cflChip'),
+    spfChip: document.getElementById('spfChip'),
     initChip: document.getElementById('initChip'),
     flowChip: document.getElementById('flowChip'),
+    machChip: document.getElementById('machChip'),
+    radiusChip: document.getElementById('radiusChip'),
+    gammaChip: document.getElementById('gammaChip'),
     limiterChip: document.getElementById('limiterChip'),
     displayChip: document.getElementById('displayChip'),
     runChip: document.getElementById('runChip'),
@@ -45,6 +51,11 @@ window.FvmEulerCylinderLab = {
     gammaInput: document.getElementById('gammaInput'),
     plotSelect: document.getElementById('plotSelect'),
     tip: document.getElementById('tip'),
+    tokenEditor: document.getElementById('tokenEditor'),
+    tokenEditorTitle: document.getElementById('tokenEditorTitle'),
+    tokenEditorEntry: document.getElementById('tokenEditorEntry'),
+    tokenEditorItems: document.getElementById('tokenEditorItems'),
+    tokenEditorMeta: document.getElementById('tokenEditorMeta'),
   };
 
   const Q = {
@@ -860,45 +871,6 @@ window.FvmEulerCylinderLab = {
     ctx.restore();
   }
 
-  function drawEquationOverlay() {
-    const W = canvas.width;
-    ctx.save();
-    ctx.font = `${Math.max(12, 13 * dpr)}px ui-monospace, SFMono-Regular, Menlo, monospace`;
-    ctx.textBaseline = 'top';
-    ctx.fillStyle = 'rgba(212,255,226,.80)';
-    ctx.shadowColor = 'rgba(0,0,0,.85)';
-    ctx.shadowBlur = 8 * dpr;
-    const x = 18 * dpr;
-    let y = 62 * dpr;
-    let lines;
-    if (isEuler()) {
-      lines = [
-        '2D Euler: ∂t U + ∂x F(U) + ∂y G(U) = 0',
-        'U=(ρ,ρu,ρv,E),  p=(γ−1)(E−ρ(u²+v²)/2)',
-        'F̂ = ½(F_L+F_R) − ½ α a_max (U_R−U_L)   // Rusanov'
-      ];
-    } else if (is1D()) {
-      lines = [
-        'Burgers DG: u_t + (u²/2)_x = 0',
-        '∫ u_t φ dx − ∫ f(u_h) φ_x dx + f̂_R φ_R − f̂_L φ_L = 0',
-        'Q0 is finite volume; Q1–Q3 are element-local Legendre modes.'
-      ];
-    } else {
-      lines = [
-        'Scalar DG: u_t + ∇·(a u) = 0',
-        '∫_K u_t φ dx − ∫_K (a u_h)·∇φ dx + ∫_∂K f̂_n φ ds = 0',
-        'f̂_n = ½s(u⁻+u⁺)+½α|s|(u⁻−u⁺),  s=a·n'
-      ];
-    }
-    // Keep the overlay readable but not panel-like.
-    const maxw = Math.min(W - 36 * dpr, 890 * dpr);
-    ctx.fillStyle = 'rgba(0,8,3,.34)';
-    ctx.fillRect(x - 8 * dpr, y - 6 * dpr, maxw, (lines.length * 18 + 10) * dpr);
-    ctx.fillStyle = 'rgba(212,255,226,.82)';
-    for (const line of lines) { ctx.fillText(line, x, y); y += 18 * dpr; }
-    ctx.restore();
-  }
-
   function drawMiniEuler(W, H) {
     const st = sim.stats || {};
     const vals = [
@@ -1683,7 +1655,6 @@ window.FvmEulerCylinderLab = {
     if (isEuler()) drawEuler();
     else if (is1D()) drawBurgers();
     else draw2D();
-    drawEquationOverlay();
     drawMini();
   }
 
@@ -1697,14 +1668,23 @@ window.FvmEulerCylinderLab = {
     ui.caseChip.innerHTML = `case <b>${sim.caseName}</b>`;
     ui.degreeChip.innerHTML = isEuler() ? `deg <b>P0/FVM</b>` : `deg <b>Q${sim.p}</b>`;
     ui.meshChip.innerHTML = is1D() ? `mesh <b>${sim.nx}</b>` : `mesh <b>${sim.nx}×${sim.ny}</b>`;
+    if (ui.nxChip) ui.nxChip.innerHTML = `Nx <b>${sim.nx}</b>`;
+    if (ui.nyChip) {
+      ui.nyChip.style.display = is1D() ? 'none' : '';
+      ui.nyChip.innerHTML = `Ny <b>${sim.ny}</b>`;
+    }
     const fluxName = isEuler() ? 'Rusanov' : (sim.alpha === 0 ? 'central' : (sim.alpha === 1 ? 'upwind' : `LLF`));
     ui.fluxChip.innerHTML = `flux <b>${fluxName}</b>`;
     ui.alphaChip.innerHTML = `α <b>${sim.alpha.toFixed(2)}</b>`;
     ui.cflChip.innerHTML = `CFL <b>${sim.cfl.toFixed(2).replace(/^0/, '')}</b>`;
+    if (ui.spfChip) ui.spfChip.innerHTML = `spf <b>${sim.stepsPerFrame}</b>`;
     ui.initChip.style.display = isEuler() ? 'none' : '';
     ui.initChip.innerHTML = `init <b>${sim.init}</b>`;
-    ui.flowChip.style.display = is1D() ? 'none' : '';
-    ui.flowChip.innerHTML = isEuler() ? `M∞ <b>${sim.mach.toFixed(2)}</b>` : `vel <b>${sim.caseName === 'advection' ? 'constant' : sim.flow}</b>`;
+    ui.flowChip.style.display = isEuler() || is1D() ? 'none' : '';
+    ui.flowChip.innerHTML = `vel <b>${sim.caseName === 'advection' ? 'constant' : sim.flow}</b>`;
+    if (ui.machChip) ui.machChip.innerHTML = `M∞ <b>${sim.mach.toFixed(2)}</b>`;
+    if (ui.radiusChip) ui.radiusChip.innerHTML = `R <b>${sim.cylR.toFixed(2).replace(/^0/, '')}</b>`;
+    if (ui.gammaChip) ui.gammaChip.innerHTML = `γ <b>${sim.gamma.toFixed(2)}</b>`;
     ui.limiterChip.innerHTML = isEuler() ? `wall <b>refl</b>` : `${is1D() ? 'lim' : 'stab'} <b>${sim.stab}</b>`;
     ui.displayChip.innerHTML = `plot <b>${sim.display}</b>`;
     ui.runChip.textContent = sim.running ? 'Ⅱ' : '▶';
@@ -1976,6 +1956,114 @@ window.FvmEulerCylinderLab = {
     allocate();
   }
 
+  const editorConfigs = {
+    nx: {
+      title: 'Nx cells',
+      input: 'nxInput',
+      values: [160, 220, 320, 420, 560],
+      meta: 'Enter applies and resets the mesh',
+    },
+    ny: {
+      title: 'Ny cells',
+      input: 'nyInput',
+      values: [80, 110, 160, 210, 280],
+      meta: 'Use roughly Nx/2 for the Euler cylinder domain',
+    },
+    cfl: {
+      title: 'CFL',
+      input: 'cflInput',
+      values: [0.08, 0.14, 0.2, 0.32, 0.48, 0.72, 1.0],
+      meta: 'Explicit time-step Courant number',
+    },
+    spf: {
+      title: 'steps per frame',
+      input: 'spfInput',
+      values: [1, 2, 4, 8, 16, 32],
+      meta: 'Higher values advance physical time faster',
+    },
+    mach: {
+      title: 'freestream Mach',
+      input: 'machInput',
+      values: [0.5, 0.8, 1.2, 1.5, 2.0, 3.0],
+      meta: 'Applies to the Euler cylinder case',
+    },
+    radius: {
+      title: 'cylinder radius',
+      input: 'radiusInput',
+      values: [0.12, 0.18, 0.22, 0.28, 0.34],
+      meta: 'Domain units; changing it resets the case',
+    },
+    gamma: {
+      title: 'ratio of specific heats',
+      input: 'gammaInput',
+      values: [1.2, 1.3, 1.4, 1.5, 1.67],
+      meta: 'γ in p=(γ−1)(E−kinetic energy)',
+    },
+  };
+
+  function hideTokenEditor() {
+    if (!ui.tokenEditor) return;
+    ui.tokenEditor.classList.remove('visible');
+    ui.tokenEditor.setAttribute('aria-hidden', 'true');
+  }
+
+  function applyEditorValue(key, value) {
+    const cfg = editorConfigs[key];
+    if (!cfg) return;
+    const input = ui[cfg.input];
+    if (!input) return;
+    input.value = String(value);
+    if (key === 'cfl') {
+      sim.cfl = readNumInput(input, sim.cfl, 0.01, isEuler() ? 1.2 : 1.4, false);
+      syncControlsFromSim();
+      updateUI();
+      hideTokenEditor();
+      return;
+    }
+    if (key === 'spf') {
+      sim.stepsPerFrame = readNumInput(input, sim.stepsPerFrame, 1, 50, true);
+      syncControlsFromSim();
+      updateUI();
+      hideTokenEditor();
+      return;
+    }
+    applyTypedControls();
+    hideTokenEditor();
+  }
+
+  function openTokenEditor(key, anchor) {
+    const cfg = editorConfigs[key];
+    if (!cfg || !ui.tokenEditor) return;
+    const input = ui[cfg.input];
+    ui.tokenEditorTitle.textContent = cfg.title;
+    ui.tokenEditorEntry.value = input ? input.value : '';
+    ui.tokenEditorEntry.dataset.key = key;
+    ui.tokenEditorMeta.textContent = cfg.meta || '';
+    ui.tokenEditorItems.innerHTML = '';
+    for (const value of cfg.values) {
+      const li = document.createElement('li');
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'inline-suggestion';
+      button.dataset.key = key;
+      button.dataset.value = String(value);
+      button.textContent = String(value);
+      li.appendChild(button);
+      ui.tokenEditorItems.appendChild(li);
+    }
+
+    const rect = anchor.getBoundingClientRect();
+    const editorWidth = Math.min(360, window.innerWidth - 24);
+    ui.tokenEditor.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - editorWidth - 8))}px`;
+    ui.tokenEditor.style.top = `${Math.max(54, rect.bottom + 8)}px`;
+    ui.tokenEditor.classList.add('visible');
+    ui.tokenEditor.setAttribute('aria-hidden', 'false');
+    requestAnimationFrame(() => {
+      ui.tokenEditorEntry.focus();
+      ui.tokenEditorEntry.select();
+    });
+  }
+
   function showTipFor(target, ev) {
     if (!ui.tip) return;
     const text = target && target.dataset ? target.dataset.help : '';
@@ -1994,9 +2082,30 @@ window.FvmEulerCylinderLab = {
 
   function bind() {
     document.addEventListener('click', (ev) => {
+      const editTarget = ev.target.closest('[data-edit]');
+      if (editTarget) {
+        openTokenEditor(editTarget.dataset.edit, editTarget);
+        return;
+      }
+      if (ui.tokenEditor && ui.tokenEditor.contains(ev.target)) {
+        const suggestion = ev.target.closest('.inline-suggestion');
+        if (suggestion) applyEditorValue(suggestion.dataset.key, suggestion.dataset.value);
+        return;
+      }
       const target = ev.target.closest('[data-act]');
       if (target) handleAction(target.dataset.act);
+      else hideTokenEditor();
     });
+    if (ui.tokenEditorEntry) {
+      ui.tokenEditorEntry.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter') {
+          ev.preventDefault();
+          applyEditorValue(ui.tokenEditorEntry.dataset.key, ui.tokenEditorEntry.value);
+        } else if (ev.key === 'Escape') {
+          hideTokenEditor();
+        }
+      });
+    }
     if (ui.plotSelect) ui.plotSelect.addEventListener('change', () => { sim.display = ui.plotSelect.value; updateUI(); });
     for (const el of [ui.nxInput, ui.nyInput, ui.cflInput, ui.spfInput, ui.machInput, ui.radiusInput, ui.gammaInput]) {
       if (!el) continue;
