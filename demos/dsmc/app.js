@@ -18,6 +18,7 @@
             const diagCollisionsEl = document.getElementById("diag-collisions");
             const diagTrotEl = document.getElementById("diag-trot");
             const diagRotEventsEl = document.getElementById("diag-rot-events");
+            const diagWallQEl = document.getElementById("diag-wallq");
             const miniCanvas = document.getElementById("minimap");
             const miniCtx = miniCanvas.getContext("2d", {
                 alpha: false,
@@ -160,6 +161,10 @@
             const CASE_LABEL = {
                 preset_eq_box: "eq",
                 preset_diffuse_wall: "wallT",
+                preset_heat_x: "heatX",
+                preset_rot_n2: "rotN2",
+                preset_couette: "Couette",
+                preset_bad_dsmc: "bad",
                 monospecies_heat_bath: "mono",
                 five_species_heat_bath: "5sp",
                 seven_species_lab_mix: "7sp",
@@ -211,6 +216,80 @@
                     cellSize: 0.18,
                     dt: 0.00024,
                     wallTemps: { left: 260, right: 520 },
+                    wallAccommodation: 0.5,
+                    plot: "moments",
+                    enableRotationalLB: false,
+                },
+                preset_heat_x: {
+                    label: "heatX",
+                    baseCase: "monospecies_heat_bath",
+                    speciesA: "Ar",
+                    speciesB: "Ar",
+                    collisionModel: "vhs",
+                    boundaryMode: "diffuse",
+                    boundaryProfile: {
+                        xMode: "diffuse",
+                        yMode: "periodic",
+                    },
+                    kn: 0.20,
+                    particleCount: 4000,
+                    cellSize: 0.20,
+                    dt: 0.00020,
+                    wallTemps: { left: 300, right: 800 },
+                    wallAccommodation: 0.5,
+                    plot: "vpt",
+                    enableRotationalLB: false,
+                },
+                preset_rot_n2: {
+                    label: "rotN2",
+                    baseCase: "five_species_heat_bath",
+                    speciesA: "N2",
+                    speciesB: "N2",
+                    collisionModel: "vss",
+                    boundaryMode: "periodic",
+                    kn: 0.20,
+                    particleCount: 3200,
+                    cellSize: 0.20,
+                    dt: 0.00020,
+                    wallTemps: { left: 800, right: 800 },
+                    wallAccommodation: 0.5,
+                    plot: "moments",
+                    enableRotationalLB: true,
+                    initialRotTemperatureK: 100.0,
+                },
+                preset_couette: {
+                    label: "Couette",
+                    baseCase: "monospecies_heat_bath",
+                    speciesA: "Ar",
+                    speciesB: "Ar",
+                    collisionModel: "vhs",
+                    boundaryMode: "diffuse",
+                    boundaryProfile: {
+                        xMode: "periodic",
+                        yMode: "diffuse",
+                    },
+                    kn: 0.15,
+                    particleCount: 4000,
+                    cellSize: 0.20,
+                    dt: 0.00015,
+                    wallTemps: { left: 400, right: 400 },
+                    wallAccommodation: 0.5,
+                    wallSpeed: 250.0,
+                    plot: "vpt",
+                    enableRotationalLB: false,
+                },
+                preset_bad_dsmc: {
+                    label: "bad",
+                    baseCase: "monospecies_heat_bath",
+                    speciesA: "Ar",
+                    speciesB: "Ar",
+                    collisionModel: "vhs",
+                    boundaryMode: "periodic",
+                    kn: 0.05,
+                    particleCount: 700,
+                    cellSize: 0.80,
+                    dt: 0.00100,
+                    wallTemps: { left: 300, right: 300 },
                     wallAccommodation: 0.5,
                     plot: "moments",
                     enableRotationalLB: false,
@@ -267,6 +346,14 @@
                 rotEventsLastStep: 0,
                 stepCount: 0,
                 enableRotationalLB: false,
+                initialRotTemperatureK: null,
+                wallSpeed: 0.0,
+                wallEnergy: {
+                    left: 0.0,
+                    right: 0.0,
+                    bottom: 0.0,
+                    top: 0.0,
+                },
                 metrics: {
                     fps: 0,
                     translTemp: NaN,
@@ -373,6 +460,13 @@
             };
 
             const getBoundaryProfile = () => {
+                const preset = getQuickPreset();
+                if (preset && preset.boundaryProfile) {
+                    return {
+                        xMode: preset.boundaryProfile.xMode || sim.boundaryMode,
+                        yMode: preset.boundaryProfile.yMode || sim.boundaryMode,
+                    };
+                }
                 return { xMode: sim.boundaryMode, yMode: sim.boundaryMode };
             };
 
@@ -385,15 +479,20 @@
                 speciesBInput.value = preset.speciesB;
                 collisionModelSelect.value = preset.collisionModel;
                 boundaryModeSelect.value = preset.boundaryMode;
+                sim.boundaryMode = preset.boundaryMode;
                 densityScaleInput.value = preset.kn.toFixed(2);
-                wallTempLeftInput.value = String(preset.wallTemps.left);
-                wallTempRightInput.value = String(preset.wallTemps.right);
+                wallTempLeftInput.value = String(preset.wallTemps?.left ?? preset.wallTempLeft ?? 300);
+                wallTempRightInput.value = String(preset.wallTemps?.right ?? preset.wallTempRight ?? 300);
                 wallMixedAccommodationInput.value = String(preset.wallAccommodation);
                 document.getElementById("particle-count").value = String(preset.particleCount);
                 cellSizeInput.value = preset.cellSize.toFixed(2);
                 simDtInput.value = preset.dt.toFixed(5);
                 miniViewSelect.value = preset.plot;
                 sim.enableRotationalLB = preset.enableRotationalLB === true;
+                sim.initialRotTemperatureK = Number.isFinite(preset.initialRotTemperatureK)
+                    ? preset.initialRotTemperatureK
+                    : null;
+                sim.wallSpeed = Number.isFinite(preset.wallSpeed) ? preset.wallSpeed : 0.0;
                 return true;
             };
 
@@ -405,12 +504,13 @@
                 collisionLines.length = 0;
             };
 
-            const addCollisionLine = (x1, y1, x2, y2) => {
+            const addCollisionLine = (x1, y1, x2, y2, marker = "normal") => {
                 collisionLines.push({
                     x1,
                     y1,
                     x2,
                     y2,
+                    marker,
                     life: 1,
                 });
                 if (collisionLines.length > maxCollisionLines) {
@@ -882,7 +982,7 @@
                         { value: "", label: "[ / ] tune" },
                     ],
                     withInput: false,
-                    meta: "header edits run, footer judges it | quick cases: eq, wallT",
+                    meta: "header edits run, footer judges it | quick cases: eq, heatX, rotN2, Couette, bad",
                     apply: () => {},
                 });
             };
@@ -971,6 +1071,15 @@
                             "if rot stays zero for Ar-only runs, that is expected",
                         ]);
                         meta = "rot counts Larsen-Borgnakke rotational exchanges in the last step";
+                        break;
+                    case "wallq":
+                        title = `qL/R ${sim.wallEnergy.left.toExponential(1)}/${sim.wallEnergy.right.toExponential(1)}`;
+                        items = buildAdviceItems([
+                            "diffuse walls exchange kinetic energy with the gas",
+                            "heatX should show opposite signs at left and right walls",
+                            "periodic and specular walls should leave qwall near zero",
+                        ]);
+                        meta = "wall energy is cumulative and uncalibrated";
                         break;
                     case "dE":
                         title = `dE/E0 ${Number.isFinite(metric.deltaE) ? metric.deltaE.toFixed(3) : "--"}`;
@@ -1489,6 +1598,7 @@
                 const wallLeft = num("wall-temp-left");
                 const wallRight = num("wall-temp-right");
                 const t = (wallLeft + wallRight) * 0.5;
+                const boundaryProfile = getBoundaryProfile();
                 core.setSeed(((Date.now() >>> 0) ^ ((performance.now() * 1000) >>> 0) ^ ((Math.random() * 0xffffffff) >>> 0)) >>> 0);
                 if (!sim.loadedCase) {
                     throw new Error("load a case first");
@@ -1503,16 +1613,17 @@
                 }
                 const particles = new Array(n);
 
-                const isPeriodic = sim.boundaryMode === "periodic";
-                const boundaryX = isPeriodic ? 0.0 : wallPadX;
-                const boundaryY = isPeriodic ? 0.0 : wallPadY;
+                const boundaryX = boundaryProfile.xMode === "periodic" ? 0.0 : wallPadX;
+                const boundaryY = boundaryProfile.yMode === "periodic" ? 0.0 : wallPadY;
                 for (let i = 0; i < n; i += 1) {
                     const species = names[(simRandom() * names.length) | 0];
                     const speciesData = getSpecies(species);
                     const x = simRandom() * (world.width - 2 * boundaryX) + boundaryX;
                     const y = simRandom() * (world.height - 2 * boundaryY) + boundaryY;
                     const rotDof = Math.max(0, Number(speciesData.rotational_degrees_of_freedom || 0));
-                    const initialRotTemperature = t;
+                    const initialRotTemperature = Number.isFinite(sim.initialRotTemperatureK)
+                        ? sim.initialRotTemperatureK
+                        : t;
 
                     if (!indexBySpecies[species]) {
                         indexBySpecies[species] = [];
@@ -1559,6 +1670,10 @@
                 sim.majorantViolationsLastStep = 0;
                 sim.rotEventsLastStep = 0;
                 sim.metrics.ntcOverflow = false;
+                sim.wallEnergy.left = 0.0;
+                sim.wallEnergy.right = 0.0;
+                sim.wallEnergy.bottom = 0.0;
+                sim.wallEnergy.top = 0.0;
                 sim.stepCount = 0;
                 stepEl.textContent = "step 0";
                 syncHudTokens();
@@ -1593,13 +1708,29 @@
             };
 
             const getBoundaryWallVelocity = (normal, axis) => {
+                if (axis === "y" && Math.abs(sim.wallSpeed) > 0.0) {
+                    return [
+                        normal[1] < 0.0 ? sim.wallSpeed : -sim.wallSpeed,
+                        0.0,
+                        0.0,
+                    ];
+                }
                 return [0, 0, 0];
+            };
+
+            const kineticEnergy = (mass, velocity) => {
+                return 0.5 * mass * (
+                    velocity[0] * velocity[0]
+                    + velocity[1] * velocity[1]
+                    + velocity[2] * velocity[2]
+                );
             };
 
             const sampleBoundaryVelocity = (mass, velocity, normal, axis = "x") => {
                 const mode = sim.boundaryMode;
                 const useDiffuse = mode === "diffuse" || (mode === "mixed" && simRandom() < sim.wallMixedAccommodation);
                 if (useDiffuse) {
+                    const beforeE = kineticEnergy(mass, velocity);
                     const wallTemperature = getBoundaryWallTemperature(normal, axis);
                     const sampled = Dsmc.diffuseWallVelocity(
                         wallTemperature,
@@ -1621,6 +1752,10 @@
                             sampled[1] = -Math.abs(sampled[1]);
                         }
                     }
+                    const wallKey = axis === "x"
+                        ? (normal[0] > 0.0 ? "left" : "right")
+                        : (normal[1] > 0.0 ? "bottom" : "top");
+                    sim.wallEnergy[wallKey] += kineticEnergy(mass, sampled) - beforeE;
                     return sampled;
                 }
                 return Dsmc.specularReflection(velocity, normal);
@@ -1666,7 +1801,7 @@
                     collisionModel: sim.collisionModel,
                     enableRotationalLB: sim.enableRotationalLB === true,
                     random: simRandom,
-                    collisionLineProbability: 0.25,
+                    collisionLineProbability: sim.renderQuality === "fast" ? 0.0 : 0.25,
                     onCollision: addCollisionLine,
                 });
                 sim.collisionsThisFrame = result.collided;
@@ -1724,8 +1859,16 @@
                         if (alpha <= 0) {
                             continue;
                         }
-                        ctx.strokeStyle = `rgba(248, 113, 113, ${alpha.toFixed(3)})`;
-                        ctx.lineWidth = 1.8;
+                        if (mark.marker === "hot") {
+                            ctx.strokeStyle = `rgba(251, 191, 36, ${alpha.toFixed(3)})`;
+                            ctx.lineWidth = 2.4;
+                        } else if (mark.marker === "rot") {
+                            ctx.strokeStyle = `rgba(167, 139, 250, ${alpha.toFixed(3)})`;
+                            ctx.lineWidth = 2.0;
+                        } else {
+                            ctx.strokeStyle = `rgba(248, 113, 113, ${alpha.toFixed(3)})`;
+                            ctx.lineWidth = 1.8;
+                        }
                         ctx.beginPath();
                         ctx.moveTo(worldToPixelX(mark.x1), worldToPixelY(mark.y1));
                         ctx.lineTo(worldToPixelX(mark.x2), worldToPixelY(mark.y2));
@@ -2020,6 +2163,12 @@
                     diagRotEventsEl.textContent = `rot ${sim.rotEventsLastStep || 0}`;
                     diagRotEventsEl.className = `tok ${(sim.rotEventsLastStep || 0) > 0 ? "good" : "neutral"}`;
                 }
+                if (diagWallQEl) {
+                    diagWallQEl.textContent = `qL/R ${sim.wallEnergy.left.toExponential(1)}/${sim.wallEnergy.right.toExponential(1)}`;
+                    diagWallQEl.className = (Math.abs(sim.wallEnergy.left) > 0.0 || Math.abs(sim.wallEnergy.right) > 0.0)
+                        ? "tok good"
+                        : "tok neutral";
+                }
                 stepEl.textContent = `step ${sim.stepCount}`;
 
                 if (trackStats) {
@@ -2110,7 +2259,7 @@
                 }
 
                 tokCaseBtn.addEventListener("click", () => {
-                    openSelectPopup(tokCaseBtn, "case", caseSelect, CASE_LABEL, "C/V cycle case | eq periodic Ar box | wallT diffuse wall Ar");
+                    openSelectPopup(tokCaseBtn, "case", caseSelect, CASE_LABEL, "C/V cycle case | heatX, rotN2, Couette, bad");
                 });
                 tokGasBtn.addEventListener("click", openGasPopup);
                 tokWallBtn.addEventListener("click", openWallPopup);
@@ -2139,6 +2288,7 @@
                     [diagCollisionsEl, "col"],
                     [diagTrotEl, "trot"],
                     [diagRotEventsEl, "rot"],
+                    [diagWallQEl, "wallq"],
                     [deltaEEl, "dE"],
                     [deltaPEl, "dP"],
                     [validityDxOverLambdaEl, "dxl"],
@@ -2437,13 +2587,15 @@
             boundaryModeSelect.addEventListener("change", (ev) => {
                 sim.boundaryMode = ev.target.value;
                 updateBoundaryRowState();
-                const isPeriodic = sim.boundaryMode === "periodic";
+                const boundaryProfile = getBoundaryProfile();
                 core.applyBoundaries({
                     boundaryMode: sim.boundaryMode,
-                    left: isPeriodic ? 0.0 : wallPadX,
-                    right: isPeriodic ? world.width : world.width - wallPadX,
-                    bottom: isPeriodic ? 0.0 : wallPadY,
-                    top: isPeriodic ? world.height : world.height - wallPadY,
+                    xMode: boundaryProfile.xMode,
+                    yMode: boundaryProfile.yMode,
+                    left: boundaryProfile.xMode === "periodic" ? 0.0 : wallPadX,
+                    right: boundaryProfile.xMode === "periodic" ? world.width : world.width - wallPadX,
+                    bottom: boundaryProfile.yMode === "periodic" ? 0.0 : wallPadY,
+                    top: boundaryProfile.yMode === "periodic" ? world.height : world.height - wallPadY,
                     wrapCoord,
                     reflectVelocity: (_index, normal, axis, mass, velocity) => sampleBoundaryVelocity(mass, velocity, normal, axis),
                 });

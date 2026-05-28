@@ -334,6 +334,9 @@
             this.vibrational_dissociation_temperatures_k = Array.from(vibrational_dissociation_temperatures_k, Number);
             this.vibrational_z_ref = Array.from(vibrational_z_ref, Number);
             this.vibrational_z_ref_temperature_k = Array.from(vibrational_z_ref_temperature_k, Number);
+            if (!(this.mass_kg > 0.0) || !(this.diameter_m > 0.0)) {
+                fail(`invalid species data for ${this.name}`);
+            }
             Object.freeze(this);
         }
     }
@@ -950,20 +953,27 @@
         collisionEnergyJ,
         viscosityTemperatureExponent,
     ) {
-        const iMax = Number(maximumLevel);
+        const iMax = Math.floor(Number(maximumLevel));
         const theta = Number(characteristicTemperatureK);
-        const collisionEnergy = Number(collisionEnergyJ);
+        const energy = Number(collisionEnergyJ);
         const omega = Number(viscosityTemperatureExponent);
-        if (!Number.isInteger(iMax) || iMax < 0 || !(theta > 0.0) || !(collisionEnergy > 0.0)) {
-            fail("maximum level, theta, and collision energy are invalid");
+        if (!(iMax >= 0) || !(theta > 0.0) || !(energy > 0.0) || !Number.isFinite(omega)) {
+            fail("invalid vibrational LB inputs");
         }
-        const weights = new Array(iMax + 1);
+
+        const weights = new Array(iMax + 1).fill(0.0);
+        let total = 0.0;
         for (let i = 0; i <= iMax; i += 1) {
-            const accessible = Math.max(1.0 - ((i * KB * theta) / collisionEnergy), 0.0);
-            weights[i] = Math.pow(accessible, 1.5 - omega);
+            const levelEnergy = i * KB * theta;
+            const accessible = 1.0 - levelEnergy / energy;
+            if (accessible > 0.0) {
+                const weight = accessible ** (1.5 - omega);
+                weights[i] = weight;
+                total += weight;
+            }
         }
-        const total = weights.reduce((acc, value) => acc + value, 0.0);
-        if (!(total > 0.0)) {
+
+        if (!(total > 0.0) || !Number.isFinite(total)) {
             fail("no accessible vibrational levels");
         }
         return weights.map((w) => w / total);
@@ -1048,10 +1058,10 @@
                 override.rotational_relaxation_collision_number
                 ?? row.rotational_relaxation_collision_number
                 ?? null,
-            vibrational_characteristic_temperatures_k: row.vibrational_characteristic_temperatures_k,
-            vibrational_dissociation_temperatures_k: row.vibrational_dissociation_temperatures_k,
-            vibrational_z_ref: row.vibrational_z_ref,
-            vibrational_z_ref_temperature_k: row.vibrational_z_ref_temperature_k,
+            vibrational_characteristic_temperatures_k: row.vibrational_characteristic_temperatures_k || [],
+            vibrational_dissociation_temperatures_k: row.vibrational_dissociation_temperatures_k || [],
+            vibrational_z_ref: row.vibrational_z_ref || [],
+            vibrational_z_ref_temperature_k: row.vibrational_z_ref_temperature_k || [],
         });
     }
 

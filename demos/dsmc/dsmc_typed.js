@@ -569,7 +569,14 @@
 
                     const pairMeta = state.pairCache[state.speciesIndex[ia] * state.speciesMeta.length + state.speciesIndex[ib]];
                     const sigmaTc = sigmaTCr(pairMeta, relSpeed);
-                    const acceptance = Dsmc.ntcAcceptsCollision(sigmaTc, sigmaMajorant, rand());
+                    const rawAcceptance = Dsmc.ntcAcceptsCollision(sigmaTc, sigmaMajorant, rand());
+                    const acceptance = typeof rawAcceptance === "boolean"
+                        ? {
+                            accepted: rawAcceptance,
+                            majorantViolated: sigmaTc > sigmaMajorant,
+                            ratio: sigmaTc / sigmaMajorant,
+                        }
+                        : rawAcceptance;
                     if (acceptance.majorantViolated) {
                         majorantViolations += 1;
                         sigmaMajorant = Math.max(sigmaMajorant, sigmaTc * ntcMargin);
@@ -628,7 +635,9 @@
                     collided += 1;
 
                     if (onCollision && rand() < collisionLineProbability) {
-                        onCollision(state.x[ia], state.y[ia], state.x[ib], state.y[ib], didRot);
+                        const reactiveThresholdJ = 2.0 * Dsmc.KB * 10000.0;
+                        const hot = 0.5 * mu * relSpeed * relSpeed > reactiveThresholdJ;
+                        onCollision(state.x[ia], state.y[ia], state.x[ib], state.y[ib], didRot ? "rot" : (hot ? "hot" : "normal"));
                     }
                 }
                 cells.sigmaMajorants[ci] = sigmaMajorant;
