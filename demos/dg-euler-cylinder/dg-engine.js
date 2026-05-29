@@ -348,18 +348,26 @@
       const rho = Math.max(1e-12, U[0]);
       const u = U[1] / rho;
       const v = U[2] / rho;
-      const p = Math.max(1e-12, (gamma - 1) * (U[3] - 0.5 * rho * (u * u + v * v)));
+      const p = this.pressureSafe(U, gamma);
       out[0] = rho;
       out[1] = u;
       out[2] = v;
       out[3] = p;
       out[4] = Math.sqrt(gamma * p / rho);
     },
-    pressure(U, gamma) {
-      const rho = Math.max(1e-12, U[0]);
+    pressureRaw(U, gamma) {
+      const rho = U[0];
+      if (!(rho > 0)) return -Infinity;
       const u = U[1] / rho;
       const v = U[2] / rho;
-      return Math.max(1e-12, (gamma - 1) * (U[3] - 0.5 * rho * (u * u + v * v)));
+      return (gamma - 1) * (U[3] - 0.5 * rho * (u * u + v * v));
+    },
+    pressureSafe(U, gamma) {
+      if (!(U[0] > 0)) return 1e-12;
+      return Math.max(1e-12, this.pressureRaw(U, gamma));
+    },
+    pressure(U, gamma) {
+      return this.pressureSafe(U, gamma);
     },
     fluxX(U, gamma, out) {
       const rho = Math.max(1e-12, U[0]);
@@ -390,13 +398,23 @@
     },
     rusanovFlux(UL, UR, nx, ny, gamma, alpha, out, scratch) {
       const FL = scratch.fluxXL, GL = scratch.fluxYL, FR = scratch.fluxXR, GR = scratch.fluxYR;
-      this.fluxX(UL, gamma, FL);
-      this.fluxY(UL, gamma, GL);
-      this.fluxX(UR, gamma, FR);
-      this.fluxY(UR, gamma, GR);
+      if (ny === 0) {
+        this.fluxX(UL, gamma, FL);
+        this.fluxX(UR, gamma, FR);
+      } else if (nx === 0) {
+        this.fluxY(UL, gamma, GL);
+        this.fluxY(UR, gamma, GR);
+      } else {
+        this.fluxX(UL, gamma, FL);
+        this.fluxY(UL, gamma, GL);
+        this.fluxX(UR, gamma, FR);
+        this.fluxY(UR, gamma, GR);
+      }
       const a = alpha * Math.max(this.maxNormalSpeed(UL, nx, ny, gamma), this.maxNormalSpeed(UR, nx, ny, gamma));
       for (let v = 0; v < 4; v++) {
-        out[v] = 0.5 * (nx * FL[v] + ny * GL[v] + nx * FR[v] + ny * GR[v]) - 0.5 * a * (UR[v] - UL[v]);
+        const left = ny === 0 ? nx * FL[v] : (nx === 0 ? ny * GL[v] : nx * FL[v] + ny * GL[v]);
+        const right = ny === 0 ? nx * FR[v] : (nx === 0 ? ny * GR[v] : nx * FR[v] + ny * GR[v]);
+        out[v] = 0.5 * (left + right) - 0.5 * a * (UR[v] - UL[v]);
       }
     },
     wallFlux(Uinside, nx, ny, gamma, out) {
@@ -414,7 +432,7 @@
       }
     },
     positivityMeanOk(Umean, gamma) {
-      return Umean[0] > 1e-10 && this.pressure(Umean, gamma) > 1e-10;
+      return Umean[0] > 1e-10 && this.pressureRaw(Umean, gamma) > 1e-10;
     },
   };
 
@@ -429,6 +447,8 @@
       this.params = params;
       this.nvar = equation.nvar;
       this.nm = this.basis.nm2;
+      this.cellStride = this.nCells;
+      this.varStride = this.nm * this.nCells;
       this.solid = solid || new Uint8Array(this.nCells);
       this.U = new Float64Array(this.nvar * this.nm * this.nCells);
       this.R = new Float64Array(this.U.length);
@@ -519,26 +539,62 @@
 
     evalAt(U, c, coeffs, off, out) {
       for (let v = 0; v < this.nvar; v++) {
+        const base = v * this.varStride + c;
         let s = 0;
-        for (let m = 0; m < this.nm; m++) s += U[this.id(v, m, c)] * coeffs[off + m];
+        for (let m = 0; m < this.nm; m++) s += U[base + m * this.cellStride] * coeffs[off + m];
         out[v] = s;
       }
     }
 
     mean(U, c, out) {
-      for (let v = 0; v < this.nvar; v++) out[v] = U[this.id(v, 0, c)];
+      for (let v = 0; v < this.nvar; v++) out[v] = U[v * this.varStride + c];
+    }
+
+    eulerQuadratureTables() {
+      if (this.p > 1) {
+        const b = this.basis;
+        return {
+          q: Q,
+          qn: Q.x.length,
+          volPhi: b.volPhi,
+          volDxi: b.volDxi,
+          volDeta: b.volDeta,
+          volW: b.volW,
+          invMassUnit: b.invMassUnit,
+          faceL: b.faceL,
+          faceR: b.faceR,
+          faceB: b.faceB,
+          faceT: b.faceT,
+        };
+      }
+      const b = this.basis;
+      return {
+        q: EQ,
+        qn: EQ.x.length,
+        volPhi: b.eVolPhi,
+        volDxi: b.eVolDxi,
+        volDeta: b.eVolDeta,
+        volW: b.eVolW,
+        invMassUnit: b.eInvMassUnit,
+        faceL: b.eFaceL,
+        faceR: b.eFaceR,
+        faceB: b.eFaceB,
+        faceT: b.eFaceT,
+      };
     }
 
     addFlux(R, c, sign, faceJac, Fn, coeffs, off) {
       for (let m = 0; m < this.nm; m++) {
         const fac = sign * faceJac * coeffs[off + m];
-        for (let v = 0; v < this.nvar; v++) R[this.id(v, m, c)] += fac * Fn[v];
+        const mo = m * this.cellStride + c;
+        for (let v = 0; v < this.nvar; v++) R[v * this.varStride + mo] += fac * Fn[v];
       }
     }
 
     rhs(U, R) {
-      const { nm2, volPhi, volDxi, volDeta, volW, invMassUnit, faceL, faceR, faceB, faceT } = this.basis;
-      const qn = Q.x.length;
+      const { nm2 } = this.basis;
+      const qt = this.eulerQuadratureTables();
+      const { q: quad, qn, volPhi, volDxi, volDeta, volW, invMassUnit, faceL, faceR, faceB, faceT } = qt;
       const dx = this.params.Lx / this.nx, dy = this.params.Ly / this.ny;
       const eq = this.equation, gamma = this.params.gamma, alpha = this.params.alpha;
       const s = this.scratch;
@@ -546,63 +602,65 @@
       for (let c = 0; c < this.nCells; c++) {
         if (this.solid[c]) continue;
         const i = c % this.nx, j = (c / this.nx) | 0;
-        for (let q = 0; q < qn * qn; q++) {
-          const qx = (q / qn) | 0, qy = q - qx * qn;
-          const x = (i + 0.5 * (Q.x[qx] + 1)) * dx;
-          const y = (j + 0.5 * (Q.x[qy] + 1)) * dy;
+        for (let qi = 0; qi < qn * qn; qi++) {
+          const qx = (qi / qn) | 0, qy = qi - qx * qn;
+          const x = (i + 0.5 * (quad.x[qx] + 1)) * dx;
+          const y = (j + 0.5 * (quad.x[qy] + 1)) * dy;
           void x; void y;
-          const off = q * nm2;
+          const off = qi * nm2;
           this.evalAt(U, c, volPhi, off, s.UL);
           eq.fluxX(s.UL, gamma, s.Fx);
           eq.fluxY(s.UL, gamma, s.Fy);
           for (let m = 0; m < nm2; m++) {
-            const wx = 0.5 * dy * volW[q] * volDxi[off + m];
-            const wy = 0.5 * dx * volW[q] * volDeta[off + m];
-            for (let v = 0; v < this.nvar; v++) R[this.id(v, m, c)] += wx * s.Fx[v] + wy * s.Fy[v];
+            const wx = 0.5 * dy * volW[qi] * volDxi[off + m];
+            const wy = 0.5 * dx * volW[qi] * volDeta[off + m];
+            const mo = m * this.cellStride + c;
+            for (let v = 0; v < this.nvar; v++) R[v * this.varStride + mo] += wx * s.Fx[v] + wy * s.Fy[v];
           }
         }
       }
       const f = this.faces;
       for (let k = 0; k < f.xInteriorL.length; k++) {
         const L = f.xInteriorL[k], Rcell = f.xInteriorR[k];
-        for (let q = 0; q < qn; q++) {
-          const off = q * nm2;
+        for (let qi = 0; qi < qn; qi++) {
+          const off = qi * nm2;
           this.evalAt(U, L, faceR, off, s.UL);
           this.evalAt(U, Rcell, faceL, off, s.UR);
           eq.rusanovFlux(s.UL, s.UR, 1, 0, gamma, alpha, s.Fn, s);
-          this.addFlux(R, L, -0.5 * dy * Q.w[q], 1, s.Fn, faceR, off);
-          this.addFlux(R, Rcell, 0.5 * dy * Q.w[q], 1, s.Fn, faceL, off);
+          this.addFlux(R, L, -0.5 * dy * quad.w[qi], 1, s.Fn, faceR, off);
+          this.addFlux(R, Rcell, 0.5 * dy * quad.w[qi], 1, s.Fn, faceL, off);
         }
       }
       for (let k = 0; k < f.yInteriorB.length; k++) {
         const B = f.yInteriorB[k], T = f.yInteriorT[k];
-        for (let q = 0; q < qn; q++) {
-          const off = q * nm2;
+        for (let qi = 0; qi < qn; qi++) {
+          const off = qi * nm2;
           this.evalAt(U, B, faceT, off, s.UL);
           this.evalAt(U, T, faceB, off, s.UR);
           eq.rusanovFlux(s.UL, s.UR, 0, 1, gamma, alpha, s.Fn, s);
-          this.addFlux(R, B, -0.5 * dx * Q.w[q], 1, s.Fn, faceT, off);
-          this.addFlux(R, T, 0.5 * dx * Q.w[q], 1, s.Fn, faceB, off);
+          this.addFlux(R, B, -0.5 * dx * quad.w[qi], 1, s.Fn, faceT, off);
+          this.addFlux(R, T, 0.5 * dx * quad.w[qi], 1, s.Fn, faceB, off);
         }
       }
-      this.boundaryFaces(U, R, f.xWallCell, f.xWallSign, 0, faceL, faceR, 0.5 * dy, qn);
-      this.boundaryFaces(U, R, f.yWallCell, f.yWallSign, 1, faceB, faceT, 0.5 * dx, qn);
-      this.boundaryFaces(U, R, f.xInlet, null, 2, faceL, faceL, 0.5 * dy, qn);
-      this.boundaryFaces(U, R, f.xOut, null, 3, faceR, faceR, 0.5 * dy, qn);
-      this.boundaryFaces(U, R, f.yBottom, null, 4, faceB, faceB, 0.5 * dx, qn);
-      this.boundaryFaces(U, R, f.yTop, null, 5, faceT, faceT, 0.5 * dx, qn);
+      this.boundaryFaces(U, R, f.xWallCell, f.xWallSign, 0, faceL, faceR, 0.5 * dy, qn, quad);
+      this.boundaryFaces(U, R, f.yWallCell, f.yWallSign, 1, faceB, faceT, 0.5 * dx, qn, quad);
+      this.boundaryFaces(U, R, f.xInlet, null, 2, faceL, faceL, 0.5 * dy, qn, quad);
+      this.boundaryFaces(U, R, f.xOut, null, 3, faceR, faceR, 0.5 * dy, qn, quad);
+      this.boundaryFaces(U, R, f.yBottom, null, 4, faceB, faceB, 0.5 * dx, qn, quad);
+      this.boundaryFaces(U, R, f.yTop, null, 5, faceT, faceT, 0.5 * dx, qn, quad);
 
       const invArea = 1 / (dx * dy);
       for (let c = 0; c < this.nCells; c++) {
         if (this.solid[c]) continue;
         for (let m = 0; m < nm2; m++) {
           const fac = invMassUnit[m] * invArea;
-          for (let v = 0; v < this.nvar; v++) R[this.id(v, m, c)] *= fac;
+          const mo = m * this.cellStride + c;
+          for (let v = 0; v < this.nvar; v++) R[v * this.varStride + mo] *= fac;
         }
       }
     }
 
-    boundaryFaces(U, R, cells, signs, kind, faceNeg, facePos, jac, qn) {
+    boundaryFaces(U, R, cells, signs, kind, faceNeg, facePos, jac, qn, quad) {
       const eq = this.equation, gamma = this.params.gamma, alpha = this.params.alpha;
       const nm2 = this.nm, s = this.scratch;
       for (let k = 0; k < cells.length; k++) {
@@ -622,7 +680,7 @@
             eq.boundaryState(type, s.UL, 0, 0, nx, ny, this.params, s.UR);
             eq.rusanovFlux(s.UL, s.UR, nx, ny, gamma, alpha, s.Fn, s);
           }
-          this.addFlux(R, c, sign * jac * Q.w[q], 1, s.Fn, coeffs, off);
+          this.addFlux(R, c, sign * jac * quad.w[q], 1, s.Fn, coeffs, off);
         }
       }
     }
@@ -630,47 +688,93 @@
     positivityLimiter(U) {
       if (this.nm === 1) return;
       const epsRho = 1e-7, epsP = 1e-7;
-      const qn = Q.x.length, basis = this.basis, s = this.scratch, eq = this.equation, gamma = this.params.gamma;
+      const qt = this.eulerQuadratureTables();
+      const qn = qt.qn, s = this.scratch, eq = this.equation, gamma = this.params.gamma;
+      const faceSets = [qt.faceL, qt.faceR, qt.faceB, qt.faceT];
+      const checkPoint = (coeffs, off, c) => {
+        this.evalAt(U, c, coeffs, off, s.point);
+        if (s.point[0] < epsRho) theta = Math.min(theta, (s.mean[0] - epsRho) / (s.mean[0] - s.point[0] + 1e-14));
+        if (eq.pressureRaw(s.point, gamma) < epsP) {
+          let lo = 0, hi = theta;
+          for (let it = 0; it < 18; it++) {
+            const mid = 0.5 * (lo + hi);
+            for (let v = 0; v < this.nvar; v++) s.UR[v] = s.mean[v] + mid * (s.point[v] - s.mean[v]);
+            if (eq.pressureRaw(s.UR, gamma) >= epsP) lo = mid; else hi = mid;
+          }
+          theta = Math.min(theta, lo);
+        }
+      };
       for (let c = 0; c < this.nCells; c++) {
         if (this.solid[c]) continue;
         this.mean(U, c, s.mean);
         if (!eq.positivityMeanOk(s.mean, gamma)) {
           this.params.farfield(s.mean);
-          for (let v = 0; v < this.nvar; v++) U[this.id(v, 0, c)] = s.mean[v];
-          for (let m = 1; m < this.nm; m++) for (let v = 0; v < this.nvar; v++) U[this.id(v, m, c)] = 0;
+          for (let v = 0; v < this.nvar; v++) U[v * this.varStride + c] = s.mean[v];
+          for (let m = 1; m < this.nm; m++) {
+            const mo = m * this.cellStride + c;
+            for (let v = 0; v < this.nvar; v++) U[v * this.varStride + mo] = 0;
+          }
           continue;
         }
         let theta = 1;
         for (let q = 0; q < qn * qn; q++) {
-          const off = q * this.nm;
-          this.evalAt(U, c, basis.volPhi, off, s.point);
-          if (s.point[0] < epsRho) theta = Math.min(theta, (s.mean[0] - epsRho) / (s.mean[0] - s.point[0] + 1e-14));
-          if (eq.pressure(s.point, gamma) < epsP) {
-            let lo = 0, hi = theta;
-            for (let it = 0; it < 18; it++) {
-              const mid = 0.5 * (lo + hi);
-              for (let v = 0; v < this.nvar; v++) s.UR[v] = s.mean[v] + mid * (s.point[v] - s.mean[v]);
-              if (eq.pressure(s.UR, gamma) >= epsP) lo = mid; else hi = mid;
-            }
-            theta = Math.min(theta, lo);
-          }
+          checkPoint(qt.volPhi, q * this.nm, c);
+        }
+        for (const face of faceSets) {
+          for (let q = 0; q < qn; q++) checkPoint(face, q * this.nm, c);
         }
         if (theta < 0.999999) {
           theta = Math.max(0, theta);
-          for (let m = 1; m < this.nm; m++) for (let v = 0; v < this.nvar; v++) U[this.id(v, m, c)] *= theta;
+          for (let m = 1; m < this.nm; m++) {
+            const mo = m * this.cellStride + c;
+            for (let v = 0; v < this.nvar; v++) U[v * this.varStride + mo] *= theta;
+          }
         }
       }
     }
 
     troubledLimiter(U) {
-      if (this.p < 2) return;
-      const threshold = 0.35;
+      if (this.p < 1) return;
+      const threshold = this.p === 1 ? 0.08 : 0.18;
+      const qt = this.eulerQuadratureTables();
+      const qn = qt.qn;
+      const phi = qt.volPhi;
+      const eq = this.equation;
+      const gamma = this.params.gamma;
+      const s = this.scratch;
       for (let c = 0; c < this.nCells; c++) {
         if (this.solid[c]) continue;
         let high = 0, low = 1e-16;
-        for (let v = 0; v < this.nvar; v++) low += U[this.id(v, 0, c)] ** 2;
-        for (let m = 2; m < this.nm; m++) for (let v = 0; v < this.nvar; v++) high += U[this.id(v, m, c)] ** 2;
-        if (high / low > threshold) for (let m = 2; m < this.nm; m++) for (let v = 0; v < this.nvar; v++) U[this.id(v, m, c)] = 0;
+        for (let v = 0; v < this.nvar; v++) low += U[v * this.varStride + c] ** 2;
+        for (let m = 1; m < this.nm; m++) {
+          const mo = m * this.cellStride + c;
+          for (let v = 0; v < this.nvar; v++) high += U[v * this.varStride + mo] ** 2;
+        }
+        let troubled = high / low > threshold;
+        if (!troubled) {
+          this.mean(U, c, s.mean);
+          const meanRho = Math.max(1e-12, s.mean[0]);
+          const meanP = Math.max(1e-12, eq.pressureRaw(s.mean, gamma));
+          for (let q = 0; q < qn * qn; q++) {
+            this.evalAt(U, c, phi, q * this.nm, s.point);
+            const p = eq.pressureRaw(s.point, gamma);
+            if (
+              s.point[0] < 0.25 * meanRho ||
+              s.point[0] > 4.0 * meanRho ||
+              p < 0.20 * meanP ||
+              p > 5.0 * meanP
+            ) {
+              troubled = true;
+              break;
+            }
+          }
+        }
+        if (troubled) {
+          for (let m = 1; m < this.nm; m++) {
+            const mo = m * this.cellStride + c;
+            for (let v = 0; v < this.nvar; v++) U[v * this.varStride + mo] = 0;
+          }
+        }
       }
     }
 
@@ -707,7 +811,7 @@
     syncMeanAoS(out) {
       for (let c = 0; c < this.nCells; c++) {
         const b = 4 * c;
-        for (let v = 0; v < this.nvar; v++) out[b + v] = this.U[this.id(v, 0, c)];
+        for (let v = 0; v < this.nvar; v++) out[b + v] = this.U[v * this.varStride + c];
       }
     }
   }
@@ -744,7 +848,8 @@
     rk3: 'rk3',
   });
 
-  window.DgEngine = Object.freeze({
+  const root = globalThis;
+  root.DgEngine = Object.freeze({
     TAU,
     EPS,
     Q,

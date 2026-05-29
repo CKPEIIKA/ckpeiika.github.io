@@ -112,13 +112,13 @@ window.DgEulerCylinderLab = {
   const MESH1 = [96, 160, 240, 360, 520];
 
   const sim = {
-    running: true,
+    running: false,
     caseName: 'euler',
     p: 1,
     meshIndex: 1,
     nx: 72,
     ny: 36,
-    cfl: 0.35,
+    cfl: 0.18,
     alpha: 1.0,
     flow: 'swirl',
     init: 'blob',
@@ -150,6 +150,11 @@ window.DgEulerCylinderLab = {
     lastR: null,
     basis: null,
     bad: false,
+    perfWarning: '',
+    solverMs: 0,
+    eulerStepping: false,
+    eulerGeneration: 0,
+    workerPool: null,
     stats: {},
     history: null,
     histW: 512,
@@ -184,7 +189,7 @@ window.DgEulerCylinderLab = {
 
   function configureActiveCase() {
     const equation = isEuler()
-      ? Equations.euler2D
+      ? Euler2D
       : (is1D() ? Equations.burgers1D : Equations.scalarAdvection2D);
     sim.activeMesh = createMesh({
       nx: sim.nx,
@@ -200,7 +205,7 @@ window.DgEulerCylinderLab = {
       numericalFlux: is1D() ? NumericalFlux.burgersRusanov : NumericalFlux.scalarAdvectionNormal,
       displayFields: currentDisplayList(),
     });
-    sim.stepper = isEuler() ? Stepper.rk2 : Stepper.rk3;
+    sim.stepper = Stepper.rk3;
   }
 
   function applyMeshFromIndex() {
@@ -364,12 +369,91 @@ window.DgEulerCylinderLab = {
     return [rho, rho * u, rho * v, E];
   }
 
+  function destroyEulerWorkers() {
+    if (!sim.workerPool) return;
+    for (const item of sim.workerPool.workers) item.worker.terminate();
+    sim.workerPool = null;
+  }
+
+  function timeout(ms) {
+    return new Promise(resolve => setTimeout(() => resolve(null), ms));
+  }
+
+  function createEulerWorkerPool(far) {
+    destroyEulerWorkers();
+    if (!window.Worker) return null;
+    try {
+      const worker = new Worker('./dg-worker.js');
+      let seq = 0;
+      const pending = new Map();
+      const ready = new Promise((resolve, reject) => {
+        worker.onerror = reject;
+        worker.onmessage = (event) => {
+          const msg = event.data || {};
+          if (msg.type === 'readyFull') {
+            resolve(true);
+            return;
+          }
+          if (msg.type === 'stepped') {
+            const done = pending.get(msg.seq);
+            if (done) {
+              pending.delete(msg.seq);
+              done(msg);
+            }
+          }
+        };
+      }).catch(() => false);
+      worker.postMessage({
+        type: 'initFull',
+        nx: sim.nx,
+        ny: sim.ny,
+        p: sim.p,
+        gamma: sim.gamma,
+        alpha: sim.alpha,
+        mach: sim.mach,
+        Lx: sim.Lx,
+        Ly: sim.Ly,
+        cylX: sim.cylX,
+        cylY: sim.cylY,
+        cylR: sim.cylR,
+      });
+      return {
+        mode: 'owned',
+        workers: [{ worker }],
+        ready,
+        step(count) {
+          seq += 1;
+          const id = seq;
+          const promise = new Promise(resolve => pending.set(id, resolve));
+          try {
+            worker.postMessage({
+              type: 'stepFull',
+              seq: id,
+              count,
+              cfl: sim.cfl,
+              alpha: sim.alpha,
+              gamma: sim.gamma,
+            });
+          } catch (error) {
+            pending.delete(id);
+            return Promise.resolve(null);
+          }
+          return promise;
+        },
+      };
+    } catch (error) {
+      return null;
+    }
+  }
+
   function eSolidAt(i, j) {
     if (i < 0 || i >= sim.nx || j < 0 || j >= sim.ny) return 0;
     return sim.solid[eCell(i, j)];
   }
 
   function initEuler() {
+    sim.eulerGeneration += 1;
+    sim.eulerStepping = false;
     const n = sim.nx * sim.ny;
     sim.solid = new Uint8Array(n);
     const fluid = [];
@@ -412,12 +496,30 @@ window.DgEulerCylinderLab = {
     });
     sim.eU = new Float64Array(4 * n);
     sim.eSolver.syncMeanAoS(sim.eU);
+    sim.workerPool = createEulerWorkerPool(far);
     configureActiveCase();
     sim.t = 0;
     sim.dt = 0;
     sim.step = 0;
     sim.bad = false;
     sim.posFix = 0;
+    sim.perfWarning = '';
+    sim.solverMs = 0;
+  }
+
+  function eulerDof() {
+    return sim.nx * sim.ny * (sim.p + 1) * (sim.p + 1) * 4;
+  }
+
+  function eulerTooLargeForLiveRun() {
+    return isEuler() && eulerDof() > 130000;
+  }
+
+  function guardEulerRuntime() {
+    if (!isEuler()) return;
+    if (!sim.workerPool && eulerTooLargeForLiveRun()) {
+      sim.perfWarning = 'large DG mesh is running on one UI thread; Web Workers unavailable';
+    }
   }
 
   function computeEulerDt() {
@@ -431,11 +533,54 @@ window.DgEulerCylinderLab = {
     const dt = computeEulerDt();
     sim.eSolver.params.alpha = sim.alpha;
     sim.eSolver.params.gamma = sim.gamma;
+    const t0 = performance.now();
     sim.eSolver.step(dt);
+    sim.solverMs = performance.now() - t0;
     sim.eSolver.syncMeanAoS(sim.eU);
     sim.t += dt;
     sim.step += 1;
     checkEulerFinite();
+  }
+
+  async function eulerStepAsync(count = 1) {
+    if (sim.bad || sim.eulerStepping) return;
+    const generation = sim.eulerGeneration;
+    sim.eulerStepping = true;
+    try {
+      if (sim.workerPool && sim.workerPool.mode === 'owned') {
+        const ready = await Promise.race([sim.workerPool.ready, timeout(1200)]);
+        if (generation !== sim.eulerGeneration) return;
+        if (ready) {
+          const msg = await Promise.race([
+            sim.workerPool.step(count),
+            timeout(10000),
+          ]);
+          if (generation !== sim.eulerGeneration) return;
+          if (msg && msg.eU) {
+            sim.eU = new Float64Array(msg.eU);
+            sim.t = msg.t;
+            sim.step = msg.step;
+            sim.dt = msg.dt;
+            sim.solverMs = msg.solverMs;
+            sim.stats = computeStats();
+            checkEulerFinite();
+            return;
+          }
+        }
+        destroyEulerWorkers();
+        sim.running = false;
+        sim.perfWarning = 'worker stalled; reset required before continuing';
+        return;
+      }
+
+      for (let stepIndex = 0; stepIndex < count && !sim.bad; stepIndex++) {
+        if (generation !== sim.eulerGeneration) return;
+        eulerStep();
+      }
+      sim.stats = computeStats();
+    } finally {
+      if (generation === sim.eulerGeneration) sim.eulerStepping = false;
+    }
   }
 
   function checkEulerFinite() {
@@ -647,11 +792,13 @@ window.DgEulerCylinderLab = {
       if (!DISPLAYE.includes(sim.display)) sim.display = 'schlieren';
       initEuler();
       sim.stats = computeStats();
+      guardEulerRuntime();
       updateFormula();
       syncControlsFromSim();
       updateUI();
       return;
     }
+    destroyEulerWorkers();
     const n = coeffCount();
     sim.U = new Float64Array(n);
     sim.A = new Float64Array(n);
@@ -1429,8 +1576,8 @@ window.DgEulerCylinderLab = {
     ui.runChip.textContent = sim.running ? 'Ⅱ' : '▶';
 
     const st = sim.stats || {};
-    ui.okChip.textContent = sim.bad ? 'blown' : 'ok';
-    ui.okChip.style.color = sim.bad ? 'var(--bad)' : 'var(--hot)';
+    ui.okChip.textContent = sim.bad ? 'blown' : (sim.perfWarning ? 'paused' : 'ok');
+    ui.okChip.style.color = sim.bad || sim.perfWarning ? 'var(--bad)' : 'var(--hot)';
     ui.stepChip.textContent = `step ${sim.step}`;
     ui.timeChip.textContent = `t ${fmt(sim.t, 3)}`;
     ui.dtChip.textContent = `dt ${fmt(sim.dt, 2)}`;
@@ -1459,6 +1606,7 @@ window.DgEulerCylinderLab = {
         `domain     ${sim.Lx}×${sim.Ly}; mesh ${sim.nx}×${sim.ny}; cylinder R=${sim.cylR}`,
         `freestream M∞=${sim.mach}, γ=${sim.gamma}; stair-step slip-wall flux`,
         `ranges     ρ [${fmt(st.rhoMin, 3)}, ${fmt(st.rhoMax, 3)}]   p [${fmt(st.pMin, 3)}, ${fmt(st.pMax, 3)}]`,
+        `runtime    ${sim.solverMs ? Math.round(sim.solverMs) + ' ms/step' : '--'}; workers ${sim.workerPool ? sim.workerPool.workers.length : 0}${sim.perfWarning ? '; ' + sim.perfWarning : ''}`,
         `model      inviscid Euler; P0 is FV limit, not Navier-Stokes validation`,
       ].join('\n');
     }
@@ -1513,9 +1661,13 @@ window.DgEulerCylinderLab = {
 
     if (sim.running && !sim.bad) {
       const steps = Math.max(1, Math.min(50, sim.stepsPerFrame | 0));
-      for (let k = 0; k < steps; k++) rk3Step();
-      if (is1D()) recordHistory(false);
-      if ((frameId & 7) === 0) sim.stats = computeStats();
+      if (isEuler()) {
+        if (!sim.eulerStepping) eulerStepAsync(steps);
+      } else {
+        for (let k = 0; k < steps && sim.running && !sim.bad; k++) rk3Step();
+        if (is1D()) recordHistory(false);
+        if ((frameId & 7) === 0) sim.stats = computeStats();
+      }
     }
 
     draw();
@@ -1538,10 +1690,19 @@ window.DgEulerCylinderLab = {
     }
     if (act === 'run') {
       sim.running = !sim.running;
+      if (sim.running) sim.perfWarning = '';
       updateUI();
       return;
     }
     if (act === 'step') {
+      if (isEuler()) {
+        sim.running = false;
+        eulerStepAsync(1).then(() => {
+          updateUI();
+          draw();
+        });
+        return;
+      }
       sim.running = false;
       rk3Step();
       if (is1D()) recordHistory(false);
