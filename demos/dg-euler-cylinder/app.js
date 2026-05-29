@@ -114,7 +114,7 @@ window.DgEulerCylinderLab = {
   const sim = {
     running: false,
     caseName: 'euler',
-    p: 1,
+    p: 0,
     meshIndex: 1,
     nx: 72,
     ny: 36,
