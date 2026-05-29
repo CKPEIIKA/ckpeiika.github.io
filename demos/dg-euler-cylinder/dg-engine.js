@@ -14,6 +14,14 @@
     w: Object.freeze([0.5555555555555556, 0.8888888888888888, 0.5555555555555556]),
   });
 
+  const FACE = Object.freeze({
+    INTERIOR: 0,
+    INLET: 1,
+    OUTFLOW: 2,
+    FARFIELD: 3,
+    WALL: 4,
+  });
+
   function clamp(x, lo, hi) {
     return x < lo ? lo : (x > hi ? hi : x);
   }
@@ -78,6 +86,48 @@
     }
 
     const nm2 = np * np;
+    const sqn = Q.x.length;
+    const volPhi = new Float64Array(sqn * sqn * nm2);
+    const volDxi = new Float64Array(sqn * sqn * nm2);
+    const volDeta = new Float64Array(sqn * sqn * nm2);
+    const volW = new Float64Array(sqn * sqn);
+    const invMassUnit = new Float64Array(nm2);
+    for (let a = 0; a < np; a++) {
+      for (let b = 0; b < np; b++) invMassUnit[a * np + b] = (2 * a + 1) * (2 * b + 1);
+    }
+    for (let qx = 0; qx < sqn; qx++) {
+      for (let qy = 0; qy < sqn; qy++) {
+        const qo = qx * sqn + qy;
+        volW[qo] = Q.w[qx] * Q.w[qy];
+        const bo = qo * nm2;
+        for (let a = 0; a < np; a++) {
+          for (let b = 0; b < np; b++) {
+            const mode = a * np + b;
+            volPhi[bo + mode] = phi[qx][a] * phi[qy][b];
+            volDxi[bo + mode] = dphi[qx][a] * phi[qy][b];
+            volDeta[bo + mode] = phi[qx][a] * dphi[qy][b];
+          }
+        }
+      }
+    }
+
+    const faceL = new Float64Array(sqn * nm2);
+    const faceR = new Float64Array(sqn * nm2);
+    const faceB = new Float64Array(sqn * nm2);
+    const faceT = new Float64Array(sqn * nm2);
+    for (let q = 0; q < sqn; q++) {
+      const bo = q * nm2;
+      for (let a = 0; a < np; a++) {
+        for (let b = 0; b < np; b++) {
+          const mode = a * np + b;
+          faceL[bo + mode] = left[a] * phi[q][b];
+          faceR[bo + mode] = right[a] * phi[q][b];
+          faceB[bo + mode] = phi[q][a] * left[b];
+          faceT[bo + mode] = phi[q][a] * right[b];
+        }
+      }
+    }
+
     const qn = EQ.x.length;
     const eVolPhi = new Float64Array(qn * qn * nm2);
     const eVolDxi = new Float64Array(qn * qn * nm2);
@@ -122,6 +172,7 @@
 
     return {
       p, np, nm1: np, nm2, phi, dphi, ephi, edphi, left, right, mass,
+      volPhi, volDxi, volDeta, volW, invMassUnit, faceL, faceR, faceB, faceT,
       eVolPhi, eVolDxi, eVolDeta, eVolW, eInvMassUnit, eFaceL, eFaceR, eFaceB, eFaceT,
     };
   }
@@ -172,6 +223,12 @@
       const row = base + a * np;
       for (let b = 0; b < np; b++) s += U[row + b] * pa * legendre(b, eta);
     }
+    return s;
+  }
+
+  function evalModal(U, base, coeffs, offset, count) {
+    let s = 0;
+    for (let mode = 0; mode < count; mode++) s += U[base + mode] * coeffs[offset + mode];
     return s;
   }
 
@@ -239,6 +296,454 @@
     }
   }
 
+  function createEquation(config) {
+    return Object.freeze({
+      kind: String(config.kind),
+      nvar: Number(config.nvar || 1),
+      fluxX: config.fluxX || null,
+      fluxY: config.fluxY || null,
+      maxSpeedX: config.maxSpeedX || null,
+      maxSpeedY: config.maxSpeedY || null,
+      primitive: config.primitive || null,
+      positivity: config.positivity || null,
+    });
+  }
+
+  const Equations = Object.freeze({
+    burgers1D: createEquation({
+      kind: 'burgers1d',
+      nvar: 1,
+      fluxX: burgersPhysicalFlux,
+      maxSpeedX: u => Math.abs(u),
+    }),
+    scalarAdvection2D: createEquation({
+      kind: 'scalar-advection2d',
+      nvar: 1,
+      fluxX: (u, ax) => ax * u,
+      fluxY: (u, ay) => ay * u,
+      maxSpeedX: ax => Math.abs(ax),
+      maxSpeedY: ay => Math.abs(ay),
+    }),
+    euler2D: createEquation({
+      kind: 'euler2d',
+      nvar: 4,
+    }),
+  });
+
+  const NumericalFlux = Object.freeze({
+    scalarAdvectionNormal: advectionNormalFlux,
+    burgersRusanov: burgersFlux,
+  });
+
+  const Euler2D = {
+    name: 'Euler2D',
+    nvar: 4,
+    consFromPrim(rho, u, v, p, gamma, out) {
+      out[0] = rho;
+      out[1] = rho * u;
+      out[2] = rho * v;
+      out[3] = p / (gamma - 1) + 0.5 * rho * (u * u + v * v);
+    },
+    prim(U, gamma, out) {
+      const rho = Math.max(1e-12, U[0]);
+      const u = U[1] / rho;
+      const v = U[2] / rho;
+      const p = Math.max(1e-12, (gamma - 1) * (U[3] - 0.5 * rho * (u * u + v * v)));
+      out[0] = rho;
+      out[1] = u;
+      out[2] = v;
+      out[3] = p;
+      out[4] = Math.sqrt(gamma * p / rho);
+    },
+    pressure(U, gamma) {
+      const rho = Math.max(1e-12, U[0]);
+      const u = U[1] / rho;
+      const v = U[2] / rho;
+      return Math.max(1e-12, (gamma - 1) * (U[3] - 0.5 * rho * (u * u + v * v)));
+    },
+    fluxX(U, gamma, out) {
+      const rho = Math.max(1e-12, U[0]);
+      const u = U[1] / rho;
+      const v = U[2] / rho;
+      const p = this.pressure(U, gamma);
+      out[0] = U[1];
+      out[1] = U[1] * u + p;
+      out[2] = U[1] * v;
+      out[3] = (U[3] + p) * u;
+    },
+    fluxY(U, gamma, out) {
+      const rho = Math.max(1e-12, U[0]);
+      const u = U[1] / rho;
+      const v = U[2] / rho;
+      const p = this.pressure(U, gamma);
+      out[0] = U[2];
+      out[1] = U[2] * u;
+      out[2] = U[2] * v + p;
+      out[3] = (U[3] + p) * v;
+    },
+    maxNormalSpeed(U, nx, ny, gamma) {
+      const rho = Math.max(1e-12, U[0]);
+      const u = U[1] / rho;
+      const v = U[2] / rho;
+      const p = this.pressure(U, gamma);
+      return Math.abs(u * nx + v * ny) + Math.sqrt(gamma * p / rho);
+    },
+    rusanovFlux(UL, UR, nx, ny, gamma, alpha, out, scratch) {
+      const FL = scratch.fluxXL, GL = scratch.fluxYL, FR = scratch.fluxXR, GR = scratch.fluxYR;
+      this.fluxX(UL, gamma, FL);
+      this.fluxY(UL, gamma, GL);
+      this.fluxX(UR, gamma, FR);
+      this.fluxY(UR, gamma, GR);
+      const a = alpha * Math.max(this.maxNormalSpeed(UL, nx, ny, gamma), this.maxNormalSpeed(UR, nx, ny, gamma));
+      for (let v = 0; v < 4; v++) {
+        out[v] = 0.5 * (nx * FL[v] + ny * GL[v] + nx * FR[v] + ny * GR[v]) - 0.5 * a * (UR[v] - UL[v]);
+      }
+    },
+    wallFlux(Uinside, nx, ny, gamma, out) {
+      const p = this.pressure(Uinside, gamma);
+      out[0] = 0;
+      out[1] = p * nx;
+      out[2] = p * ny;
+      out[3] = 0;
+    },
+    boundaryState(type, Uinside, x, y, nx, ny, params, out) {
+      if (type === FACE.INLET || type === FACE.FARFIELD) {
+        params.farfield(out);
+      } else {
+        out.set(Uinside);
+      }
+    },
+    positivityMeanOk(Umean, gamma) {
+      return Umean[0] > 1e-10 && this.pressure(Umean, gamma) > 1e-10;
+    },
+  };
+
+  class DGSolver2D {
+    constructor({ nx, ny, p, equation, params = {}, solid = null, initialCondition = null }) {
+      this.nx = nx;
+      this.ny = ny;
+      this.nCells = nx * ny;
+      this.basis = buildBasis(p);
+      this.p = p;
+      this.equation = equation;
+      this.params = params;
+      this.nvar = equation.nvar;
+      this.nm = this.basis.nm2;
+      this.solid = solid || new Uint8Array(this.nCells);
+      this.U = new Float64Array(this.nvar * this.nm * this.nCells);
+      this.R = new Float64Array(this.U.length);
+      this.A = new Float64Array(this.U.length);
+      this.B = new Float64Array(this.U.length);
+      this.scratch = {
+        UL: new Float64Array(this.nvar),
+        UR: new Float64Array(this.nvar),
+        Fn: new Float64Array(this.nvar),
+        Fx: new Float64Array(this.nvar),
+        Fy: new Float64Array(this.nvar),
+        mean: new Float64Array(this.nvar),
+        point: new Float64Array(this.nvar),
+        fluxXL: new Float64Array(this.nvar),
+        fluxYL: new Float64Array(this.nvar),
+        fluxXR: new Float64Array(this.nvar),
+        fluxYR: new Float64Array(this.nvar),
+      };
+      this.buildFaces();
+      if (initialCondition) this.project(initialCondition);
+    }
+
+    id(v, m, c) { return ((v * this.nm + m) * this.nCells + c); }
+    cell(i, j) { return j * this.nx + i; }
+    isSolid(i, j) { return i < 0 || i >= this.nx || j < 0 || j >= this.ny ? 0 : this.solid[this.cell(i, j)]; }
+
+    buildFaces() {
+      const xInteriorL = [], xInteriorR = [], xWallCell = [], xWallSign = [], xInlet = [], xOut = [];
+      const yInteriorB = [], yInteriorT = [], yWallCell = [], yWallSign = [], yBottom = [], yTop = [];
+      for (let j = 0; j < this.ny; j++) {
+        for (let i = 0; i <= this.nx; i++) {
+          const hasL = i > 0 && !this.isSolid(i - 1, j);
+          const hasR = i < this.nx && !this.isSolid(i, j);
+          if (hasL && hasR) { xInteriorL.push(this.cell(i - 1, j)); xInteriorR.push(this.cell(i, j)); }
+          else if (hasL && i < this.nx) { xWallCell.push(this.cell(i - 1, j)); xWallSign.push(1); }
+          else if (hasR && i > 0) { xWallCell.push(this.cell(i, j)); xWallSign.push(-1); }
+          else if (hasR && i === 0) xInlet.push(this.cell(i, j));
+          else if (hasL && i === this.nx) xOut.push(this.cell(i - 1, j));
+        }
+      }
+      for (let j = 0; j <= this.ny; j++) {
+        for (let i = 0; i < this.nx; i++) {
+          const hasB = j > 0 && !this.isSolid(i, j - 1);
+          const hasT = j < this.ny && !this.isSolid(i, j);
+          if (hasB && hasT) { yInteriorB.push(this.cell(i, j - 1)); yInteriorT.push(this.cell(i, j)); }
+          else if (hasB && j < this.ny) { yWallCell.push(this.cell(i, j - 1)); yWallSign.push(1); }
+          else if (hasT && j > 0) { yWallCell.push(this.cell(i, j)); yWallSign.push(-1); }
+          else if (hasT && j === 0) yBottom.push(this.cell(i, j));
+          else if (hasB && j === this.ny) yTop.push(this.cell(i, j - 1));
+        }
+      }
+      this.faces = {
+        xInteriorL: Int32Array.from(xInteriorL),
+        xInteriorR: Int32Array.from(xInteriorR),
+        xWallCell: Int32Array.from(xWallCell),
+        xWallSign: Int8Array.from(xWallSign),
+        xInlet: Int32Array.from(xInlet),
+        xOut: Int32Array.from(xOut),
+        yInteriorB: Int32Array.from(yInteriorB),
+        yInteriorT: Int32Array.from(yInteriorT),
+        yWallCell: Int32Array.from(yWallCell),
+        yWallSign: Int8Array.from(yWallSign),
+        yBottom: Int32Array.from(yBottom),
+        yTop: Int32Array.from(yTop),
+      };
+    }
+
+    project(initialCondition) {
+      const { nm2, volPhi, volW, invMassUnit } = this.basis;
+      const qn = Q.x.length;
+      const Uq = this.scratch.UL;
+      for (let c = 0; c < this.nCells; c++) {
+        if (this.solid[c]) continue;
+        const i = c % this.nx, j = (c / this.nx) | 0;
+        for (let q = 0; q < qn * qn; q++) {
+          const qx = (q / qn) | 0, qy = q - qx * qn;
+          const x = (i + 0.5 * (Q.x[qx] + 1)) / this.nx;
+          const y = (j + 0.5 * (Q.x[qy] + 1)) / this.ny;
+          initialCondition(x, y, Uq);
+          const off = q * nm2;
+          for (let m = 0; m < nm2; m++) {
+            const w = 0.25 * volW[q] * volPhi[off + m] * invMassUnit[m];
+            for (let v = 0; v < this.nvar; v++) this.U[this.id(v, m, c)] += w * Uq[v];
+          }
+        }
+      }
+    }
+
+    evalAt(U, c, coeffs, off, out) {
+      for (let v = 0; v < this.nvar; v++) {
+        let s = 0;
+        for (let m = 0; m < this.nm; m++) s += U[this.id(v, m, c)] * coeffs[off + m];
+        out[v] = s;
+      }
+    }
+
+    mean(U, c, out) {
+      for (let v = 0; v < this.nvar; v++) out[v] = U[this.id(v, 0, c)];
+    }
+
+    addFlux(R, c, sign, faceJac, Fn, coeffs, off) {
+      for (let m = 0; m < this.nm; m++) {
+        const fac = sign * faceJac * coeffs[off + m];
+        for (let v = 0; v < this.nvar; v++) R[this.id(v, m, c)] += fac * Fn[v];
+      }
+    }
+
+    rhs(U, R) {
+      const { nm2, volPhi, volDxi, volDeta, volW, invMassUnit, faceL, faceR, faceB, faceT } = this.basis;
+      const qn = Q.x.length;
+      const dx = this.params.Lx / this.nx, dy = this.params.Ly / this.ny;
+      const eq = this.equation, gamma = this.params.gamma, alpha = this.params.alpha;
+      const s = this.scratch;
+      R.fill(0);
+      for (let c = 0; c < this.nCells; c++) {
+        if (this.solid[c]) continue;
+        const i = c % this.nx, j = (c / this.nx) | 0;
+        for (let q = 0; q < qn * qn; q++) {
+          const qx = (q / qn) | 0, qy = q - qx * qn;
+          const x = (i + 0.5 * (Q.x[qx] + 1)) * dx;
+          const y = (j + 0.5 * (Q.x[qy] + 1)) * dy;
+          void x; void y;
+          const off = q * nm2;
+          this.evalAt(U, c, volPhi, off, s.UL);
+          eq.fluxX(s.UL, gamma, s.Fx);
+          eq.fluxY(s.UL, gamma, s.Fy);
+          for (let m = 0; m < nm2; m++) {
+            const wx = 0.5 * dy * volW[q] * volDxi[off + m];
+            const wy = 0.5 * dx * volW[q] * volDeta[off + m];
+            for (let v = 0; v < this.nvar; v++) R[this.id(v, m, c)] += wx * s.Fx[v] + wy * s.Fy[v];
+          }
+        }
+      }
+      const f = this.faces;
+      for (let k = 0; k < f.xInteriorL.length; k++) {
+        const L = f.xInteriorL[k], Rcell = f.xInteriorR[k];
+        for (let q = 0; q < qn; q++) {
+          const off = q * nm2;
+          this.evalAt(U, L, faceR, off, s.UL);
+          this.evalAt(U, Rcell, faceL, off, s.UR);
+          eq.rusanovFlux(s.UL, s.UR, 1, 0, gamma, alpha, s.Fn, s);
+          this.addFlux(R, L, -0.5 * dy * Q.w[q], 1, s.Fn, faceR, off);
+          this.addFlux(R, Rcell, 0.5 * dy * Q.w[q], 1, s.Fn, faceL, off);
+        }
+      }
+      for (let k = 0; k < f.yInteriorB.length; k++) {
+        const B = f.yInteriorB[k], T = f.yInteriorT[k];
+        for (let q = 0; q < qn; q++) {
+          const off = q * nm2;
+          this.evalAt(U, B, faceT, off, s.UL);
+          this.evalAt(U, T, faceB, off, s.UR);
+          eq.rusanovFlux(s.UL, s.UR, 0, 1, gamma, alpha, s.Fn, s);
+          this.addFlux(R, B, -0.5 * dx * Q.w[q], 1, s.Fn, faceT, off);
+          this.addFlux(R, T, 0.5 * dx * Q.w[q], 1, s.Fn, faceB, off);
+        }
+      }
+      this.boundaryFaces(U, R, f.xWallCell, f.xWallSign, 0, faceL, faceR, 0.5 * dy, qn);
+      this.boundaryFaces(U, R, f.yWallCell, f.yWallSign, 1, faceB, faceT, 0.5 * dx, qn);
+      this.boundaryFaces(U, R, f.xInlet, null, 2, faceL, faceL, 0.5 * dy, qn);
+      this.boundaryFaces(U, R, f.xOut, null, 3, faceR, faceR, 0.5 * dy, qn);
+      this.boundaryFaces(U, R, f.yBottom, null, 4, faceB, faceB, 0.5 * dx, qn);
+      this.boundaryFaces(U, R, f.yTop, null, 5, faceT, faceT, 0.5 * dx, qn);
+
+      const invArea = 1 / (dx * dy);
+      for (let c = 0; c < this.nCells; c++) {
+        if (this.solid[c]) continue;
+        for (let m = 0; m < nm2; m++) {
+          const fac = invMassUnit[m] * invArea;
+          for (let v = 0; v < this.nvar; v++) R[this.id(v, m, c)] *= fac;
+        }
+      }
+    }
+
+    boundaryFaces(U, R, cells, signs, kind, faceNeg, facePos, jac, qn) {
+      const eq = this.equation, gamma = this.params.gamma, alpha = this.params.alpha;
+      const nm2 = this.nm, s = this.scratch;
+      for (let k = 0; k < cells.length; k++) {
+        const c = cells[k];
+        let nx = 0, ny = 0, coeffs = facePos, sign = -1, type = FACE.OUTFLOW;
+        if (kind === 0) { nx = signs[k]; coeffs = nx > 0 ? facePos : faceNeg; sign = -1; type = FACE.WALL; }
+        else if (kind === 1) { ny = signs[k]; coeffs = ny > 0 ? facePos : faceNeg; sign = -1; type = FACE.WALL; }
+        else if (kind === 2) { nx = -1; coeffs = faceNeg; sign = -1; type = FACE.INLET; }
+        else if (kind === 3) { nx = 1; coeffs = facePos; sign = -1; type = FACE.OUTFLOW; }
+        else if (kind === 4) { ny = -1; coeffs = faceNeg; sign = -1; type = FACE.FARFIELD; }
+        else if (kind === 5) { ny = 1; coeffs = facePos; sign = -1; type = FACE.FARFIELD; }
+        for (let q = 0; q < qn; q++) {
+          const off = q * nm2;
+          this.evalAt(U, c, coeffs, off, s.UL);
+          if (type === FACE.WALL) eq.wallFlux(s.UL, nx, ny, gamma, s.Fn);
+          else {
+            eq.boundaryState(type, s.UL, 0, 0, nx, ny, this.params, s.UR);
+            eq.rusanovFlux(s.UL, s.UR, nx, ny, gamma, alpha, s.Fn, s);
+          }
+          this.addFlux(R, c, sign * jac * Q.w[q], 1, s.Fn, coeffs, off);
+        }
+      }
+    }
+
+    positivityLimiter(U) {
+      if (this.nm === 1) return;
+      const epsRho = 1e-7, epsP = 1e-7;
+      const qn = Q.x.length, basis = this.basis, s = this.scratch, eq = this.equation, gamma = this.params.gamma;
+      for (let c = 0; c < this.nCells; c++) {
+        if (this.solid[c]) continue;
+        this.mean(U, c, s.mean);
+        if (!eq.positivityMeanOk(s.mean, gamma)) {
+          this.params.farfield(s.mean);
+          for (let v = 0; v < this.nvar; v++) U[this.id(v, 0, c)] = s.mean[v];
+          for (let m = 1; m < this.nm; m++) for (let v = 0; v < this.nvar; v++) U[this.id(v, m, c)] = 0;
+          continue;
+        }
+        let theta = 1;
+        for (let q = 0; q < qn * qn; q++) {
+          const off = q * this.nm;
+          this.evalAt(U, c, basis.volPhi, off, s.point);
+          if (s.point[0] < epsRho) theta = Math.min(theta, (s.mean[0] - epsRho) / (s.mean[0] - s.point[0] + 1e-14));
+          if (eq.pressure(s.point, gamma) < epsP) {
+            let lo = 0, hi = theta;
+            for (let it = 0; it < 18; it++) {
+              const mid = 0.5 * (lo + hi);
+              for (let v = 0; v < this.nvar; v++) s.UR[v] = s.mean[v] + mid * (s.point[v] - s.mean[v]);
+              if (eq.pressure(s.UR, gamma) >= epsP) lo = mid; else hi = mid;
+            }
+            theta = Math.min(theta, lo);
+          }
+        }
+        if (theta < 0.999999) {
+          theta = Math.max(0, theta);
+          for (let m = 1; m < this.nm; m++) for (let v = 0; v < this.nvar; v++) U[this.id(v, m, c)] *= theta;
+        }
+      }
+    }
+
+    troubledLimiter(U) {
+      if (this.p < 2) return;
+      const threshold = 0.35;
+      for (let c = 0; c < this.nCells; c++) {
+        if (this.solid[c]) continue;
+        let high = 0, low = 1e-16;
+        for (let v = 0; v < this.nvar; v++) low += U[this.id(v, 0, c)] ** 2;
+        for (let m = 2; m < this.nm; m++) for (let v = 0; v < this.nvar; v++) high += U[this.id(v, m, c)] ** 2;
+        if (high / low > threshold) for (let m = 2; m < this.nm; m++) for (let v = 0; v < this.nvar; v++) U[this.id(v, m, c)] = 0;
+      }
+    }
+
+    limit(U) {
+      this.positivityLimiter(U);
+      this.troubledLimiter(U);
+    }
+
+    maxLambda() {
+      const dx = this.params.Lx / this.nx, dy = this.params.Ly / this.ny;
+      let lam = 1e-12;
+      const mean = this.scratch.mean;
+      for (let c = 0; c < this.nCells; c++) {
+        if (this.solid[c]) continue;
+        this.mean(this.U, c, mean);
+        lam = Math.max(lam, (this.equation.maxNormalSpeed(mean, 1, 0, this.params.gamma) / dx) + (this.equation.maxNormalSpeed(mean, 0, 1, this.params.gamma) / dy));
+      }
+      return (2 * this.p + 1) * lam;
+    }
+
+    step(dt) {
+      const U = this.U, A = this.A, B = this.B, R = this.R;
+      this.rhs(U, R);
+      for (let i = 0; i < U.length; i++) A[i] = U[i] + dt * R[i];
+      this.limit(A);
+      this.rhs(A, R);
+      for (let i = 0; i < U.length; i++) B[i] = 0.75 * U[i] + 0.25 * (A[i] + dt * R[i]);
+      this.limit(B);
+      this.rhs(B, R);
+      for (let i = 0; i < U.length; i++) U[i] = (1 / 3) * U[i] + (2 / 3) * (B[i] + dt * R[i]);
+      this.limit(U);
+    }
+
+    syncMeanAoS(out) {
+      for (let c = 0; c < this.nCells; c++) {
+        const b = 4 * c;
+        for (let v = 0; v < this.nvar; v++) out[b + v] = this.U[this.id(v, 0, c)];
+      }
+    }
+  }
+
+  function createMesh(config) {
+    const nx = Number(config.nx);
+    const ny = Number(config.ny || 1);
+    return Object.freeze({
+      nx,
+      ny,
+      dx: Number(config.dx || 1 / nx),
+      dy: Number(config.dy || 1 / ny),
+      solid: config.solid || null,
+      xFaces: config.xFaces || null,
+      yFaces: config.yFaces || null,
+    });
+  }
+
+  function createCase(config) {
+    return Object.freeze({
+      name: String(config.name),
+      equation: config.equation,
+      mesh: config.mesh || null,
+      initialCondition: config.initialCondition || null,
+      boundaryCondition: config.boundaryCondition || null,
+      numericalFlux: config.numericalFlux || null,
+      displayFields: Object.freeze([...(config.displayFields || [])]),
+    });
+  }
+
+  const Stepper = Object.freeze({
+    euler: 'euler',
+    rk2: 'rk2',
+    rk3: 'rk3',
+  });
+
   window.DgEngine = Object.freeze({
     TAU,
     EPS,
@@ -258,9 +763,19 @@
     eval1,
     eval1AtX,
     eval2Ref,
+    evalModal,
     eval2AtXY,
     mean2AtXY,
     projectInitial1D,
     projectInitial2D,
+    FACE,
+    Equations,
+    NumericalFlux,
+    createEquation,
+    createMesh,
+    createCase,
+    Stepper,
+    Euler2D,
+    DGSolver2D,
   });
 })();

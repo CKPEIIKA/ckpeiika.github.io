@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>DG lab — Euler cylinder, diamond, advection, Burgers</title>
+  <title>DG/FV lab — Euler FV cylinder, diamond, advection, Burgers</title>
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
@@ -72,18 +72,17 @@
   <div id="helpOverlay">
     <div class="helpBox">
       <button class="chip close" data-act="help">close</button>
-      <h1>DG lab</h1>
-      <p><b>Euler cylinder</b> solves the two-dimensional compressible Euler equations with a modal DG scheme. The obstacle is an embedded reflective wall on a Cartesian mesh.</p>
+      <h1>DG/FV lab</h1>
+      <p><b>Euler cylinder</b> solves the two-dimensional inviscid compressible Euler equations with the same vector DG operator used by the scalar cases. The obstacle is an approximate stair-step slip wall on a Cartesian mesh.</p>
       <p><code>U=(ρ,ρu,ρv,E)</code>, <code>F(U)</code> and <code>G(U)</code> are Euler fluxes, and <code>p=(γ−1)(E−ρ(u²+v²)/2)</code>. The face flux is local Lax–Friedrichs/Rusanov: <code>F̂=½(F_L+F_R)−½α a_max(U_R−U_L)</code>.</p>
       <div id="formulaText"></div>
       <p><b>Nx, Ny</b> are the mesh dimensions. <b>CFL</b> controls the explicit time step. <b>spf</b> is solver steps per animation frame. <b>M∞</b> is freestream Mach number. <b>R</b> is cylinder radius. <b>γ</b> is the ratio of specific heats.</p>
-      <p>All cases use DG modal coefficients. <b>P0/Q0</b> is the finite-volume limit; higher degrees add Legendre modes inside each cell. Burgers can use a mean-preserving troubled-cell minmod limiter, while Euler uses a positivity fallback for density and pressure.</p>
+      <p>All cases use modal coefficients. <b>P0/Q0</b> is the finite-volume limit; higher degrees add Legendre modes inside each cell. Euler is inviscid, not Navier-Stokes, and uses positivity/troubled-cell limiting for robustness.</p>
       <p>Hotkeys: <b>Space</b> run/pause, <b>R</b> reset, <b>S</b> one step, <b>[</b>/<b>]</b> degree, <b>1</b> Euler, <b>2</b> diamond, <b>3</b> advection, <b>4</b> Burgers.</p>
     </div>
   </div>
 
   <script src="./dg-engine.js"></script>
-  <script src="./fvm.js"></script>
   <script src="./app.js"></script>
 </body>
 </html>
