@@ -1682,9 +1682,16 @@ window.DgEulerCylinderLab = {
     canvas.height = Math.floor(window.innerHeight * dpr);
   }
 
+  function pauseForControl() {
+    if (!sim.running) return;
+    sim.running = false;
+    updateUI();
+  }
+
   function handleAction(act) {
     if (!act) return;
     if (act === 'about' || act === 'help') {
+      pauseForControl();
       ui.helpOverlay.classList.toggle('open');
       return;
     }
@@ -1694,6 +1701,7 @@ window.DgEulerCylinderLab = {
       updateUI();
       return;
     }
+    pauseForControl();
     if (act === 'step') {
       if (isEuler()) {
         sim.running = false;
@@ -2251,27 +2259,40 @@ window.DgEulerCylinderLab = {
 
 
   function bind() {
+    document.addEventListener('pointerdown', (ev) => {
+      const target = ev.target instanceof Element ? ev.target : null;
+      if (!target) return;
+      const control = target.closest('[data-act], [data-edit], [data-status], [data-case], [data-option-key], [data-status-action]');
+      if (!control) return;
+      if (control.closest('[data-act="run"]')) return;
+      pauseForControl();
+    }, true);
+
     document.addEventListener('click', (ev) => {
       const clickTarget = ev.target instanceof Element ? ev.target : null;
       const editTarget = clickTarget ? clickTarget.closest('[data-edit]') : null;
       if (editTarget) {
+        pauseForControl();
         openTokenEditor(editTarget.dataset.edit, editTarget);
         return;
       }
       if (clickTarget && ui.tokenEditor && ui.tokenEditor.contains(clickTarget)) {
         const optionTarget = clickTarget.closest('[data-option-key]');
         if (optionTarget) {
+          pauseForControl();
           applyOptionValue(optionTarget.dataset.optionKey, optionTarget.dataset.optionValue);
           return;
         }
         const caseTarget = clickTarget.closest('[data-case]');
         if (caseTarget) {
+          pauseForControl();
           setCase(caseTarget.dataset.case);
           hideTokenEditor();
           return;
         }
         const statusAction = clickTarget.closest('[data-status-action]');
         if (statusAction) {
+          pauseForControl();
           runFooterAction(statusAction.dataset.statusKind, statusAction.dataset.statusAction, statusAction);
           return;
         }
@@ -2281,11 +2302,13 @@ window.DgEulerCylinderLab = {
       }
       const caseTarget = clickTarget ? clickTarget.closest('[data-case]') : null;
       if (caseTarget) {
+        pauseForControl();
         setCase(caseTarget.dataset.case);
         return;
       }
       const statusTarget = clickTarget ? clickTarget.closest('[data-status]') : null;
       if (statusTarget) {
+        pauseForControl();
         openStatusPanel(statusTarget.dataset.status, statusTarget);
         return;
       }
