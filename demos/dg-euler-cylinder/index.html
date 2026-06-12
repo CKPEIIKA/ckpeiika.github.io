@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>DG/FV lab — Euler FV cylinder, diamond, advection, Burgers</title>
+  <title>DG/FV lab — Euler cylinder, diamond, advection, Burgers</title>
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
@@ -13,18 +13,22 @@
     <button class="chip run" id="runChip" data-act="run">▶</button>
     <button class="chip" id="caseChip" data-act="case" title="Choose equation/case">case <b>euler</b></button>
     <button class="chip" id="degreeChip" data-act="degree" title="Polynomial degree. P0/Q0 is the finite-volume limit.">deg <b>P1</b></button>
-    <button class="chip" id="meshChip" data-act="mesh" title="Cycle mesh presets. Exact mesh size can be typed below.">mesh <b>72×36</b></button>
+    <button class="chip" id="meshChip" data-act="mesh" title="Cycle mesh presets, or edit Nx/Ny directly.">mesh <b>72×36</b></button>
+    <button class="chip" id="nxChip" data-edit="nx" title="Edit number of cells in x">Nx <b>72</b></button>
+    <button class="chip" id="nyChip" data-edit="ny" title="Edit number of cells in y">Ny <b>36</b></button>
     <button class="chip" id="fluxChip" data-act="flux" title="Cycle numerical flux dissipation">flux <b>rusanov</b></button>
     <button class="chip" id="alphaChip" data-act="alpha" title="Flux dissipation multiplier α">α <b>1.00</b></button>
     <button class="chip" id="cflChip" data-edit="cfl" title="Edit Courant number">CFL <b>.18</b></button>
     <button class="chip" id="spfChip" data-edit="spf" title="Edit solver steps per animation frame">spf <b>1</b></button>
-    <button class="chip" id="initChip" data-act="init" title="Initial condition for scalar cases">init <b>free</b></button>
-    <button class="chip" id="flowChip" data-act="flow" title="Flow setup or velocity field">Mach <b>1.50</b></button>
+    <button class="chip" id="initChip" data-act="init" title="Initial condition for scalar cases">init <b>blob</b></button>
+    <button class="chip" id="flowChip" data-act="flow" title="Velocity field for the scalar advection case">vel <b>uniform</b></button>
+    <button class="chip eulerOnly" id="shapeChip" data-act="shape" title="Obstacle shape: square (exact on grid), wedge (oblique-shock theory), cylinder (stair-step)">body <b>square</b></button>
     <button class="chip eulerOnly" id="machChip" data-edit="mach" title="Edit freestream Mach number">M∞ <b>1.50</b></button>
-    <button class="chip eulerOnly" id="radiusChip" data-edit="radius" title="Edit cylinder radius">R <b>.10</b></button>
+    <button class="chip eulerOnly" id="radiusChip" data-edit="radius" title="Edit body half-height R (frontal height 2R for all shapes)">R <b>.10</b></button>
     <button class="chip eulerOnly" id="gammaChip" data-edit="gamma" title="Edit ratio of specific heats">γ <b>1.40</b></button>
-    <button class="chip" id="limiterChip" data-act="limiter" title="Limiter/stabilizer">stab <b>positivity</b></button>
+    <button class="chip" id="limiterChip" data-act="limiter" title="Limiter/stabilizer regime">stab <b>minmod</b></button>
     <button class="chip" id="displayChip" data-act="display" title="What field is drawn">plot <b>schlieren</b></button>
+    <button class="chip help" data-act="help" title="Help, formulas, hotkeys (H)">?</button>
   </div>
 
   <div id="tokenEditor" class="input-help" aria-hidden="true">
@@ -73,12 +77,14 @@
     <div class="helpBox">
       <button class="chip close" data-act="help">close</button>
       <h1>DG/FV lab</h1>
-      <p><b>Euler cylinder</b> solves the two-dimensional inviscid compressible Euler equations with the same vector DG operator used by the scalar cases. The obstacle is an approximate stair-step slip wall on a Cartesian mesh.</p>
+      <p><b>Euler flow over a body</b> solves the two-dimensional inviscid compressible Euler equations with the same vector DG operator used by the scalar cases. Three obstacle shapes are available: a <b>square</b> (default — its walls coincide exactly with cell faces, so there is no geometry error and the entropy plot measures the scheme itself), a <b>10° half-angle wedge</b> (for supersonic M∞ the θ–β–M oblique-shock angle is drawn as a dashed overlay, so the computed shock can be compared against theory; below the attachment Mach the shock detaches), and a <b>cylinder</b> (a stair-step approximation that illustrates geometry error on Cartesian meshes). Exterior boundaries impose Riemann-invariant (characteristic) far-field states, so subsonic as well as supersonic freestreams behave correctly.</p>
       <p><code>U=(ρ,ρu,ρv,E)</code>, <code>F(U)</code> and <code>G(U)</code> are Euler fluxes, and <code>p=(γ−1)(E−ρ(u²+v²)/2)</code>. The face flux is local Lax–Friedrichs/Rusanov: <code>F̂=½(F_L+F_R)−½α a_max(U_R−U_L)</code>.</p>
       <div id="formulaText"></div>
       <p><b>Nx, Ny</b> are the mesh dimensions. <b>CFL</b> controls the explicit time step. <b>spf</b> is solver steps per animation frame. <b>M∞</b> is freestream Mach number. <b>R</b> is cylinder radius. <b>γ</b> is the ratio of specific heats.</p>
-      <p>All cases use modal coefficients. <b>P0/Q0</b> is the finite-volume limit; higher degrees add Legendre modes inside each cell. Euler is inviscid, not Navier-Stokes, and uses positivity/troubled-cell limiting for robustness.</p>
-      <p>Hotkeys: <b>Space</b> run/pause, <b>R</b> reset, <b>S</b> one step, <b>[</b>/<b>]</b> degree, <b>1</b> Euler, <b>2</b> diamond, <b>3</b> advection, <b>4</b> Burgers.</p>
+      <p>All cases use modal Legendre coefficients. <b>P0/Q0</b> is the finite-volume limit; higher degrees add modes inside each cell, and the Euler plot is sampled on a subcell grid so you can see the extra in-cell structure. The <b>stab</b> chip switches the Euler limiter live: <i>off</i> (raw DG — expect blow-up at shocks), <i>positivity</i> (Zhang–Shu scaling only), <i>pos+minmod</i> (troubled cells become limited linears), <i>pos+flatten</i> (troubled cells drop to their means).</p>
+      <p>Things to try: compare P0 (FV) with P1/P2 at the same DOF count; run M∞=0.5 vs 1.5 and watch the bow shock appear; on the wedge, refine the mesh and watch the computed shock converge to the dashed theoretical angle, or drop M∞ toward ~1.4 to see the shock detach; compare <i>entropy</i> between the square (exact walls) and the cylinder (stair-step) at the same resolution; watch the Cd/Cl history settle (or oscillate) in the diagnostics panel; lower α or the limiter strength until the scheme fails.</p>
+      <p>Euler is inviscid — drag here is wave/numerical drag, not a Navier–Stokes prediction.</p>
+      <p>Hotkeys: <b>Space</b> run/pause, <b>R</b> reset, <b>S</b> one step, <b>H</b> help, <b>[</b>/<b>]</b> degree, <b>1</b> Euler, <b>2</b> diamond, <b>3</b> advection, <b>4</b> Burgers.</p>
     </div>
   </div>
 

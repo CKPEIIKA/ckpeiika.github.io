@@ -15,6 +15,9 @@ window.DgEulerCylinderLab = {
     legendre: P,
     dLegendre: dP,
     minmod3,
+    WEDGE_HALF_ANGLE,
+    insideShape,
+    obliqueShockBeta,
     buildBasis,
     burgersPhysicalFlux,
     burgersFlux,
@@ -55,6 +58,7 @@ window.DgEulerCylinderLab = {
     spfChip: document.getElementById('spfChip'),
     initChip: document.getElementById('initChip'),
     flowChip: document.getElementById('flowChip'),
+    shapeChip: document.getElementById('shapeChip'),
     machChip: document.getElementById('machChip'),
     radiusChip: document.getElementById('radiusChip'),
     gammaChip: document.getElementById('gammaChip'),
@@ -95,14 +99,15 @@ window.DgEulerCylinderLab = {
   const DEGREES = [0, 1, 2, 3];
   const EULER_DEGREES = [0, 1, 2];
   const ALPHAS = [0, 0.25, 0.5, 1.0, 1.5];
-  const ALPHASE = [1.0, 1.25, 1.6, 2.0, 3.0];
+  const ALPHASE = [0.75, 1.0, 1.25, 1.6, 2.0];
   const CFLS = [0.08, 0.14, 0.20, 0.32, 0.48, 0.72, 1.00];
-  const FLOWS = ['swirl', 'shear', 'uniform'];
+  const FLOWS = ['uniform', 'swirl', 'shear'];
+  const EULER_LIMITERS = ['off', 'pos', 'minmod', 'flatten'];
   const INIT2 = ['diamond', 'blob', 'two', 'vortex', 'square'];
   const INIT1 = ['sine', 'riemann', 'bump', 'square'];
   const DISPLAY2 = ['field', 'mean', 'jump', 'modes', 'residual', 'error'];
   const DISPLAY1 = ['field', 'mean', 'jump', 'modes', 'residual', 'history'];
-  const DISPLAYE = ['schlieren', 'rho', 'pressure', 'mach', 'speed', 'vorticity', 'solid'];
+  const DISPLAYE = ['schlieren', 'rho', 'pressure', 'mach', 'speed', 'vorticity', 'entropy', 'solid'];
   const MESH2 = [
     [28, 18], [40, 26], [56, 36], [72, 46], [92, 58],
   ];
@@ -120,26 +125,36 @@ window.DgEulerCylinderLab = {
     ny: 36,
     cfl: 0.18,
     alpha: 1.0,
-    flow: 'swirl',
+    flow: 'uniform',
     init: 'blob',
     stab: 'off',
+    eulerLimiter: 'minmod',
     display: 'schlieren',
     stepsPerFrame: 1,
     gamma: 1.4,
     mach: 1.5,
+    shape: 'square',
     cylR: 0.10,
     Lx: 4.0,
     Ly: 2.0,
     cylX: 1.0,
     cylY: 1.0,
+    bodyRect: null,
     eU: null,
     eSolver: null,
     solid: null,
     eFluidCells: null,
+    eFine: null,
+    eFineRecycle: null,
+    eFineK: 1,
+    eFineW: 0,
+    eFineH: 0,
+    eForces: [0, 0],
+    limLast: [0, 0],
+    eHist: null,
     activeCase: null,
     activeMesh: null,
     stepper: Stepper.rk3,
-    posFix: 0,
     t: 0,
     dt: 0,
     step: 0,
@@ -169,6 +184,7 @@ window.DgEulerCylinderLab = {
       rhs2: new Float64Array(1),
       miniBins: new Float64Array(1),
       miniCounts: new Float64Array(1),
+      dispField: null,
       imageData: null,
       image32: null,
     },
@@ -185,7 +201,9 @@ window.DgEulerCylinderLab = {
   function is1D() { return sim.caseName === 'burgers'; }
   function is2D() { return !is1D(); }
   function isScalar2D() { return !isEuler() && !is1D(); }
-  function isConstantAdvection() { return sim.caseName === 'advection' || sim.caseName === 'diamond'; }
+  function isConstantAdvection() {
+    return sim.caseName === 'diamond' || (sim.caseName === 'advection' && sim.flow === 'uniform');
+  }
 
   function configureActiveCase() {
     const equation = isEuler()
@@ -279,17 +297,14 @@ window.DgEulerCylinderLab = {
   }
 
   function velocity(x, y) {
-    if (isConstantAdvection()) {
-      return [1.0, 0.38];
-    }
-    if (sim.flow === 'uniform') return [1.0, 0.38];
+    if (sim.caseName === 'diamond' || sim.flow === 'uniform') return [1.0, 0.38];
     if (sim.flow === 'shear') return [1.0, 0.52 * Math.sin(TAU * x)];
     // Periodic, divergence-free toy field: div(sin(2πy), sin(2πx)) = 0.
     return [Math.sin(TAU * y), Math.sin(TAU * x)];
   }
 
   function maxVelocity() {
-    if (isConstantAdvection() || sim.flow === 'uniform') return Math.hypot(1.0, 0.38);
+    if (isConstantAdvection()) return Math.hypot(1.0, 0.38);
     if (sim.flow === 'shear') return Math.hypot(1.0, 0.52);
     return Math.SQRT2;
   }
@@ -379,7 +394,7 @@ window.DgEulerCylinderLab = {
     return new Promise(resolve => setTimeout(() => resolve(null), ms));
   }
 
-  function createEulerWorkerPool(far) {
+  function createEulerWorkerPool() {
     destroyEulerWorkers();
     if (!window.Worker) return null;
     try {
@@ -416,6 +431,9 @@ window.DgEulerCylinderLab = {
         cylX: sim.cylX,
         cylY: sim.cylY,
         cylR: sim.cylR,
+        shape: sim.shape,
+        limiter: sim.eulerLimiter,
+        fineK: sim.eFineK,
       });
       return {
         mode: 'owned',
@@ -425,6 +443,13 @@ window.DgEulerCylinderLab = {
           seq += 1;
           const id = seq;
           const promise = new Promise(resolve => pending.set(id, resolve));
+          const transfers = [];
+          let recycle = null;
+          if (sim.eFineRecycle && sim.eFineRecycle.buffer.byteLength) {
+            recycle = sim.eFineRecycle.buffer;
+            transfers.push(recycle);
+          }
+          sim.eFineRecycle = null;
           try {
             worker.postMessage({
               type: 'stepFull',
@@ -433,7 +458,9 @@ window.DgEulerCylinderLab = {
               cfl: sim.cfl,
               alpha: sim.alpha,
               gamma: sim.gamma,
-            });
+              limiter: sim.eulerLimiter,
+              recycle,
+            }, transfers);
           } catch (error) {
             pending.delete(id);
             return Promise.resolve(null);
@@ -451,6 +478,12 @@ window.DgEulerCylinderLab = {
     return sim.solid[eCell(i, j)];
   }
 
+  function eulerFineK() {
+    let k = sim.p === 0 ? 1 : (sim.p === 1 ? 3 : 4);
+    while (k > 1 && sim.nx * k * sim.ny * k > 260000) k--;
+    return k;
+  }
+
   function initEuler() {
     sim.eulerGeneration += 1;
     sim.eulerStepping = false;
@@ -458,17 +491,31 @@ window.DgEulerCylinderLab = {
     sim.solid = new Uint8Array(n);
     const fluid = [];
     const dx = sim.Lx / sim.nx, dy = sim.Ly / sim.ny;
+    const inside = (x, y) => insideShape(sim.shape, x, y, sim.cylX, sim.cylY, sim.cylR);
+    let iMin = sim.nx, iMax = -1, jMin = sim.ny, jMax = -1;
     for (let j = 0; j < sim.ny; j++) {
       const y = (j + 0.5) * dy;
       for (let i = 0; i < sim.nx; i++) {
         const x = (i + 0.5) * dx;
         const c = eCell(i, j);
-        const inside = Math.hypot(x - sim.cylX, y - sim.cylY) < sim.cylR;
-        sim.solid[c] = inside ? 1 : 0;
-        if (!inside) fluid.push(c);
+        const solidHere = inside(x, y);
+        sim.solid[c] = solidHere ? 1 : 0;
+        if (solidHere) {
+          if (i < iMin) iMin = i;
+          if (i > iMax) iMax = i;
+          if (j < jMin) jMin = j;
+          if (j > jMax) jMax = j;
+        } else {
+          fluid.push(c);
+        }
       }
     }
     sim.eFluidCells = Int32Array.from(fluid);
+    // Extent of the discrete (cell-quantized) body; for the square this is
+    // the exact wall location since cell faces coincide with the geometry.
+    sim.bodyRect = iMax >= 0
+      ? { x0: iMin * dx, x1: (iMax + 1) * dx, y0: jMin * dy, y1: (jMax + 1) * dy }
+      : null;
     const far = eFarVars();
     const farfield = (out) => { out[0] = far[0]; out[1] = far[1]; out[2] = far[2]; out[3] = far[3]; };
     sim.eSolver = new DGSolver2D({
@@ -487,22 +534,31 @@ window.DgEulerCylinderLab = {
       initialCondition: (xUnit, yUnit, out) => {
         const x = xUnit * sim.Lx;
         const y = yUnit * sim.Ly;
-        if (Math.hypot(x - sim.cylX, y - sim.cylY) < sim.cylR) {
+        if (inside(x, y)) {
           out[0] = far[0]; out[1] = 0; out[2] = 0; out[3] = far[3];
         } else {
           out[0] = far[0]; out[1] = far[1]; out[2] = far[2]; out[3] = far[3];
         }
       },
     });
+    sim.eSolver.limiterMode = sim.eulerLimiter;
     sim.eU = new Float64Array(4 * n);
     sim.eSolver.syncMeanAoS(sim.eU);
-    sim.workerPool = createEulerWorkerPool(far);
+    sim.eFineK = eulerFineK();
+    sim.eFineW = sim.nx * sim.eFineK;
+    sim.eFineH = sim.ny * sim.eFineK;
+    sim.eFine = new Float32Array(4 * sim.eFineW * sim.eFineH);
+    sim.eFineRecycle = null;
+    sim.eSolver.sampleFieldAoS(sim.eFine, sim.eFineK);
+    sim.eForces = [0, 0];
+    sim.limLast = [0, 0];
+    sim.eHist = { t: [], cd: [], cl: [] };
+    sim.workerPool = createEulerWorkerPool();
     configureActiveCase();
     sim.t = 0;
     sim.dt = 0;
     sim.step = 0;
     sim.bad = false;
-    sim.posFix = 0;
     sim.perfWarning = '';
     sim.solverMs = 0;
   }
@@ -533,6 +589,7 @@ window.DgEulerCylinderLab = {
     const dt = computeEulerDt();
     sim.eSolver.params.alpha = sim.alpha;
     sim.eSolver.params.gamma = sim.gamma;
+    sim.eSolver.limiterMode = sim.eulerLimiter;
     const t0 = performance.now();
     sim.eSolver.step(dt);
     sim.solverMs = performance.now() - t0;
@@ -542,13 +599,35 @@ window.DgEulerCylinderLab = {
     checkEulerFinite();
   }
 
+  function pushForceHistory() {
+    if (!sim.eHist) return;
+    const qref = Math.max(1e-9, sim.mach * sim.mach * sim.cylR); // ½ρ∞u∞²·(2R)
+    const h = sim.eHist;
+    h.t.push(sim.t);
+    h.cd.push(sim.eForces[0] / qref);
+    h.cl.push(sim.eForces[1] / qref);
+    if (h.t.length > 900) {
+      h.t.splice(0, h.t.length - 900);
+      h.cd.splice(0, h.cd.length - 900);
+      h.cl.splice(0, h.cl.length - 900);
+    }
+  }
+
+  function refreshEulerDerived() {
+    if (!sim.eSolver || !sim.eFine) return;
+    sim.eSolver.sampleFieldAoS(sim.eFine, sim.eFineK);
+    sim.eSolver.wallForces(sim.eForces);
+    sim.limLast = [sim.eSolver.limPos || 0, sim.eSolver.limTC || 0];
+    pushForceHistory();
+  }
+
   async function eulerStepAsync(count = 1) {
     if (sim.bad || sim.eulerStepping) return;
     const generation = sim.eulerGeneration;
     sim.eulerStepping = true;
     try {
       if (sim.workerPool && sim.workerPool.mode === 'owned') {
-        const ready = await Promise.race([sim.workerPool.ready, timeout(1200)]);
+        const ready = await Promise.race([sim.workerPool.ready, timeout(5000)]);
         if (generation !== sim.eulerGeneration) return;
         if (ready) {
           const msg = await Promise.race([
@@ -558,10 +637,20 @@ window.DgEulerCylinderLab = {
           if (generation !== sim.eulerGeneration) return;
           if (msg && msg.eU) {
             sim.eU = new Float64Array(msg.eU);
+            if (msg.field) {
+              if (sim.eFine && sim.eFine.buffer.byteLength) sim.eFineRecycle = sim.eFine;
+              sim.eFine = new Float32Array(msg.field);
+            }
+            if (msg.forces) sim.eForces = msg.forces;
+            if (msg.lim) {
+              const denom = Math.max(1, count);
+              sim.limLast = [msg.lim[0] / denom, msg.lim[1] / denom];
+            }
             sim.t = msg.t;
             sim.step = msg.step;
             sim.dt = msg.dt;
             sim.solverMs = msg.solverMs;
+            pushForceHistory();
             sim.stats = computeStats();
             checkEulerFinite();
             return;
@@ -577,6 +666,7 @@ window.DgEulerCylinderLab = {
         if (generation !== sim.eulerGeneration) return;
         eulerStep();
       }
+      refreshEulerDerived();
       sim.stats = computeStats();
     } finally {
       if (generation === sim.eulerGeneration) sim.eulerStepping = false;
@@ -624,6 +714,7 @@ window.DgEulerCylinderLab = {
         }
     }
     sim.rhoMin = minR; sim.rhoMax = maxR; sim.pMin = minP; sim.pMax = maxP; sim.machMax = maxM;
+    const qref = Math.max(1e-9, sim.mach * sim.mach * sim.cylR);
     return {
       mass,
       l2: Math.sqrt(Math.max(0, grad / Math.max(1, gradN))),
@@ -634,68 +725,92 @@ window.DgEulerCylinderLab = {
       error: NaN,
       dof: fluid * sim.basis.nm2 * 4,
       rhoMin: minR, rhoMax: maxR, pMin: minP, pMax: maxP, machMax: maxM,
+      cd: sim.eForces[0] / qref,
+      cl: sim.eForces[1] / qref,
     };
   }
 
-  function eVelocityAt(i, j, comp, fallback) {
-    if (i < 0) i = 0; if (i >= sim.nx) i = sim.nx - 1;
-    if (j < 0) j = 0; if (j >= sim.ny) j = sim.ny - 1;
-    if (eSolidAt(i, j)) return fallback;
-    const b = eBase(i, j);
-    const rho = Math.max(1e-12, sim.eU[b]);
-    return comp === 0 ? sim.eU[b + 1] / rho : sim.eU[b + 2] / rho;
-  }
-
-  function eSampleCell(i, j) {
-    if (i < 0) i = 0; if (i >= sim.nx) i = sim.nx - 1;
-    if (j < 0) j = 0; if (j >= sim.ny) j = sim.ny - 1;
-    if (sim.display === 'solid') return eSolidAt(i, j) ? 1 : 0;
-    if (eSolidAt(i, j)) return NaN;
-    const U = sim.eU;
-    const g = sim.gamma;
-    const b = eBase(i, j);
-    const rho = Math.max(1e-12, U[b]);
-    const u = U[b + 1] / rho;
-    const v = U[b + 2] / rho;
-    const p = Math.max(1e-10, (g - 1) * (U[b + 3] - 0.5 * rho * (u * u + v * v)));
-    const c = Math.sqrt(g * p / rho);
-    if (sim.display === 'rho') return rho;
-    if (sim.display === 'pressure') return p;
-    if (sim.display === 'mach') return Math.hypot(u, v) / c;
-    if (sim.display === 'speed') return Math.hypot(u, v);
-    if (sim.display === 'vorticity') {
-      const il = Math.max(0, i - 1), ir = Math.min(sim.nx - 1, i + 1);
-      const jb = Math.max(0, j - 1), jt = Math.min(sim.ny - 1, j + 1);
-      const dx = sim.Lx / sim.nx, dy = sim.Ly / sim.ny;
-      const vR = eVelocityAt(ir, j, 1, v);
-      const vL = eVelocityAt(il, j, 1, v);
-      const uT = eVelocityAt(i, jt, 0, u);
-      const uB = eVelocityAt(i, jb, 0, u);
-      return (vR - vL) / (Math.max(1, ir - il) * dx) - (uT - uB) / (Math.max(1, jt - jb) * dy);
+  // Builds the scalar field to plot from the subcell-sampled conserved
+  // variables in sim.eFine and returns the colour-mapping info.
+  function buildEulerDisplayField() {
+    const FW = sim.eFineW, FH = sim.eFineH, F = sim.eFine, g = sim.gamma;
+    const n = FW * FH;
+    let D = sim.scratch.dispField;
+    if (!D || D.length !== n) {
+      D = new Float32Array(n);
+      sim.scratch.dispField = D;
     }
-    // Schlieren-like density-gradient diagnostic.
-    const il = Math.max(0, i - 1), ir = Math.min(sim.nx - 1, i + 1);
-    const jb = Math.max(0, j - 1), jt = Math.min(sim.ny - 1, j + 1);
-    const dx = sim.Lx / sim.nx, dy = sim.Ly / sim.ny;
-    const rR = eSolidAt(ir, j) ? rho : U[eBase(ir, j)];
-    const rL = eSolidAt(il, j) ? rho : U[eBase(il, j)];
-    const rT = eSolidAt(i, jt) ? rho : U[eBase(i, jt)];
-    const rB = eSolidAt(i, jb) ? rho : U[eBase(i, jb)];
-    const gr = Math.hypot((rR - rL) / (Math.max(1, ir - il) * dx), (rT - rB) / (Math.max(1, jt - jb) * dy));
-    return gr / (rho + 1e-6);
+    const disp = sim.display;
+    if (disp === 'solid') {
+      for (let q = 0; q < n; q++) D[q] = Number.isFinite(F[4 * q]) ? 0 : 1;
+      return { kind: 'linear', lo: 0, hi: 1 };
+    }
+    if (disp === 'schlieren' || disp === 'vorticity') {
+      const dxf = sim.Lx / FW, dyf = sim.Ly / FH;
+      for (let fy = 0; fy < FH; fy++) {
+        for (let fx = 0; fx < FW; fx++) {
+          const q = fy * FW + fx;
+          const rho = F[4 * q];
+          if (!Number.isFinite(rho) || rho <= 0) { D[q] = NaN; continue; }
+          const qL = fx > 0 && Number.isFinite(F[4 * (q - 1)]) ? q - 1 : q;
+          const qR = fx < FW - 1 && Number.isFinite(F[4 * (q + 1)]) ? q + 1 : q;
+          const qB = fy > 0 && Number.isFinite(F[4 * (q - FW)]) ? q - FW : q;
+          const qT = fy < FH - 1 && Number.isFinite(F[4 * (q + FW)]) ? q + FW : q;
+          const sx = Math.max(1, qR - qL) * dxf;
+          const sy = Math.max(1, (qT - qB) / FW) * dyf;
+          if (disp === 'schlieren') {
+            D[q] = Math.hypot((F[4 * qR] - F[4 * qL]) / sx, (F[4 * qT] - F[4 * qB]) / sy) / rho;
+          } else {
+            const vR = F[4 * qR + 2] / F[4 * qR], vL = F[4 * qL + 2] / F[4 * qL];
+            const uT = F[4 * qT + 1] / F[4 * qT], uB = F[4 * qB + 1] / F[4 * qB];
+            D[q] = (vR - vL) / sx - (uT - uB) / sy;
+          }
+        }
+      }
+    } else {
+      for (let q = 0; q < n; q++) {
+        const rho = F[4 * q];
+        if (!Number.isFinite(rho) || rho <= 0) { D[q] = NaN; continue; }
+        const u = F[4 * q + 1] / rho, v = F[4 * q + 2] / rho;
+        const p = Math.max(1e-12, (g - 1) * (F[4 * q + 3] - 0.5 * rho * (u * u + v * v)));
+        if (disp === 'rho') D[q] = rho;
+        else if (disp === 'pressure') D[q] = p;
+        else if (disp === 'speed') D[q] = Math.hypot(u, v);
+        else if (disp === 'mach') D[q] = Math.hypot(u, v) / Math.sqrt(g * p / rho);
+        else if (disp === 'entropy') D[q] = g * p / Math.pow(rho, g) - 1;
+        else D[q] = rho;
+      }
+    }
+    let lo = Infinity, hi = -Infinity;
+    for (let q = 0; q < n; q++) {
+      const v = D[q];
+      if (Number.isFinite(v)) { if (v < lo) lo = v; if (v > hi) hi = v; }
+    }
+    if (!(hi >= lo)) { lo = 0; hi = 1; }
+    if (disp === 'schlieren') return { kind: 'schlieren', lo: 0, hi: Math.max(1e-9, hi) };
+    if (disp === 'vorticity') {
+      const s = Math.max(Math.abs(lo), Math.abs(hi), 1e-9);
+      return { kind: 'div', lo: -s, hi: s };
+    }
+    if (disp === 'mach') return { kind: 'linear', lo: 0, hi: Math.max(1.2, hi) };
+    if (disp === 'speed') return { kind: 'linear', lo: 0, hi: Math.max(1e-9, hi) };
+    return { kind: 'linear', lo, hi: hi > lo ? hi : lo + 1 };
   }
 
-  function eulerColor(v) {
-    if (!Number.isFinite(v)) return 0xff000200;
-    let t = 0;
-    if (sim.display === 'rho') t = (v - (sim.rhoMin || 0.3)) / (((sim.rhoMax || 2) - (sim.rhoMin || 0.3)) + 1e-9);
-    else if (sim.display === 'pressure') t = (v - (sim.pMin || 0.1)) / (((sim.pMax || 2) - (sim.pMin || 0.1)) + 1e-9);
-    else if (sim.display === 'mach') t = v / Math.max(2.0, sim.machMax || 2.0);
-    else if (sim.display === 'speed') t = v / Math.max(1.5, sim.mach + 0.8);
-    else if (sim.display === 'vorticity') t = 0.5 + 0.5 * Math.tanh(0.12 * v);
-    else if (sim.display === 'solid') t = v;
-    else t = 1 - Math.exp(-8.0 * Math.abs(v));
+  function eulerColorMapped(v, info) {
+    if (!Number.isFinite(v)) return (255 << 24) | (2 << 16) | (2 << 8) | 0;
+    let t;
+    if (info.kind === 'schlieren') t = 1 - Math.exp(-4.5 * v / info.hi);
+    else t = (v - info.lo) / (info.hi - info.lo);
     t = clamp(t, 0, 1);
+    if (info.kind === 'div') {
+      const a = 2 * (t - 0.5);
+      const m = Math.abs(a);
+      const r = Math.round(4 + 30 * m);
+      const g = a > 0 ? Math.round(14 + 215 * m) : Math.round(10 + 40 * m);
+      const b = a > 0 ? Math.round(8 + 40 * m) : Math.round(30 + 215 * m);
+      return (255 << 24) | (b << 16) | (g << 8) | r;
+    }
     const r = Math.round(2 + 24 * t + 150 * Math.max(0, t - 0.82));
     const g = Math.round(8 + 75 * Math.sqrt(t) + 170 * t);
     const b = Math.round(4 + 26 * t + 26 * Math.max(0, t - 0.72));
@@ -704,30 +819,31 @@ window.DgEulerCylinderLab = {
 
   function drawEuler() {
     const W = canvas.width, H = canvas.height;
-    const rw = Math.min(sim.nx, 360);
-    const rh = Math.min(sim.ny, 180);
-    if (off.width !== rw || off.height !== rh || !sim.scratch.imageData) {
-      off.width = rw;
-      off.height = rh;
-      sim.scratch.imageData = offCtx.createImageData(rw, rh);
+    const FW = sim.eFineW, FH = sim.eFineH;
+    if (!sim.eFine || !FW || !FH) return;
+    const info = buildEulerDisplayField();
+    if (off.width !== FW || off.height !== FH || !sim.scratch.imageData || sim.scratch.imageData.width !== FW || sim.scratch.imageData.height !== FH) {
+      off.width = FW;
+      off.height = FH;
+      sim.scratch.imageData = offCtx.createImageData(FW, FH);
       sim.scratch.image32 = new Uint32Array(sim.scratch.imageData.data.buffer);
     }
-    const img = sim.scratch.imageData;
+    const D = sim.scratch.dispField;
     const data = sim.scratch.image32;
-    for (let py = 0; py < rh; py++) {
-      const j = Math.min(sim.ny - 1, Math.floor((1 - py / Math.max(1, rh - 1)) * sim.ny));
-      for (let px = 0; px < rw; px++) {
-        const i = Math.min(sim.nx - 1, Math.floor(px / Math.max(1, rw - 1) * sim.nx));
-        data[py * rw + px] = eulerColor(eSampleCell(i, j));
-      }
+    for (let py = 0; py < FH; py++) {
+      const rowD = (FH - 1 - py) * FW;
+      const rowI = py * FW;
+      for (let px = 0; px < FW; px++) data[rowI + px] = eulerColorMapped(D[rowD + px], info);
     }
-    offCtx.putImageData(img, 0, 0);
+    offCtx.putImageData(sim.scratch.imageData, 0, 0);
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(off, 0, 0, W, H);
-    drawEulerGridAndCylinder(W, H);
+    drawEulerOverlay(W, H);
   }
 
-  function drawEulerGridAndCylinder(W, H) {
+  function drawEulerOverlay(W, H) {
+    const X = x => W * x / sim.Lx;
+    const Yp = y => H * (1 - y / sim.Ly);
     ctx.save();
     if (sim.nx <= 360) {
       ctx.lineWidth = Math.max(1, dpr * 0.45);
@@ -739,47 +855,118 @@ window.DgEulerCylinderLab = {
       for (let j = 0; j <= sim.ny; j += sy) { const y = H * j / sim.ny; ctx.moveTo(0, y); ctx.lineTo(W, y); }
       ctx.stroke();
     }
-    const cx = W * sim.cylX / sim.Lx;
-    const cy = H * (1 - sim.cylY / sim.Ly);
-    const rx = W * sim.cylR / sim.Lx;
-    const ry = H * sim.cylR / sim.Ly;
-    ctx.beginPath();
-    ctx.ellipse(cx, cy, rx, ry, 0, 0, TAU);
     ctx.fillStyle = 'rgba(0,8,2,.95)';
-    ctx.fill();
-    ctx.lineWidth = Math.max(1.5, 1.5 * dpr);
     ctx.strokeStyle = 'rgba(166,255,122,.75)';
-    ctx.stroke();
+    ctx.lineWidth = Math.max(1.5, 1.5 * dpr);
+    if (sim.shape === 'square') {
+      // The discrete body is exactly this rectangle: cell faces are the wall.
+      const r = sim.bodyRect;
+      if (r) {
+        ctx.beginPath();
+        ctx.rect(X(r.x0), Yp(r.y1), X(r.x1) - X(r.x0), Yp(r.y0) - Yp(r.y1));
+        ctx.fill();
+        ctx.stroke();
+      }
+    } else if (sim.shape === 'wedge') {
+      const L = sim.cylR / Math.tan(WEDGE_HALF_ANGLE);
+      const xt = sim.cylX - 0.5 * L;
+      ctx.beginPath();
+      ctx.moveTo(X(xt), Yp(sim.cylY));
+      ctx.lineTo(X(xt + L), Yp(sim.cylY + sim.cylR));
+      ctx.lineTo(X(xt + L), Yp(sim.cylY - sim.cylR));
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      const beta = obliqueShockBeta(sim.mach, WEDGE_HALF_ANGLE, sim.gamma);
+      if (Number.isFinite(beta)) {
+        const cosB = Math.cos(beta), sinB = Math.sin(beta);
+        const tTop = Math.min((sim.Lx - xt) / cosB, (sim.Ly - sim.cylY) / sinB);
+        const tBot = Math.min((sim.Lx - xt) / cosB, sim.cylY / sinB);
+        ctx.setLineDash([6 * dpr, 5 * dpr]);
+        ctx.strokeStyle = 'rgba(69,216,255,.62)';
+        ctx.lineWidth = 1.2 * dpr;
+        ctx.beginPath();
+        ctx.moveTo(X(xt), Yp(sim.cylY));
+        ctx.lineTo(X(xt + tTop * cosB), Yp(sim.cylY + tTop * sinB));
+        ctx.moveTo(X(xt), Yp(sim.cylY));
+        ctx.lineTo(X(xt + tBot * cosB), Yp(sim.cylY - tBot * sinB));
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = 'rgba(69,216,255,.8)';
+        ctx.font = `${11 * dpr}px ui-monospace`;
+        ctx.fillText(
+          `β=${(beta * 180 / Math.PI).toFixed(1)}° theory`,
+          X(xt + 0.55 * tTop * cosB) + 8 * dpr,
+          Yp(sim.cylY + 0.55 * tTop * sinB),
+        );
+      }
+    } else {
+      ctx.beginPath();
+      ctx.ellipse(X(sim.cylX), Yp(sim.cylY), W * sim.cylR / sim.Lx, H * sim.cylR / sim.Ly, 0, 0, TAU);
+      ctx.fill();
+      ctx.stroke();
+    }
     // Freestream arrow.
     ctx.strokeStyle = 'rgba(166,255,122,.45)';
     ctx.fillStyle = 'rgba(166,255,122,.55)';
     ctx.lineWidth = 1.4 * dpr;
-    const y = cy - 1.35 * ry;
+    const y = Yp(sim.cylY + 1.35 * sim.cylR);
     ctx.beginPath(); ctx.moveTo(0.07 * W, y); ctx.lineTo(0.19 * W, y); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(0.19 * W, y); ctx.lineTo(0.175 * W, y - 5 * dpr); ctx.lineTo(0.175 * W, y + 5 * dpr); ctx.closePath(); ctx.fill();
     ctx.restore();
   }
 
+  // Time history of the pressure force on the cylinder: Cd flattening out
+  // shows convergence to steady state, oscillating Cl reveals unsteadiness.
   function drawMiniEuler(W, H) {
-    const st = sim.stats || {};
-    const vals = [
-      ['ρ', st.rhoMax || 1],
-      ['p', st.pMax || 1],
-      ['M', st.machMax || 0],
-      ['∇ρ', st.jump || 0],
-    ];
-    let maxv = 1e-12;
-    for (const v of vals) maxv = Math.max(maxv, Math.abs(v[1]));
-    const bw = W / vals.length;
+    const h = sim.eHist;
     miniCtx.font = `${10 * dpr}px ui-monospace`;
-    miniCtx.textAlign = 'center';
-    for (let k = 0; k < vals.length; k++) {
-      const h = H * 0.75 * Math.sqrt(Math.abs(vals[k][1]) / maxv);
-      miniCtx.fillStyle = 'rgba(166,255,122,.78)';
-      miniCtx.fillRect(k * bw + 6 * dpr, H - h - 16 * dpr, Math.max(1, bw - 12 * dpr), h);
-      miniCtx.fillStyle = 'rgba(189,236,203,.85)';
-      miniCtx.fillText(vals[k][0], k * bw + 0.5 * bw, H - 12 * dpr);
+    miniCtx.textAlign = 'left';
+    if (!h || h.t.length < 2) {
+      miniCtx.fillStyle = 'rgba(189,236,203,.6)';
+      miniCtx.fillText('Cd/Cl history appears as the run advances', 8 * dpr, H * 0.5);
+      return;
     }
+    const n = h.t.length;
+    let lo = Infinity, hi = -Infinity;
+    for (let k = 0; k < n; k++) {
+      const a = h.cd[k], b = h.cl[k];
+      if (Number.isFinite(a)) { if (a < lo) lo = a; if (a > hi) hi = a; }
+      if (Number.isFinite(b)) { if (b < lo) lo = b; if (b > hi) hi = b; }
+    }
+    if (!(hi > lo)) { lo -= 0.5; hi += 0.5; }
+    const pad = 0.1 * (hi - lo) + 1e-9;
+    lo -= pad; hi += pad;
+    const yOf = v => H - 14 * dpr - (H - 24 * dpr) * (v - lo) / (hi - lo);
+    const xOf = k => (n === 1 ? W : W * k / (n - 1));
+    if (lo < 0 && hi > 0) {
+      miniCtx.strokeStyle = 'rgba(189,236,203,.25)';
+      miniCtx.lineWidth = dpr;
+      miniCtx.beginPath();
+      miniCtx.moveTo(0, yOf(0));
+      miniCtx.lineTo(W, yOf(0));
+      miniCtx.stroke();
+    }
+    const series = [
+      [h.cd, 'rgba(166,255,122,.92)'],
+      [h.cl, 'rgba(69,216,255,.92)'],
+    ];
+    for (const [vals, color] of series) {
+      miniCtx.strokeStyle = color;
+      miniCtx.lineWidth = 1.5 * dpr;
+      miniCtx.beginPath();
+      for (let k = 0; k < n; k++) {
+        const y = yOf(Number.isFinite(vals[k]) ? vals[k] : 0);
+        if (k === 0) miniCtx.moveTo(xOf(k), y); else miniCtx.lineTo(xOf(k), y);
+      }
+      miniCtx.stroke();
+    }
+    miniCtx.fillStyle = 'rgba(166,255,122,.92)';
+    miniCtx.fillText(`Cd ${fmt(h.cd[n - 1], 3)}`, 8 * dpr, 13 * dpr);
+    miniCtx.fillStyle = 'rgba(69,216,255,.92)';
+    miniCtx.fillText(`Cl ${fmt(h.cl[n - 1], 3)}`, 8 * dpr + 92 * dpr, 13 * dpr);
+    miniCtx.fillStyle = 'rgba(189,236,203,.6)';
+    miniCtx.fillText(`t ${fmt(h.t[0], 1)} … ${fmt(h.t[n - 1], 1)}`, 8 * dpr, H - 4 * dpr);
   }
 
 
@@ -798,6 +985,10 @@ window.DgEulerCylinderLab = {
       updateUI();
       return;
     }
+    // Leaving the Euler case: invalidate any in-flight worker replies so the
+    // stall watchdog cannot fire against the scalar run later.
+    sim.eulerGeneration += 1;
+    sim.eulerStepping = false;
     destroyEulerWorkers();
     const n = coeffCount();
     sim.U = new Float64Array(n);
@@ -820,7 +1011,7 @@ window.DgEulerCylinderLab = {
       if (!['off', 'filter'].includes(sim.stab)) sim.stab = 'off';
       if (sim.caseName === 'diamond') sim.init = 'diamond';
       else if (!INIT2.includes(sim.init) || sim.init === 'diamond') sim.init = 'blob';
-      if (!DISPLAY2.includes(sim.display)) sim.display = 'field';
+      if (!currentDisplayList().includes(sim.display)) sim.display = 'field';
       projectInitial2D();
       initParticles();
     }
@@ -1132,7 +1323,7 @@ window.DgEulerCylinderLab = {
             res2 += sim.lastR[base + a * np + b] ** 2;
           }
         }
-        if (sim.caseName === 'advection') {
+        if (isConstantAdvection()) {
           for (let qx = 0; qx < Q.x.length; qx++) {
             const xi = Q.x[qx];
             const x = (i + 0.5 * (xi + 1)) * hx;
@@ -1165,7 +1356,7 @@ window.DgEulerCylinderLab = {
       jump: Math.sqrt(jump2 / Math.max(1, jumpN)),
       residual: Math.sqrt(res2 / sim.U.length),
       maxAbs: Math.sqrt(l2),
-      error: sim.caseName === 'advection' ? Math.sqrt(err) : NaN,
+      error: isConstantAdvection() ? Math.sqrt(err) : NaN,
       dof: sim.U.length,
     };
   }
@@ -1173,7 +1364,7 @@ window.DgEulerCylinderLab = {
   function sample2DDisplay(x, y) {
     const disp = sim.display;
     if (disp === 'mean') return mean2AtXY(sim.U, x, y);
-    if (disp === 'error' && sim.caseName === 'advection') return Math.abs(eval2AtXY(sim.U, x, y) - exact2D(x, y));
+    if (disp === 'error' && isConstantAdvection()) return Math.abs(eval2AtXY(sim.U, x, y) - exact2D(x, y));
     if (disp === 'jump') return jumpSensor2D(x, y);
     if (disp === 'modes') return modeSensor2D(x, y);
     if (disp === 'residual') return residualSensor2D(x, y);
@@ -1534,12 +1725,32 @@ window.DgEulerCylinderLab = {
     }
   }
 
+  function drawBlowupBanner() {
+    if (!sim.bad) return;
+    const W = canvas.width, H = canvas.height;
+    const msg = 'solution diverged — press R to reset (lower CFL, raise α, or strengthen the limiter)';
+    ctx.save();
+    ctx.font = `${14 * dpr}px ui-monospace`;
+    ctx.textAlign = 'center';
+    const w = Math.min(W - 20 * dpr, ctx.measureText(msg).width + 44 * dpr);
+    const y = H * 0.5;
+    ctx.fillStyle = 'rgba(1,4,2,.82)';
+    ctx.fillRect(W * 0.5 - w / 2, y - 24 * dpr, w, 42 * dpr);
+    ctx.strokeStyle = 'rgba(255,189,100,.85)';
+    ctx.lineWidth = dpr;
+    ctx.strokeRect(W * 0.5 - w / 2, y - 24 * dpr, w, 42 * dpr);
+    ctx.fillStyle = '#ffbd64';
+    ctx.fillText(msg, W * 0.5, y + 3 * dpr);
+    ctx.restore();
+  }
+
   function draw() {
     drawBackground();
     if (isEuler()) drawEuler();
     else if (is1D()) drawBurgers();
     else draw2D();
     drawMini();
+    drawBlowupBanner();
   }
 
   function fmt(x, n = 3) {
@@ -1557,7 +1768,7 @@ window.DgEulerCylinderLab = {
       ui.nyChip.style.display = is1D() ? 'none' : '';
       ui.nyChip.innerHTML = `Ny <b>${sim.ny}</b>`;
     }
-    const fluxName = isEuler() ? 'Rusanov' : (sim.alpha === 0 ? 'central' : (sim.alpha === 1 ? 'upwind' : `LLF`));
+    const fluxName = isEuler() ? 'Rusanov' : (sim.alpha === 0 ? 'central' : (sim.alpha === 1 ? (is1D() ? 'rusanov' : 'upwind') : `α=${sim.alpha}`));
     ui.fluxChip.style.display = isEuler() ? 'none' : '';
     ui.fluxChip.innerHTML = `flux <b>${fluxName}</b>`;
     ui.alphaChip.innerHTML = `α <b>${sim.alpha.toFixed(2)}</b>`;
@@ -1565,18 +1776,18 @@ window.DgEulerCylinderLab = {
     if (ui.spfChip) ui.spfChip.innerHTML = `spf <b>${sim.stepsPerFrame}</b>`;
     ui.initChip.style.display = isEuler() || sim.caseName === 'diamond' ? 'none' : '';
     ui.initChip.innerHTML = `init <b>${sim.init}</b>`;
-    ui.flowChip.style.display = isScalar2D() && !isConstantAdvection() ? '' : 'none';
-    ui.flowChip.innerHTML = `vel <b>${sim.caseName === 'advection' ? 'constant' : sim.flow}</b>`;
+    ui.flowChip.style.display = sim.caseName === 'advection' ? '' : 'none';
+    ui.flowChip.innerHTML = `vel <b>${sim.flow}</b>`;
+    if (ui.shapeChip) ui.shapeChip.innerHTML = `body <b>${sim.shape}</b>`;
     if (ui.machChip) ui.machChip.innerHTML = `M∞ <b>${sim.mach.toFixed(2)}</b>`;
     if (ui.radiusChip) ui.radiusChip.innerHTML = `R <b>${sim.cylR.toFixed(2).replace(/^0/, '')}</b>`;
     if (ui.gammaChip) ui.gammaChip.innerHTML = `γ <b>${sim.gamma.toFixed(2)}</b>`;
-    ui.limiterChip.style.display = isEuler() ? 'none' : '';
-    ui.limiterChip.innerHTML = isEuler() ? `stab <b>pos</b>` : `${is1D() ? 'lim' : 'stab'} <b>${sim.stab}</b>`;
+    ui.limiterChip.innerHTML = isEuler() ? `stab <b>${sim.eulerLimiter}</b>` : `${is1D() ? 'lim' : 'stab'} <b>${sim.stab}</b>`;
     ui.displayChip.innerHTML = `plot <b>${sim.display}</b>`;
     ui.runChip.textContent = sim.running ? 'Ⅱ' : '▶';
 
     const st = sim.stats || {};
-    ui.okChip.textContent = sim.bad ? 'blown' : (sim.perfWarning ? 'paused' : 'ok');
+    ui.okChip.textContent = sim.bad ? 'blown' : (sim.perfWarning ? 'warn' : 'ok');
     ui.okChip.style.color = sim.bad || sim.perfWarning ? 'var(--bad)' : 'var(--hot)';
     ui.stepChip.textContent = `step ${sim.step}`;
     ui.timeChip.textContent = `t ${fmt(sim.t, 3)}`;
@@ -1584,8 +1795,8 @@ window.DgEulerCylinderLab = {
     ui.massChip.textContent = `mass ${fmt(st.mass, 4)}`;
     if (isEuler()) {
       ui.errChip.textContent = `Mmax ${fmt(st.machMax, 2)}`;
-      ui.jumpChip.textContent = `∇ρ ${fmt(st.jump, 2)}`;
-      ui.modeChip.textContent = `fix ${sim.posFix || 0}`;
+      ui.jumpChip.textContent = `Cd ${fmt(st.cd, 2)}`;
+      ui.modeChip.textContent = `lim ${Math.round(sim.limLast[0])}/${Math.round(sim.limLast[1])}`;
     } else {
       ui.errChip.textContent = Number.isFinite(st.error) ? `err ${fmt(st.error, 2)}` : `L2 ${fmt(st.l2, 3)}`;
       ui.jumpChip.textContent = `jump ${fmt(st.jump, 2)}`;
@@ -1597,17 +1808,31 @@ window.DgEulerCylinderLab = {
     ui.hudText.textContent = hudText();
   }
 
+  function eulerBodyDesc() {
+    if (sim.shape === 'square') return `square, half-side ${sim.cylR} (walls on cell faces: exact geometry)`;
+    if (sim.shape === 'wedge') {
+      const beta = obliqueShockBeta(sim.mach, WEDGE_HALF_ANGLE, sim.gamma);
+      const state = Number.isFinite(beta)
+        ? `attached, theory β=${(beta * 180 / Math.PI).toFixed(1)}°`
+        : (sim.mach > 1 ? 'detached (θ>θmax)' : 'subsonic');
+      return `wedge θ=10°, half-height ${sim.cylR}; ${state}`;
+    }
+    return `cylinder R=${sim.cylR} (stair-step wall)`;
+  }
+
   function hudText() {
     const st = sim.stats || {};
     if (isEuler()) {
       return [
-        `equation   2D compressible Euler`,
-        `scheme     vector modal DG P${sim.p}; Rusanov flux α=${sim.alpha}`,
-        `domain     ${sim.Lx}×${sim.Ly}; mesh ${sim.nx}×${sim.ny}; cylinder R=${sim.cylR}`,
-        `freestream M∞=${sim.mach}, γ=${sim.gamma}; stair-step slip-wall flux`,
+        `equation   2D compressible Euler (inviscid)`,
+        `scheme     vector modal DG P${sim.p} (P0 = FV), SSP-RK3; Rusanov flux ×α=${sim.alpha}`,
+        `limiter    ${sim.eulerLimiter}; cells limited/step pos ${Math.round(sim.limLast[0])}, troubled ${Math.round(sim.limLast[1])}`,
+        `boundary   characteristic far-field; slip wall on body`,
+        `body       ${eulerBodyDesc()}`,
+        `domain     ${sim.Lx}×${sim.Ly}; mesh ${sim.nx}×${sim.ny}; M∞=${sim.mach}; γ=${sim.gamma}`,
+        `forces     Cd ${fmt(st.cd, 3)}   Cl ${fmt(st.cl, 3)}   (pressure only)`,
         `ranges     ρ [${fmt(st.rhoMin, 3)}, ${fmt(st.rhoMax, 3)}]   p [${fmt(st.pMin, 3)}, ${fmt(st.pMax, 3)}]`,
-        `runtime    ${sim.solverMs ? Math.round(sim.solverMs) + ' ms/step' : '--'}; workers ${sim.workerPool ? sim.workerPool.workers.length : 0}${sim.perfWarning ? '; ' + sim.perfWarning : ''}`,
-        `model      inviscid Euler; P0 is FV limit, not Navier-Stokes validation`,
+        `runtime    ${sim.solverMs ? Math.round(sim.solverMs) + ' ms/step' : '--'}; workers ${sim.workerPool ? sim.workerPool.workers.length : 0}; render ${sim.eFineK}×${sim.eFineK} subcells${sim.perfWarning ? '; ' + sim.perfWarning : ''}`,
       ].join('\n');
     }
     if (is1D()) {
@@ -1623,7 +1848,7 @@ window.DgEulerCylinderLab = {
       `equation   u_t + div(a u) = 0`,
       `scheme     tensor-product modal DG Q${sim.p}; Q0 is FVM`,
       `flux       fhat_n = ½s(u-+u+) + ½α|s|(u--u+)`,
-      `velocity   constant periodic field`,
+      `velocity   ${sim.caseName === 'diamond' ? 'constant (1, 0.38)' : (sim.flow === 'uniform' ? 'constant (1, 0.38), exact solution known' : sim.flow + ', divergence-free, periodic')}`,
       `mass       ${fmt(st.mass, 6)}   ${Number.isFinite(st.error) ? 'err ' + fmt(st.error, 3) : 'res ' + fmt(st.residual, 3)}`,
     ].join('\n');
   }
@@ -1635,7 +1860,11 @@ window.DgEulerCylinderLab = {
         `<code>U=(ρ,ρu,ρv,E)</code>, <code>p=(γ−1)(E−ρ(u²+v²)/2)</code>.<br>` +
         `Vector DG update: <code>d/dt ∫K U_h φ dx − ∫K F(U_h)·∇φ dx + ∫∂K F̂n φ ds = 0</code>.<br>` +
         `Rusanov normal flux: <code>F̂n=½(Fn_L+Fn_R)−½α a_max(U_R−U_L)</code>.<br>` +
-        `Stair-step cylinder wall uses direct slip-wall pressure flux: <code>Fwall=(0,p nx,p ny,0)</code>.`;
+        `Body walls use the exact slip-wall flux <code>Fwall=(0,p nx,p ny,0)</code>: the square is exactly aligned with cell faces, ` +
+        `while curved/slanted walls (cylinder, wedge) are stair-step approximations on the Cartesian mesh. ` +
+        `Exterior boundaries use Riemann-invariant (characteristic) far-field states, valid for sub- and supersonic M∞.<br>` +
+        `Limiting: Zhang–Shu positivity scaling toward the cell mean plus a troubled-cell limiter ` +
+        `(minmod-limited linears or flattening to means).`;
       return;
     }
     if (is1D()) {
@@ -1691,8 +1920,16 @@ window.DgEulerCylinderLab = {
   function handleAction(act) {
     if (!act) return;
     if (act === 'about' || act === 'help') {
-      pauseForControl();
+      const opening = !ui.helpOverlay.classList.contains('open');
       ui.helpOverlay.classList.toggle('open');
+      if (opening) {
+        sim.resumeAfterHelp = sim.running;
+        pauseForControl();
+      } else if (sim.resumeAfterHelp && !sim.bad) {
+        sim.resumeAfterHelp = false;
+        sim.running = true;
+        updateUI();
+      }
       return;
     }
     if (act === 'run') {
@@ -1701,7 +1938,6 @@ window.DgEulerCylinderLab = {
       updateUI();
       return;
     }
-    pauseForControl();
     if (act === 'step') {
       if (isEuler()) {
         sim.running = false;
@@ -1757,16 +1993,14 @@ window.DgEulerCylinderLab = {
       return;
     }
     if (act === 'flow') {
-      if (isEuler()) {
-        openTokenEditor('mach', ui.machChip || ui.flowChip);
-        return;
-      }
-      if (is1D() || isConstantAdvection()) return;
-      openOptionPanel('flow', ui.flowChip);
+      if (sim.caseName === 'advection') openOptionPanel('flow', ui.flowChip);
+      return;
+    }
+    if (act === 'shape') {
+      if (isEuler()) openOptionPanel('shape', ui.shapeChip);
       return;
     }
     if (act === 'limiter') {
-      if (isEuler()) return;
       openOptionPanel('limiter', ui.limiterChip);
       return;
     }
@@ -1782,7 +2016,7 @@ window.DgEulerCylinderLab = {
     sim.meshIndex = Math.max(0, Math.min(1, sim.meshIndex));
     if (sim.caseName === 'euler') {
       if (!EULER_DEGREES.includes(sim.p)) sim.p = 1;
-      sim.display = 'schlieren';
+      if (!DISPLAYE.includes(sim.display)) sim.display = 'schlieren';
     } else if (sim.caseName === 'burgers') {
       if (!INIT1.includes(sim.init)) sim.init = 'sine';
       if (!DISPLAY1.includes(sim.display)) sim.display = 'field';
@@ -1794,7 +2028,10 @@ window.DgEulerCylinderLab = {
   }
 
   function currentDisplayList() {
-    return isEuler() ? DISPLAYE : (is1D() ? DISPLAY1 : DISPLAY2);
+    if (isEuler()) return DISPLAYE;
+    if (is1D()) return DISPLAY1;
+    // The pointwise error plot needs the exact solution, i.e. constant advection.
+    return isConstantAdvection() ? DISPLAY2 : DISPLAY2.filter(name => name !== 'error');
   }
 
   function syncPlotSelect() {
@@ -1864,7 +2101,7 @@ window.DgEulerCylinderLab = {
       title: 'CFL',
       input: 'cflInput',
       values: [0.08, 0.14, 0.2, 0.32, 0.48, 0.72, 1.0],
-      meta: 'Explicit time-step Courant number',
+      meta: 'Courant number; dt already includes the 1/(2p+1) degree factor, so ≈1 is the explicit stability edge',
     },
     spf: {
       title: 'steps per frame',
@@ -1879,10 +2116,10 @@ window.DgEulerCylinderLab = {
       meta: 'Applies to the Euler cylinder case',
     },
     radius: {
-      title: 'cylinder radius',
+      title: 'body half-height R',
       input: 'radiusInput',
       values: [0.05, 0.08, 0.10, 0.12, 0.16],
-      meta: 'Domain units; changing it resets the case',
+      meta: 'Frontal height is 2R for every shape, so Cd is comparable; changing R resets the case',
     },
     gamma: {
       title: 'ratio of specific heats',
@@ -1928,11 +2165,11 @@ window.DgEulerCylinderLab = {
         title: 'flux',
         value: sim.alpha === 0 ? 'central' : (sim.alpha === 1 ? 'upwind' : 'llf'),
         values: [
-          { value: 'central', label: 'central' },
-          { value: 'upwind', label: 'upwind' },
-          { value: 'llf', label: 'LLF' },
+          { value: 'central', label: 'central (α=0)' },
+          { value: 'upwind', label: is1D() ? 'rusanov (α=1)' : 'upwind (α=1)' },
+          { value: 'llf', label: 'extra (α=1.5)' },
         ],
-        meta: 'Scalar numerical flux choice; LLF uses stronger dissipation',
+        meta: 'α scales the jump-dissipation term of the interface flux; α=0 is dispersive and oscillates at fronts',
       };
     }
     if (key === 'alpha') {
@@ -1956,16 +2193,41 @@ window.DgEulerCylinderLab = {
         title: 'velocity field',
         value: sim.flow,
         values: FLOWS.map(name => ({ value: name, label: name })),
-        meta: 'Velocity field for the variable-coefficient scalar advection case',
+        meta: 'uniform has an exact solution (enables the error plot); swirl and shear are divergence-free variable fields',
+      };
+    }
+    if (key === 'shape') {
+      return {
+        title: 'body shape',
+        value: sim.shape,
+        values: [
+          { value: 'square', label: 'square' },
+          { value: 'wedge', label: 'wedge 10°' },
+          { value: 'cylinder', label: 'cylinder' },
+        ],
+        meta: 'square walls coincide with cell faces (exact geometry); the wedge overlays the θ–β–M oblique-shock angle when attached; the cylinder shows the stair-step approximation. All have frontal height 2R.',
       };
     }
     if (key === 'limiter') {
+      if (isEuler()) {
+        return {
+          title: 'Euler limiting',
+          value: sim.eulerLimiter,
+          values: [
+            { value: 'off', label: 'off' },
+            { value: 'pos', label: 'positivity' },
+            { value: 'minmod', label: 'pos + minmod' },
+            { value: 'flatten', label: 'pos + flatten' },
+          ],
+          meta: 'Applies live. off: raw DG, expect blow-up at shocks. positivity: Zhang–Shu scaling only. minmod: troubled cells reduced to limited linears. flatten: troubled cells dropped to means (most dissipative).',
+        };
+      }
       const list = is1D() ? ['off', 'minmod'] : ['off', 'filter'];
       return {
         title: is1D() ? 'limiter' : 'stabilizer',
         value: sim.stab,
         values: list.map(name => ({ value: name, label: name })),
-        meta: is1D() ? 'Mean-preserving troubled-cell limiter for Burgers shocks' : 'Modal filter for scalar 2D cases',
+        meta: is1D() ? 'Mean-preserving troubled-cell limiter for Burgers shocks' : 'Modal filter for scalar 2D cases (acts on degree ≥ 2 modes)',
       };
     }
     if (key === 'display') {
@@ -2000,12 +2262,20 @@ window.DgEulerCylinderLab = {
     } else if (key === 'flow') {
       sim.flow = value;
       allocate();
+    } else if (key === 'shape') {
+      if (['square', 'wedge', 'cylinder'].includes(value)) sim.shape = value;
+      allocate();
     } else if (key === 'limiter') {
-      sim.stab = value;
+      if (isEuler()) {
+        sim.eulerLimiter = EULER_LIMITERS.includes(value) ? value : 'minmod';
+        if (sim.eSolver) sim.eSolver.limiterMode = sim.eulerLimiter;
+      } else {
+        sim.stab = value;
+      }
       updateUI();
     } else if (key === 'display') {
       sim.display = value;
-      if (sim.display === 'error' && sim.caseName !== 'advection') sim.display = 'field';
+      if (sim.display === 'error' && !isConstantAdvection()) sim.display = 'field';
       syncPlotSelect();
       updateUI();
     }
@@ -2233,7 +2503,7 @@ window.DgEulerCylinderLab = {
       li.appendChild(button);
       ui.tokenEditorItems.appendChild(li);
     }
-    ui.tokenEditorMeta.textContent = 'Euler cylinder, diamond, smooth advection, or Burgers';
+    ui.tokenEditorMeta.textContent = 'Euler flow over a body, diamond, smooth advection, or Burgers';
     const rect = anchor.getBoundingClientRect();
     const editorWidth = Math.min(360, window.innerWidth - 24);
     ui.tokenEditor.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - editorWidth - 8))}px`;
@@ -2259,40 +2529,30 @@ window.DgEulerCylinderLab = {
 
 
   function bind() {
-    document.addEventListener('pointerdown', (ev) => {
-      const target = ev.target instanceof Element ? ev.target : null;
-      if (!target) return;
-      const control = target.closest('[data-act], [data-edit], [data-status], [data-case], [data-option-key], [data-status-action]');
-      if (!control) return;
-      if (control.closest('[data-act="run"]')) return;
-      pauseForControl();
-    }, true);
-
+    // Controls apply live: structural changes (case, mesh, degree, …) reset
+    // the state but keep the run going; tuning knobs (α, CFL, plot, limiter)
+    // take effect without interrupting the solver.
     document.addEventListener('click', (ev) => {
       const clickTarget = ev.target instanceof Element ? ev.target : null;
       const editTarget = clickTarget ? clickTarget.closest('[data-edit]') : null;
       if (editTarget) {
-        pauseForControl();
         openTokenEditor(editTarget.dataset.edit, editTarget);
         return;
       }
       if (clickTarget && ui.tokenEditor && ui.tokenEditor.contains(clickTarget)) {
         const optionTarget = clickTarget.closest('[data-option-key]');
         if (optionTarget) {
-          pauseForControl();
           applyOptionValue(optionTarget.dataset.optionKey, optionTarget.dataset.optionValue);
           return;
         }
         const caseTarget = clickTarget.closest('[data-case]');
         if (caseTarget) {
-          pauseForControl();
           setCase(caseTarget.dataset.case);
           hideTokenEditor();
           return;
         }
         const statusAction = clickTarget.closest('[data-status-action]');
         if (statusAction) {
-          pauseForControl();
           runFooterAction(statusAction.dataset.statusKind, statusAction.dataset.statusAction, statusAction);
           return;
         }
@@ -2302,13 +2562,11 @@ window.DgEulerCylinderLab = {
       }
       const caseTarget = clickTarget ? clickTarget.closest('[data-case]') : null;
       if (caseTarget) {
-        pauseForControl();
         setCase(caseTarget.dataset.case);
         return;
       }
       const statusTarget = clickTarget ? clickTarget.closest('[data-status]') : null;
       if (statusTarget) {
-        pauseForControl();
         openStatusPanel(statusTarget.dataset.status, statusTarget);
         return;
       }
@@ -2342,6 +2600,7 @@ window.DgEulerCylinderLab = {
       if (ev.code === 'Space') { ev.preventDefault(); handleAction('run'); }
       else if (ev.key === 'r' || ev.key === 'R') handleAction('reset');
       else if (ev.key === 's' || ev.key === 'S') handleAction('step');
+      else if (ev.key === 'h' || ev.key === 'H' || ev.key === '?') handleAction('help');
       else if (ev.key === '[') { sim.p = Math.max(0, sim.p - 1); if (isEuler()) sim.p = Math.min(2, sim.p); allocate(); }
       else if (ev.key === ']') { sim.p = Math.min(isEuler() ? 2 : 3, sim.p + 1); allocate(); }
       else if (ev.key === '1') setCase('euler');
@@ -2355,6 +2614,7 @@ window.DgEulerCylinderLab = {
     bind();
     resize();
     allocate();
+    sim.running = true;
     requestAnimationFrame((t) => { lastFrame = t; requestAnimationFrame(animationLoop); });
   }
 

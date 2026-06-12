@@ -53,6 +53,54 @@
     return 0;
   }
 
+  // Obstacle shapes for the Euler case, shared by the main thread and the
+  // worker so both build the identical solid mask. All shapes have frontal
+  // height 2r, so drag coefficients are directly comparable across shapes.
+  const WEDGE_HALF_ANGLE = 10 * Math.PI / 180;
+
+  function insideShape(shape, x, y, cx, cy, r) {
+    if (shape === 'square') {
+      return Math.abs(x - cx) < r && Math.abs(y - cy) < r;
+    }
+    if (shape === 'wedge') {
+      // Triangle pointing upstream: sharp tip, flat axis-aligned base.
+      const L = r / Math.tan(WEDGE_HALF_ANGLE);
+      const xt = cx - 0.5 * L;
+      return x > xt && x < xt + L && Math.abs(y - cy) < (x - xt) * Math.tan(WEDGE_HALF_ANGLE);
+    }
+    return Math.hypot(x - cx, y - cy) < r;
+  }
+
+  // Weak-branch solution of the θ–β–M oblique-shock relation
+  //   tan θ = 2 cot β (M² sin²β − 1) / (M²(γ + cos 2β) + 2).
+  // Returns NaN when the shock is detached (θ > θmax(M)) or M ≤ 1.
+  function obliqueShockBeta(M, theta, gamma) {
+    if (!(M > 1) || !(theta > 0)) return NaN;
+    const f = (b) => {
+      const s = Math.sin(b);
+      return 2 * (M * M * s * s - 1) / (Math.tan(b) * (M * M * (gamma + Math.cos(2 * b)) + 2)) - Math.tan(theta);
+    };
+    const bMin = Math.asin(1 / M) + 1e-9;
+    const bMax = Math.PI / 2 - 1e-9;
+    const n = 400;
+    let prevB = bMin, prevF = f(bMin);
+    for (let k = 1; k <= n; k++) {
+      const b = bMin + (bMax - bMin) * k / n;
+      const fb = f(b);
+      if (prevF <= 0 && fb >= 0) {
+        let lo = prevB, hi = b;
+        for (let it = 0; it < 50; it++) {
+          const mid = 0.5 * (lo + hi);
+          if (f(mid) < 0) lo = mid; else hi = mid;
+        }
+        return 0.5 * (lo + hi);
+      }
+      prevB = b;
+      prevF = fb;
+    }
+    return NaN;
+  }
+
   function buildBasis(p) {
     const np = p + 1;
     const phi = [];
@@ -425,16 +473,52 @@
       out[3] = 0;
     },
     boundaryState(type, Uinside, x, y, nx, ny, params, out) {
-      if (type === FACE.INLET || type === FACE.FARFIELD) {
-        params.farfield(out);
-      } else {
+      if (type === FACE.WALL) {
         out.set(Uinside);
+        return;
       }
+      params.farfield(EULER_FAR);
+      this.characteristicGhost(Uinside, EULER_FAR, nx, ny, params.gamma, out);
+    },
+    // Riemann-invariant far-field state for an exterior face with outward
+    // normal (nx,ny). Handles sub/supersonic in/outflow uniformly, so inlet,
+    // outlet, and the lateral boundaries all behave correctly at any Mach.
+    characteristicGhost(Ui, Uf, nx, ny, gamma, out) {
+      const gm1 = gamma - 1;
+      const ri = Math.max(1e-12, Ui[0]);
+      const ui = Ui[1] / ri, vi = Ui[2] / ri;
+      const pi = this.pressureSafe(Ui, gamma);
+      const ci = Math.sqrt(gamma * pi / ri);
+      const rf = Math.max(1e-12, Uf[0]);
+      const uf = Uf[1] / rf, vf = Uf[2] / rf;
+      const pf = Math.max(1e-12, gm1 * (Uf[3] - 0.5 * rf * (uf * uf + vf * vf)));
+      const cf = Math.sqrt(gamma * pf / rf);
+      const uni = ui * nx + vi * ny;
+      const unf = uf * nx + vf * ny;
+      if (uni >= ci) { out.set(Ui); return; }
+      if (unf <= -cf) { out.set(Uf); return; }
+      const Rp = uni + 2 * ci / gm1;
+      const Rm = unf - 2 * cf / gm1;
+      const unb = 0.5 * (Rp + Rm);
+      const cb = Math.max(1e-9, 0.25 * gm1 * (Rp - Rm));
+      let sEnt, ut, vt;
+      if (unb >= 0) {
+        sEnt = pi / Math.pow(ri, gamma);
+        ut = ui - uni * nx; vt = vi - uni * ny;
+      } else {
+        sEnt = pf / Math.pow(rf, gamma);
+        ut = uf - unf * nx; vt = vf - unf * ny;
+      }
+      const rb = Math.pow(cb * cb / (gamma * Math.max(1e-12, sEnt)), 1 / gm1);
+      const pb = rb * cb * cb / gamma;
+      this.consFromPrim(rb, ut + unb * nx, vt + unb * ny, pb, gamma, out);
     },
     positivityMeanOk(Umean, gamma) {
       return Umean[0] > 1e-10 && this.pressureRaw(Umean, gamma) > 1e-10;
     },
   };
+
+  const EULER_FAR = new Float64Array(4);
 
   class DGSolver2D {
     constructor({ nx, ny, p, equation, params = {}, solid = null, initialCondition = null }) {
@@ -450,6 +534,10 @@
       this.cellStride = this.nCells;
       this.varStride = this.nm * this.nCells;
       this.solid = solid || new Uint8Array(this.nCells);
+      // 'off' | 'pos' | 'minmod' | 'flatten' — see limit().
+      this.limiterMode = params.limiter || 'minmod';
+      this.limPos = 0;
+      this.limTC = 0;
       this.U = new Float64Array(this.nvar * this.nm * this.nCells);
       this.R = new Float64Array(this.U.length);
       this.A = new Float64Array(this.U.length);
@@ -601,12 +689,7 @@
       R.fill(0);
       for (let c = 0; c < this.nCells; c++) {
         if (this.solid[c]) continue;
-        const i = c % this.nx, j = (c / this.nx) | 0;
         for (let qi = 0; qi < qn * qn; qi++) {
-          const qx = (qi / qn) | 0, qy = qi - qx * qn;
-          const x = (i + 0.5 * (quad.x[qx] + 1)) * dx;
-          const y = (j + 0.5 * (quad.x[qy] + 1)) * dy;
-          void x; void y;
           const off = qi * nm2;
           this.evalAt(U, c, volPhi, off, s.UL);
           eq.fluxX(s.UL, gamma, s.Fx);
@@ -685,25 +768,34 @@
       }
     }
 
+    // Returns the Zhang–Shu scaling factor needed so that density and
+    // pressure stay above eps at the quadrature point coeffs[off..]; assumes
+    // this.scratch.mean already holds the (admissible) cell mean.
+    pointTheta(U, c, coeffs, off, theta, epsRho, epsP) {
+      const s = this.scratch, eq = this.equation, gamma = this.params.gamma;
+      this.evalAt(U, c, coeffs, off, s.point);
+      if (s.point[0] < epsRho) {
+        theta = Math.min(theta, (s.mean[0] - epsRho) / (s.mean[0] - s.point[0] + 1e-14));
+      }
+      if (eq.pressureRaw(s.point, gamma) < epsP) {
+        let lo = 0, hi = theta;
+        for (let it = 0; it < 18; it++) {
+          const mid = 0.5 * (lo + hi);
+          for (let v = 0; v < this.nvar; v++) s.UR[v] = s.mean[v] + mid * (s.point[v] - s.mean[v]);
+          if (eq.pressureRaw(s.UR, gamma) >= epsP) lo = mid; else hi = mid;
+        }
+        theta = Math.min(theta, lo);
+      }
+      return theta;
+    }
+
     positivityLimiter(U) {
-      if (this.nm === 1) return;
+      if (this.nm === 1) return 0;
       const epsRho = 1e-7, epsP = 1e-7;
       const qt = this.eulerQuadratureTables();
       const qn = qt.qn, s = this.scratch, eq = this.equation, gamma = this.params.gamma;
       const faceSets = [qt.faceL, qt.faceR, qt.faceB, qt.faceT];
-      const checkPoint = (coeffs, off, c) => {
-        this.evalAt(U, c, coeffs, off, s.point);
-        if (s.point[0] < epsRho) theta = Math.min(theta, (s.mean[0] - epsRho) / (s.mean[0] - s.point[0] + 1e-14));
-        if (eq.pressureRaw(s.point, gamma) < epsP) {
-          let lo = 0, hi = theta;
-          for (let it = 0; it < 18; it++) {
-            const mid = 0.5 * (lo + hi);
-            for (let v = 0; v < this.nvar; v++) s.UR[v] = s.mean[v] + mid * (s.point[v] - s.mean[v]);
-            if (eq.pressureRaw(s.UR, gamma) >= epsP) lo = mid; else hi = mid;
-          }
-          theta = Math.min(theta, lo);
-        }
-      };
+      let fixed = 0;
       for (let c = 0; c < this.nCells; c++) {
         if (this.solid[c]) continue;
         this.mean(U, c, s.mean);
@@ -714,14 +806,15 @@
             const mo = m * this.cellStride + c;
             for (let v = 0; v < this.nvar; v++) U[v * this.varStride + mo] = 0;
           }
+          fixed++;
           continue;
         }
         let theta = 1;
         for (let q = 0; q < qn * qn; q++) {
-          checkPoint(qt.volPhi, q * this.nm, c);
+          theta = this.pointTheta(U, c, qt.volPhi, q * this.nm, theta, epsRho, epsP);
         }
         for (const face of faceSets) {
-          for (let q = 0; q < qn; q++) checkPoint(face, q * this.nm, c);
+          for (let q = 0; q < qn; q++) theta = this.pointTheta(U, c, face, q * this.nm, theta, epsRho, epsP);
         }
         if (theta < 0.999999) {
           theta = Math.max(0, theta);
@@ -729,12 +822,22 @@
             const mo = m * this.cellStride + c;
             for (let v = 0; v < this.nvar; v++) U[v * this.varStride + mo] *= theta;
           }
+          fixed++;
         }
       }
+      return fixed;
     }
 
+    // Troubled-cell limiter. In 'flatten' mode high modes of flagged cells are
+    // dropped to the cell mean (very robust, very dissipative). In 'minmod'
+    // mode flagged cells are reduced to limited linears, Cockburn–Shu style:
+    // slope coefficients are minmod-compared against neighbour mean
+    // differences, all other high modes are dropped.
     troubledLimiter(U) {
-      if (this.p < 1) return;
+      if (this.p < 1) return 0;
+      const mode = this.limiterMode;
+      if (mode !== 'minmod' && mode !== 'flatten') return 0;
+      const np = this.basis.np;
       const threshold = this.p === 1 ? 0.08 : 0.18;
       const qt = this.eulerQuadratureTables();
       const qn = qt.qn;
@@ -742,6 +845,7 @@
       const eq = this.equation;
       const gamma = this.params.gamma;
       const s = this.scratch;
+      let count = 0;
       for (let c = 0; c < this.nCells; c++) {
         if (this.solid[c]) continue;
         let high = 0, low = 1e-16;
@@ -769,18 +873,35 @@
             }
           }
         }
-        if (troubled) {
-          for (let m = 1; m < this.nm; m++) {
-            const mo = m * this.cellStride + c;
-            for (let v = 0; v < this.nvar; v++) U[v * this.varStride + mo] = 0;
+        if (!troubled) continue;
+        count++;
+        const i = c % this.nx, j = (c / this.nx) | 0;
+        for (let v = 0; v < this.nvar; v++) {
+          const meanIdx = v * this.varStride + c;
+          let sx = 0, sy = 0;
+          if (mode === 'minmod') {
+            const mC = U[meanIdx];
+            // Solid/domain-edge neighbours fall back to the own mean, which
+            // makes minmod return 0 there: slopes flatten at walls.
+            const mL = i > 0 && !this.solid[c - 1] ? U[meanIdx - 1] : mC;
+            const mR = i < this.nx - 1 && !this.solid[c + 1] ? U[meanIdx + 1] : mC;
+            const mB = j > 0 && !this.solid[c - this.nx] ? U[meanIdx - this.nx] : mC;
+            const mT = j < this.ny - 1 && !this.solid[c + this.nx] ? U[meanIdx + this.nx] : mC;
+            sx = minmod3(U[(v * this.nm + np) * this.nCells + c], mR - mC, mC - mL);
+            sy = minmod3(U[(v * this.nm + 1) * this.nCells + c], mT - mC, mC - mB);
           }
+          for (let m = 1; m < this.nm; m++) U[(v * this.nm + m) * this.nCells + c] = 0;
+          if (this.nm > 1) U[(v * this.nm + 1) * this.nCells + c] = sy;
+          if (np > 1) U[(v * this.nm + np) * this.nCells + c] = sx;
         }
       }
+      return count;
     }
 
     limit(U) {
-      this.positivityLimiter(U);
-      this.troubledLimiter(U);
+      if (this.limiterMode === 'off') return;
+      this.limTC += this.troubledLimiter(U);
+      this.limPos += this.positivityLimiter(U);
     }
 
     maxLambda() {
@@ -796,6 +917,8 @@
     }
 
     step(dt) {
+      this.limPos = 0;
+      this.limTC = 0;
       const U = this.U, A = this.A, B = this.B, R = this.R;
       this.rhs(U, R);
       for (let i = 0; i < U.length; i++) A[i] = U[i] + dt * R[i];
@@ -813,6 +936,83 @@
         const b = 4 * c;
         for (let v = 0; v < this.nvar; v++) out[b + v] = this.U[v * this.varStride + c];
       }
+    }
+
+    // Evaluates the DG polynomial at k×k uniformly spaced points per cell and
+    // writes them AoS into out (nvar values per point, row-major over the
+    // nx*k × ny*k fine grid). Solid cells are marked with NaN. This is what
+    // makes subcell DG structure visible: P0 reproduces the FV cell-average
+    // picture, higher degrees show in-cell variation.
+    sampleFieldAoS(out, k) {
+      const np = this.basis.np, nm = this.nm, nvar = this.nvar;
+      if (!this._sub || this._sub.k !== k || this._sub.np !== np) {
+        const tbl = new Float64Array(k * k * nm);
+        for (let sy = 0; sy < k; sy++) {
+          const eta = -1 + (2 * sy + 1) / k;
+          for (let sx = 0; sx < k; sx++) {
+            const xi = -1 + (2 * sx + 1) / k;
+            const o = (sy * k + sx) * nm;
+            for (let a = 0; a < np; a++) {
+              const pa = legendre(a, xi);
+              for (let b = 0; b < np; b++) tbl[o + a * np + b] = pa * legendre(b, eta);
+            }
+          }
+        }
+        this._sub = { k, np, tbl };
+      }
+      const tbl = this._sub.tbl;
+      const FW = this.nx * k;
+      const s = this.scratch;
+      for (let c = 0; c < this.nCells; c++) {
+        const i = c % this.nx, j = (c / this.nx) | 0;
+        if (this.solid[c]) {
+          for (let sy = 0; sy < k; sy++) {
+            const row = (j * k + sy) * FW + i * k;
+            for (let sx = 0; sx < k; sx++) {
+              const o = nvar * (row + sx);
+              for (let v = 0; v < nvar; v++) out[o + v] = NaN;
+            }
+          }
+          continue;
+        }
+        for (let sy = 0; sy < k; sy++) {
+          const row = (j * k + sy) * FW + i * k;
+          for (let sx = 0; sx < k; sx++) {
+            this.evalAt(this.U, c, tbl, (sy * k + sx) * nm, s.point);
+            const o = nvar * (row + sx);
+            for (let v = 0; v < nvar; v++) out[o + v] = s.point[v];
+          }
+        }
+      }
+    }
+
+    // Pressure force on the embedded body: ∮ p n ds over the stair-step wall
+    // faces, with n pointing from fluid into the body. out = [Fx, Fy].
+    wallForces(out) {
+      const qt = this.eulerQuadratureTables();
+      const qn = qt.qn, quad = qt.q;
+      const dx = this.params.Lx / this.nx, dy = this.params.Ly / this.ny;
+      const gamma = this.params.gamma;
+      const eq = this.equation, s = this.scratch, f = this.faces;
+      let fx = 0, fy = 0;
+      for (let k = 0; k < f.xWallCell.length; k++) {
+        const c = f.xWallCell[k], sgn = f.xWallSign[k];
+        const coeffs = sgn > 0 ? qt.faceR : qt.faceL;
+        for (let q = 0; q < qn; q++) {
+          this.evalAt(this.U, c, coeffs, q * this.nm, s.UL);
+          fx += sgn * eq.pressureSafe(s.UL, gamma) * 0.5 * dy * quad.w[q];
+        }
+      }
+      for (let k = 0; k < f.yWallCell.length; k++) {
+        const c = f.yWallCell[k], sgn = f.yWallSign[k];
+        const coeffs = sgn > 0 ? qt.faceT : qt.faceB;
+        for (let q = 0; q < qn; q++) {
+          this.evalAt(this.U, c, coeffs, q * this.nm, s.UL);
+          fy += sgn * eq.pressureSafe(s.UL, gamma) * 0.5 * dx * quad.w[q];
+        }
+      }
+      out[0] = fx;
+      out[1] = fy;
     }
   }
 
@@ -859,6 +1059,9 @@
     legendre,
     dLegendre,
     minmod3,
+    WEDGE_HALF_ANGLE,
+    insideShape,
+    obliqueShockBeta,
     buildBasis,
     burgersPhysicalFlux,
     burgersFlux,
