@@ -27,7 +27,8 @@
   --chalk-rule: #e9eed55e;
   --chalk-yellow: #efd677;
   --board-texture: url("./assets/board-grain.png");
-  --chalk-transition-duration: 180ms;
+  --chalk-transition-duration: 1200ms;
+  --chalk-rewrite-duration: 1600ms;
   --control-corner: 1px;
   --radius: 2px;
 }
@@ -319,12 +320,40 @@ button {
   }
 }
 
+@keyframes chalk-rewrite {
+  0% {
+    clip-path: inset(0);
+    opacity: 1;
+    filter: none;
+  }
+  42% {
+    clip-path: inset(0 0 0 100%);
+    opacity: 0.08;
+    filter: blur(1.2px);
+  }
+  52% {
+    clip-path: inset(0 100% 0 0);
+    opacity: 0.16;
+    filter: blur(0.8px);
+  }
+  82% { opacity: 0.9; }
+  100% {
+    clip-path: inset(0);
+    opacity: 1;
+    filter: none;
+  }
+}
+
 [data-chalk-transition="write"] {
   animation: chalk-write var(--chalk-transition-duration) steps(9, end) both;
 }
 
 [data-chalk-transition="erase"] {
   animation: chalk-erase var(--chalk-transition-duration) steps(7, end) both;
+}
+
+[data-chalk-transition="rewrite"] {
+  animation: chalk-rewrite var(--chalk-rewrite-duration) steps(15, end) both;
 }
 
 .stage-icon .play-glyph {

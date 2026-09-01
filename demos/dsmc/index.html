@@ -220,7 +220,7 @@
         </label>
       </fieldset>
 
-      <details>
+      <details id="wall-controls">
         <summary data-i18n="page.wallControls">Wall controls</summary>
         <fieldset>
           <legend data-i18n="page.maxwell">Maxwell boundary</legend>
@@ -243,7 +243,7 @@
         </fieldset>
       </details>
 
-      <details>
+      <details id="model-controls" open>
         <summary data-i18n="page.modelControls">Model controls</summary>
         <fieldset>
           <legend data-i18n="page.boundaries">Boundaries</legend>
@@ -269,7 +269,7 @@
         <fieldset>
           <legend data-i18n="page.rotationControls">Rotation and display</legend>
           <label class="control-row checkbox-row">
-            <span data-i18n="page.rotationEnabled">Rotational exchange</span>
+            <span data-i18n="page.rotationEnabled">Larsen–Borgnakke exchange</span>
             <input id="rotational-relaxation" type="checkbox">
           </label>
           <label class="control-row">
@@ -279,6 +279,10 @@
           <label class="control-row checkbox-row">
             <span data-i18n="page.highlights">Collision marks</span>
             <input id="event-highlights" type="checkbox" checked>
+          </label>
+          <label class="control-row">
+            <span><span data-i18n="page.collisionSample">Displayed collisions</span> <output id="collision-sample-value">25%</output></span>
+            <input id="collision-sample" type="range" min="0" max="0.5" step="0.05" value="0.25">
           </label>
           <label class="control-row">
             <span data-i18n="page.boardStyle">Particles</span>

@@ -1,3 +1,5 @@
+import { rewriteChalkText } from '../lib/chalkish/examples/chalk-transition.js';
+
 const LANGUAGES = new Set(['en', 'ru']);
 
 const COMMON = Object.freeze({
@@ -66,10 +68,12 @@ export function bindLabLanguage(translations) {
     return translations[language]?.[key] ?? translations.en?.[key] ?? key;
   }
 
-  function apply() {
+  function apply({ animate = false } = {}) {
     document.documentElement.lang = language;
     for (const node of document.querySelectorAll('[data-i18n]')) {
-      node.textContent = translate(node.dataset.i18n);
+      const text = translate(node.dataset.i18n);
+      if (animate && node.tagName !== 'OPTION') rewriteChalkText(node, text);
+      else node.textContent = text;
     }
     for (const node of document.querySelectorAll('[data-i18n-aria-label]')) {
       node.setAttribute('aria-label', translate(node.dataset.i18nAriaLabel));
@@ -95,7 +99,7 @@ export function bindLabLanguage(translations) {
     const url = new URL(globalThis.location.href);
     url.searchParams.set('lang', language);
     globalThis.history.replaceState(null, '', url);
-    apply();
+    apply({ animate: true });
   }
 
   document.querySelector('[data-locale-switch]')?.addEventListener('click', (event) => {

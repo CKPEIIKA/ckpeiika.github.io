@@ -7,7 +7,8 @@ import { BOARD_RENDER_STYLE } from '../../lib/chalkish/examples/board-settings.j
 import { bindStageControls } from '../../lib/chalkish/examples/stage-controls.js';
 import {
   markChalkTransition,
-  writeChalkText,
+  rewriteChalkLabel,
+  rewriteChalkText,
 } from '../../lib/chalkish/examples/chalk-transition.js';
 import { bindLabLanguage, withCommonTranslations } from '../lab-i18n.js';
 import {
@@ -47,11 +48,12 @@ const i18n = bindLabLanguage(withCommonTranslations({
     'boundary.diffuse': 'Diffuse',
     'boundary.mixed': 'Mixed',
     'page.rotationControls': 'Rotation and display',
-    'page.rotationEnabled': 'Rotational exchange',
+    'page.rotationEnabled': 'Larsen–Borgnakke exchange',
     'page.highlights': 'Collision marks',
+    'page.collisionSample': 'Displayed collisions',
     'page.boardStyle': 'Particles',
-    'style.chalk': 'Chalk',
-    'style.clean': 'Scientific clean',
+    'style.chalk': 'Colored chalk',
+    'style.clean': 'Clean colors',
     'page.quality': 'Quality',
     'quality.auto': 'Automatic',
     'quality.high': 'High',
@@ -117,11 +119,12 @@ const i18n = bindLabLanguage(withCommonTranslations({
     'boundary.diffuse': 'Диффузная',
     'boundary.mixed': 'Смешанная',
     'page.rotationControls': 'Вращение и отображение',
-    'page.rotationEnabled': 'Обмен с вращением',
+    'page.rotationEnabled': 'Обмен Ларсена — Боргнакке',
     'page.highlights': 'Метки столкновений',
+    'page.collisionSample': 'Доля отображаемых столкновений',
     'page.boardStyle': 'Частицы',
-    'style.chalk': 'Меловое',
-    'style.clean': 'Чистое научное',
+    'style.chalk': 'Цветной мел',
+    'style.clean': 'Чистые цвета',
     'page.quality': 'Качество',
     'quality.auto': 'Автоматически',
     'quality.high': 'Высокое',
@@ -160,20 +163,7 @@ const i18n = bindLabLanguage(withCommonTranslations({
   },
 }));
 
-const CANVAS_METHODS = Object.freeze({
-  en: Object.freeze({
-    'equilibrium-box': 'NTC collisions · periodic box · elastic VHS',
-    'heat-transfer-x': 'NTC collisions · diffuse thermal x-walls · periodic y',
-    'rotational-nitrogen': 'NTC collisions · VSS scattering · rotational Larsen–Borgnakke',
-    'couette-flow': 'NTC collisions · periodic x · moving diffuse y-walls',
-  }),
-  ru: Object.freeze({
-    'equilibrium-box': 'Столкновения NTC · периодический объём · упругие VHS',
-    'heat-transfer-x': 'Столкновения NTC · диффузные тепловые стенки по x · периодичность по y',
-    'rotational-nitrogen': 'Столкновения NTC · рассеяние VSS · вращательная модель Ларсена — Боргнакке',
-    'couette-flow': 'Столкновения NTC · периодичность по x · движущиеся диффузные стенки по y',
-  }),
-});
+const CHALK_ERASE_DELAY_MS = 1250;
 
 function required(id) {
   const node = document.getElementById(id);
@@ -209,6 +199,9 @@ const nodes = Object.freeze({
   rotationalRelaxation: required('rotational-relaxation'),
   rotationalCollisionNumber: required('rotational-collision-number'),
   eventHighlights: required('event-highlights'),
+  collisionSample: required('collision-sample'),
+  collisionSampleValue: required('collision-sample-value'),
+  modelControls: required('model-controls'),
   boardStyle: required('board-style'),
   renderQuality: required('render-quality'),
   randomSeed: required('random-seed'),
@@ -255,6 +248,8 @@ function applyPreset(caseId) {
   nodes.boundaryX.value = preset.xBoundary;
   nodes.boundaryY.value = preset.yBoundary;
   nodes.rotationalRelaxation.checked = preset.rotationalRelaxation;
+  nodes.collisionSample.value = String(preset.collisionLineProbability);
+  if (caseId === 'rotational-nitrogen') nodes.modelControls.open = true;
   syncOutputs();
 }
 
@@ -263,6 +258,9 @@ function syncOutputs() {
   nodes.wallAccommodationValue.textContent = Number(
     nodes.wallAccommodation.value,
   ).toFixed(2);
+  nodes.collisionSampleValue.textContent = `${Math.round(
+    100 * Number(nodes.collisionSample.value),
+  )}%`;
 }
 
 function parameters() {
@@ -286,6 +284,7 @@ function parameters() {
     rotationalRelaxation: nodes.rotationalRelaxation.checked,
     rotationalCollisionNumber: Number(nodes.rotationalCollisionNumber.value),
     highlightEvents: nodes.eventHighlights.checked,
+    collisionLineProbability: Number(nodes.collisionSample.value),
   };
 }
 
@@ -332,6 +331,8 @@ const plotHistory = {
 const profileZero = new Float64Array(24);
 let plotModeIndex = 0;
 let plotVisible = true;
+let plotExpanded = true;
+let plotCollapseTimer = null;
 
 function canvasAspect() {
   const width = nodes.canvas.clientWidth || nodes.canvas.width;
@@ -393,12 +394,12 @@ function setPlotBuffers(x, primary, reference, { referenceVisible = true } = {})
     .setBuffers({ x, y: primary, count })
     .setScale(scaleX, scaleY)
     .setPosition(6.52 - minimumX * scaleX, 0.43 - minimum * scaleY)
-    .setVisible(plotVisible);
+    .setVisible(plotExpanded);
   controller.view.layers.maxwellian
     .setBuffers({ x, y: reference, count })
     .setScale(scaleX, scaleY)
     .setPosition(6.52 - minimumX * scaleX, 0.43 - minimum * scaleY)
-    .setVisible(plotVisible && referenceVisible);
+    .setVisible(plotExpanded && referenceVisible);
 }
 
 function renderPlot() {
@@ -406,26 +407,22 @@ function renderPlot() {
   const layers = controller.view.layers;
   layers.distributionFrame.setVisible(false);
   layers.distributionLabel.setVisible(false);
-  const wasVisible = nodes.distributionTabs.dataset.expanded === 'true';
-  if (wasVisible !== plotVisible) {
-    markChalkTransition(nodes.distributionPlot, plotVisible ? 'write' : 'erase');
-  }
-  nodes.distributionTabs.dataset.expanded = String(plotVisible);
+  nodes.distributionTabs.dataset.expanded = String(plotExpanded);
   nodes.togglePlot.setAttribute('aria-expanded', String(plotVisible));
   const action = i18n.t(plotVisible ? 'plot.hide' : 'plot.show');
   nodes.togglePlot.setAttribute('aria-label', action);
   nodes.togglePlot.setAttribute('title', action);
-  const label = plotVisible
+  const label = plotExpanded
     ? i18n.t(`plot.${mode}`)
     : `‹ ${i18n.t('plot.show')}`;
   const legend = i18n.t(`plot.${mode}Legend`);
   if (nodes.distributionTabLabel.textContent !== label) {
-    writeChalkText(nodes.distributionTabLabel, label);
+    rewriteChalkText(nodes.distributionTabLabel, label);
   }
   if (nodes.distributionTabLegend.textContent !== legend) {
-    writeChalkText(nodes.distributionTabLegend, legend);
+    rewriteChalkText(nodes.distributionTabLegend, legend);
   }
-  if (!plotVisible) {
+  if (!plotExpanded) {
     layers.distribution.setVisible(false);
     layers.maxwellian.setVisible(false);
     plotApp.render();
@@ -471,10 +468,57 @@ function renderPlot() {
   plotApp.render();
 }
 
-function localizeCanvas() {
+function setPlotVisible(visible) {
+  plotVisible = visible;
+  if (plotCollapseTimer !== null) clearTimeout(plotCollapseTimer);
+  plotCollapseTimer = null;
+  if (visible) {
+    plotExpanded = true;
+    renderPlot();
+    markChalkTransition(nodes.distributionPlot, 'write');
+    app.render();
+    return;
+  }
+  renderPlot();
+  markChalkTransition(nodes.distributionPlot, 'erase');
+  plotCollapseTimer = setTimeout(() => {
+    plotCollapseTimer = null;
+    if (plotVisible) return;
+    plotExpanded = false;
+    renderPlot();
+    app.render();
+  }, CHALK_ERASE_DELAY_MS);
+}
+
+function canvasMethod(values) {
+  const parameters = controller.model.parameters;
+  const model = parameters.collisionModel.toUpperCase();
+  const rotation = parameters.rotationalRelaxation;
+  if (i18n.language === 'ru') {
+    const boundary = values.caseId === 'heat-transfer-x'
+      ? 'тепловые стенки по x'
+      : values.caseId === 'couette-flow'
+        ? 'движущиеся стенки по y'
+        : 'периодический объём';
+    return `Столкновения NTC · ${model} · ${boundary}${rotation ? ' · обмен Ларсена — Боргнакке' : ''}`;
+  }
+  const boundary = values.caseId === 'heat-transfer-x'
+    ? 'thermal x-walls'
+    : values.caseId === 'couette-flow'
+      ? 'moving y-walls'
+      : 'periodic box';
+  return `NTC collisions · ${model} · ${boundary}${rotation ? ' · Larsen–Borgnakke exchange' : ''}`;
+}
+
+function localizeCanvas({ animate = false } = {}) {
   const values = controller.diagnostics();
   controller.view.layers.heading.setText('');
-  controller.view.layers.method.setText(CANVAS_METHODS[i18n.language][values.caseId]);
+  const method = canvasMethod(values);
+  if (animate) {
+    rewriteChalkLabel(controller.view.layers.method, method, { render: () => app.render() });
+  } else {
+    controller.view.layers.method.setText(method);
+  }
   controller.view.layers.status.setText('');
   controller.camera
     .setCenter(5, 3.2)
@@ -488,7 +532,7 @@ function formatRotational(value) {
     : i18n.language === 'ru' ? 'не учитывается' : 'not active';
 }
 
-function updateDiagnostics() {
+function updateDiagnostics({ animate = false } = {}) {
   const values = controller.diagnostics();
   recordPlotHistory(values);
   const wallHeat = Object.values(values.wallEnergy)
@@ -499,13 +543,15 @@ function updateDiagnostics() {
   const balance = values.closedSystem
     ? `ΔE ${values.energyError.toExponential(2)} · Δp ${values.momentumError.toExponential(2)}`
     : `${ru ? 'qст' : 'qwall'} ${wallHeat} ${ru ? 'Дж' : 'J'}`;
-  nodes.diagnostics.textContent = [
+  const text = [
     `t ${(1e3 * values.time).toFixed(2)} ${ru ? 'мс' : 'ms'}`,
     `${ru ? 'шаг' : 'step'} ${values.step}`,
     `N ${values.particles}`,
     `${ru ? 'Tпост' : 'Ttrans'} ${values.temperature.toFixed(1)} K`,
     `${ru ? 'Tвращ' : 'Trot'} ${formatRotational(values.rotationalTemperature)}`,
     `${ru ? 'столкновения' : 'collisions'} ${values.collisions}`,
+    `${ru ? 'вращ. обмены' : 'rot exchanges'} ${values.rotationalEvents}`,
+    `${ru ? 'показано' : 'shown'} ${Math.round(100 * values.collisionLineProbability)}%`,
     `${ru ? 'мажоранта' : 'majorant'} ${values.majorantViolations}/${values.collisionAttemptsLastStep}`,
     `dx/λ ${values.dxOverMeanFreePath.toFixed(2)}`,
     `dt/τ ${values.dtOverMeanCollisionTime.toFixed(2)}`,
@@ -516,6 +562,8 @@ function updateDiagnostics() {
       ? (ru ? 'норма' : 'healthy')
       : (ru ? 'уменьшите шаг по времени или размер ячейки' : 'reduce time step or cell size'),
   ].join(' · ');
+  if (animate) rewriteChalkText(nodes.diagnostics, text);
+  else nodes.diagnostics.textContent = text;
   positionPlotPanel();
   renderPlot();
 }
@@ -547,15 +595,17 @@ const layoutObserver = new ResizeObserver(() => {
 layoutObserver.observe(nodes.canvas);
 
 function reset() {
+  const previousMethod = controller.view.layers.method.text;
   controller.reset(parameters());
+  controller.view.layers.method.setText(previousMethod);
   for (const valuesArray of Object.values(plotHistory)) {
     if (Array.isArray(valuesArray)) valuesArray.length = 0;
   }
   plotHistory.lastStep = -1;
-  localizeCanvas();
+  localizeCanvas({ animate: true });
   app.clock?.reset(null);
   diagnosticsCountdown = 0;
-  updateDiagnostics();
+  updateDiagnostics({ animate: true });
   app.render();
   stageControls.captureView();
 }
@@ -588,12 +638,14 @@ for (const control of [
   nodes.rotationalRelaxation,
   nodes.rotationalCollisionNumber,
   nodes.eventHighlights,
+  nodes.collisionSample,
   nodes.randomSeed,
 ]) {
   control.addEventListener('change', safeReset);
 }
 nodes.knudsen.addEventListener('input', syncOutputs);
 nodes.wallAccommodation.addEventListener('input', syncOutputs);
+nodes.collisionSample.addEventListener('input', syncOutputs);
 nodes.knudsen.addEventListener('change', safeReset);
 nodes.wallAccommodation.addEventListener('change', safeReset);
 nodes.reset.addEventListener('click', safeReset);
@@ -609,9 +661,7 @@ nodes.nextPlot.addEventListener('click', () => {
   app.render();
 });
 nodes.togglePlot.addEventListener('click', () => {
-  plotVisible = !plotVisible;
-  renderPlot();
-  app.render();
+  setPlotVisible(!plotVisible);
 });
 nodes.boardStyle.addEventListener('change', () => {
   controller.setStyle(nodes.boardStyle.value);
@@ -660,6 +710,7 @@ nodes.replayFile.addEventListener('change', async () => {
       ['xBoundary', nodes.boundaryX],
       ['yBoundary', nodes.boundaryY],
       ['rotationalCollisionNumber', nodes.rotationalCollisionNumber],
+      ['collisionLineProbability', nodes.collisionSample],
       ['seed', nodes.randomSeed],
     ];
     for (const [key, node] of assignments) {
@@ -693,13 +744,14 @@ document.addEventListener('keydown', (event) => {
 });
 
 i18n.onChange(() => {
-  localizeCanvas();
-  updateDiagnostics();
+  localizeCanvas({ animate: true });
+  updateDiagnostics({ animate: true });
   stageControls.sync();
   app.render();
 });
 
 globalThis.addEventListener?.('pagehide', () => {
+  if (plotCollapseTimer !== null) clearTimeout(plotCollapseTimer);
   layoutObserver.disconnect();
   stageControls.dispose();
   plotApp.destroy();

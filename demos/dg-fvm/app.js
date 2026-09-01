@@ -16,7 +16,8 @@ import { BOARD_RENDER_STYLE } from '../../lib/chalkish/examples/board-settings.j
 import { bindStageControls } from '../../lib/chalkish/examples/stage-controls.js';
 import {
   markChalkTransition,
-  writeChalkText,
+  rewriteChalkLabel,
+  rewriteChalkText,
 } from '../../lib/chalkish/examples/chalk-transition.js';
 import { bindLabLanguage, withCommonTranslations } from '../lab-i18n.js';
 import { RingHistory } from '../lab-parity.js';
@@ -130,6 +131,8 @@ const i18n = bindLabLanguage(withCommonTranslations({
   },
 }));
 
+const CHALK_ERASE_DELAY_MS = 1250;
+
 function required(id) {
   const node = document.getElementById(id);
   if (!node) throw new Error(`DG/FV board is missing #${id}`);
@@ -180,28 +183,34 @@ const nodes = Object.freeze({
 
 const CASE_UI = Object.freeze({
   'euler-cylinder': Object.freeze({
-    resolutions: Object.freeze(['24x12', '32x16', '48x24', '72x36']),
+    resolutions: Object.freeze([
+      '24x12', '32x16', '48x24', '72x36', '96x48', '128x64', '192x96',
+    ]),
     resolution: '24x12',
     degree: '0',
     cfl: '0.18',
     limiter: 'minmod',
   }),
   'diamond-translation': Object.freeze({
-    resolutions: Object.freeze(['20x12', '28x18', '40x26', '56x36']),
+    resolutions: Object.freeze([
+      '20x12', '28x18', '40x26', '56x36', '80x52', '112x72', '160x104',
+    ]),
     resolution: '28x18',
     degree: '1',
     cfl: '0.30',
     limiter: 'filter',
   }),
   'scalar-advection': Object.freeze({
-    resolutions: Object.freeze(['20x12', '28x18', '40x26', '56x36']),
+    resolutions: Object.freeze([
+      '20x12', '28x18', '40x26', '56x36', '80x52', '112x72', '160x104',
+    ]),
     resolution: '28x18',
     degree: '1',
     cfl: '0.28',
     limiter: 'filter',
   }),
   burgers: Object.freeze({
-    resolutions: Object.freeze(['48x1', '96x1', '160x1', '240x1']),
+    resolutions: Object.freeze(['48x1', '96x1', '160x1', '240x1', '320x1']),
     resolution: '96x1',
     degree: '1',
     cfl: '0.28',
@@ -374,6 +383,8 @@ const analysisApp = mount(nodes.analysisCanvas, {
 });
 let analysisModeIndex = 0;
 let analysisVisible = true;
+let analysisExpanded = true;
+let analysisCollapseTimer = null;
 let analysisLastStep = -1;
 
 function analysisModes() {
@@ -449,21 +460,21 @@ function renderAnalysis() {
   const modes = analysisModes();
   analysisModeIndex = ((analysisModeIndex % modes.length) + modes.length) % modes.length;
   const mode = modes[analysisModeIndex];
-  nodes.analysisTabs.dataset.expanded = String(analysisVisible);
+  nodes.analysisTabs.dataset.expanded = String(analysisExpanded);
   nodes.toggleAnalysis.setAttribute('aria-expanded', String(analysisVisible));
   const action = i18n.t(analysisVisible ? 'plot.hide' : 'plot.show');
   nodes.toggleAnalysis.setAttribute('aria-label', action);
   nodes.toggleAnalysis.setAttribute('title', action);
-  const label = analysisVisible ? i18n.t(`analysis.${mode}`) : `‹ ${i18n.t('plot.show')}`;
+  const label = analysisExpanded ? i18n.t(`analysis.${mode}`) : `‹ ${i18n.t('plot.show')}`;
   const legend = i18n.t(`analysis.${mode}Legend`);
-  if (nodes.analysisTabLabel.textContent !== label) writeChalkText(nodes.analysisTabLabel, label);
+  if (nodes.analysisTabLabel.textContent !== label) rewriteChalkText(nodes.analysisTabLabel, label);
   if (nodes.analysisTabLegend.textContent !== legend) {
-    writeChalkText(nodes.analysisTabLegend, legend);
+    rewriteChalkText(nodes.analysisTabLegend, legend);
   }
-  analysisPrimary.setVisible(analysisVisible && mode !== 'spaceTime');
-  analysisSecondary.setVisible(analysisVisible && mode !== 'spaceTime' && mode !== 'spectrum');
-  analysisField.setVisible(analysisVisible && mode === 'spaceTime');
-  if (!analysisVisible) {
+  analysisPrimary.setVisible(analysisExpanded && mode !== 'spaceTime');
+  analysisSecondary.setVisible(analysisExpanded && mode !== 'spaceTime' && mode !== 'spectrum');
+  analysisField.setVisible(analysisExpanded && mode === 'spaceTime');
+  if (!analysisExpanded) {
     analysisApp.render();
     return;
   }
@@ -501,14 +512,41 @@ function renderAnalysis() {
   }
   analysisApp.render();
 }
+
+function setAnalysisVisible(visible) {
+  analysisVisible = visible;
+  if (analysisCollapseTimer !== null) clearTimeout(analysisCollapseTimer);
+  analysisCollapseTimer = null;
+  if (visible) {
+    analysisExpanded = true;
+    renderAnalysis();
+    markChalkTransition(nodes.analysisPlot, 'write');
+    app.render();
+    return;
+  }
+  renderAnalysis();
+  markChalkTransition(nodes.analysisPlot, 'erase');
+  analysisCollapseTimer = setTimeout(() => {
+    analysisCollapseTimer = null;
+    if (analysisVisible) return;
+    analysisExpanded = false;
+    renderAnalysis();
+    app.render();
+  }, CHALK_ERASE_DELAY_MS);
+}
 const startsPaused = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 let diagnosticsCountdown = 0;
 
-function localizeCanvas() {
+function localizeCanvas({ animate = false } = {}) {
   const values = controller.diagnostics();
   const caseId = values.caseId;
   controller.view.layers.heading.setText('');
-  controller.view.layers.formula.setText(CANVAS_FORMULAS[i18n.language][caseId]);
+  const formula = CANVAS_FORMULAS[i18n.language][caseId];
+  if (animate) {
+    rewriteChalkLabel(controller.view.layers.formula, formula, { render: () => app.render() });
+  } else {
+    controller.view.layers.formula.setText(formula);
+  }
   controller.view.layers.status.setText('');
   if (caseId === 'burgers') {
     controller.camera.setCenter(0.5, 0.45).setHeight(1.65);
@@ -545,7 +583,7 @@ function positionAnalysisPanel() {
   nodes.analysisTabs.style.setProperty('--plot-bottom', `${Math.max(0, height - y)}px`);
 }
 
-function updateDiagnostics() {
+function updateDiagnostics({ animate = false } = {}) {
   const values = controller.diagnostics();
   recordAnalysis(values);
   const ru = i18n.language === 'ru';
@@ -555,16 +593,20 @@ function updateDiagnostics() {
     ? `t ${values.time.toFixed(4)} · шаг ${values.step} · ${parameters.columns}×${parameters.rows} / P${parameters.degree} · CFL ${parameters.cfl.toFixed(2)} · ${fps.toFixed(0)} кадр/с`
     : `t ${values.time.toFixed(4)} · step ${values.step} · ${parameters.columns}×${parameters.rows} / P${parameters.degree} · CFL ${parameters.cfl.toFixed(2)} · ${fps.toFixed(0)} fps`;
   if (values.caseId === 'euler-cylinder') {
-    nodes.diagnostics.textContent = ru
+    const text = ru
       ? `${common} · ρмин ${values.minimumDensity.toFixed(3)} · pмин ${values.minimumPressure.toFixed(3)} · Cd ${values.dragCoefficient.toFixed(2)} · Cl ${values.liftCoefficient.toFixed(2)} · огр. ${values.positivityLimitedCells}/${values.troubledCells} · ${values.healthy ? 'норма' : 'снизьте CFL или включите ограничитель положительности'}`
       : `${common} · ρmin ${values.minimumDensity.toFixed(3)} · pmin ${values.minimumPressure.toFixed(3)} · Cd ${values.dragCoefficient.toFixed(2)} · Cl ${values.liftCoefficient.toFixed(2)} · limited ${values.positivityLimitedCells}/${values.troubledCells} · ${values.healthy ? 'healthy' : 'reduce CFL or enable positivity'}`;
+    if (animate) rewriteChalkText(nodes.diagnostics, text);
+    else nodes.diagnostics.textContent = text;
     renderAnalysis();
     return;
   }
   const accuracy = Number.isFinite(values.l2Error)
     ? `L2 ${values.l2Error.toExponential(2)}`
     : `${ru ? 'старшие моды' : 'higher modes'} ${values.modalEnergyFraction.toExponential(2)}`;
-  nodes.diagnostics.textContent = `${common} · ${ru ? 'масса' : 'mass'} ${values.mass.toFixed(6)} · ${accuracy} · ${ru ? 'невязка' : 'residual'} ${values.residualNorm.toExponential(2)}`;
+  const text = `${common} · ${ru ? 'масса' : 'mass'} ${values.mass.toFixed(6)} · ${accuracy} · ${ru ? 'невязка' : 'residual'} ${values.residualNorm.toExponential(2)}`;
+  if (animate) rewriteChalkText(nodes.diagnostics, text);
+  else nodes.diagnostics.textContent = text;
   renderAnalysis();
 }
 
@@ -596,16 +638,18 @@ const layoutObserver = new ResizeObserver(() => {
 layoutObserver.observe(nodes.canvas);
 
 function reset() {
+  const previousFormula = controller.view.layers.formula.text;
   controller.reset(parameters());
+  controller.view.layers.formula.setText(previousFormula);
   analysisHistory.clear();
   analysisLastStep = -1;
   burgersHistoryColumns = 1;
   burgersHistoryRows = 0;
   burgersHistory = new Float32Array(60);
-  localizeCanvas();
+  localizeCanvas({ animate: true });
   app.clock?.reset(null);
   diagnosticsCountdown = 0;
-  updateDiagnostics();
+  updateDiagnostics({ animate: true });
   app.render();
   stageControls.captureView();
 }
@@ -668,9 +712,7 @@ nodes.nextAnalysis.addEventListener('click', () => {
   renderAnalysis();
 });
 nodes.toggleAnalysis.addEventListener('click', () => {
-  analysisVisible = !analysisVisible;
-  markChalkTransition(nodes.analysisPlot, analysisVisible ? 'write' : 'erase');
-  renderAnalysis();
+  setAnalysisVisible(!analysisVisible);
 });
 nodes.help.addEventListener('click', () => nodes.helpDialog.showModal());
 
@@ -699,13 +741,14 @@ document.addEventListener('keydown', (event) => {
 
 i18n.onChange(() => {
   syncCase();
-  localizeCanvas();
-  updateDiagnostics();
+  localizeCanvas({ animate: true });
+  updateDiagnostics({ animate: true });
   stageControls.sync();
   app.render();
 });
 
 globalThis.addEventListener?.('pagehide', () => {
+  if (analysisCollapseTimer !== null) clearTimeout(analysisCollapseTimer);
   layoutObserver.disconnect();
   stageControls.dispose();
   analysisApp.destroy();

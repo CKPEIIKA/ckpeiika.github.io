@@ -11,6 +11,8 @@
   --chalk-yellow: #efd677;
   --chalk-rule: #d8dde366;
   --board-texture: url("../lib/chalkish/examples/assets/board-grain.png");
+  --chalk-transition-duration: 1200ms;
+  --chalk-rewrite-duration: 1600ms;
 }
 
 *,
@@ -219,6 +221,15 @@ body::after,
   flex: 1 1 auto;
 }
 
+.command-row {
+  position: sticky;
+  z-index: 3;
+  bottom: 0;
+  padding-top: 0.35rem;
+  border-top: 1px dashed #9f2d2070;
+  background: var(--site-background);
+}
+
 .compact-actions button,
 .icon-command {
   min-height: 1.85rem;
@@ -338,10 +349,10 @@ body::after,
   color: var(--chalk-white);
   font-family: var(--font-chalk);
   transition:
-    width 180ms ease,
-    height 180ms ease,
-    right 180ms ease,
-    opacity 140ms ease;
+    width 520ms steps(12, end),
+    height 520ms steps(12, end),
+    right 520ms steps(12, end),
+    opacity 420ms steps(9, end);
 }
 
 .distribution-tabbar {
@@ -433,7 +444,7 @@ body::after,
   min-height: 0;
   overflow: hidden;
   opacity: 1;
-  transition: opacity 140ms ease;
+  transition: opacity 900ms steps(12, end);
 }
 
 .distribution-tabs[data-expanded="false"] .distribution-plot {
@@ -530,8 +541,8 @@ body::after,
   scrollbar-width: none;
   transform-origin: left center;
   transition:
-    max-width 180ms steps(7, end),
-    opacity 140ms ease;
+    max-width 420ms steps(9, end),
+    opacity 360ms steps(8, end);
 }
 
 .stage-controls-toggle {
@@ -572,6 +583,17 @@ body::after,
   filter:
     drop-shadow(0.04rem 0.03rem 0 #f5f2e968)
     drop-shadow(-0.025rem 0.02rem 0 #f5f2e936);
+  transform: rotate(-0.45deg);
+}
+
+.stage-controls button:nth-child(even) .stage-icon {
+  transform: rotate(0.7deg);
+}
+
+.chalk-icon-echo {
+  opacity: 0.28;
+  transform: translate(0.42px, -0.28px) rotate(0.8deg);
+  transform-origin: center;
 }
 
 .stage-footer button,

@@ -6,7 +6,7 @@ implementation before migration:
 ```text
 repository: ckpeiika.github.io
 revision: cd792b03fd1b099f0778fe5804cbec06e3759caf
-DG/FV: demos/dg-euler-cylinder/
+DG/FV: demos/dg-fvm/
 DSMC: demos/dsmc/
 ```
 
