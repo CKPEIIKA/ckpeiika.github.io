@@ -1,10 +1,14 @@
-import { mount } from '../../lib/chalkish/src/index.js';
+import { Camera2D, Scene, mount } from '../../lib/chalkish/src/index.js';
 import {
   createDsmcLabController,
   getDsmcLabPreset,
 } from '../../lib/chalkish/examples/boards/_shared/dsmc-lab-controller.js';
 import { BOARD_RENDER_STYLE } from '../../lib/chalkish/examples/board-settings.js';
 import { bindStageControls } from '../../lib/chalkish/examples/stage-controls.js';
+import {
+  markChalkTransition,
+  writeChalkText,
+} from '../../lib/chalkish/examples/chalk-transition.js';
 import { bindLabLanguage, withCommonTranslations } from '../lab-i18n.js';
 
 const i18n = bindLabLanguage(withCommonTranslations({
@@ -38,9 +42,9 @@ const i18n = bindLabLanguage(withCommonTranslations({
     'plot.speed': 'Speeds',
     'plot.temperature': 'Temperatures',
     'plot.collisions': 'Collisions',
-    'plot.speedLegend': 'sample — Maxwellian ╌',
-    'plot.temperatureLegend': 'translational — rotational ╌',
-    'plot.collisionsLegend': 'accepted — candidate pairs ╌',
+    'plot.speedLegend': 'sample / Maxwellian',
+    'plot.temperatureLegend': 'Ttrans / Trot',
+    'plot.collisionsLegend': 'accepted / trials',
   },
   ru: {
     'page.documentTitle': 'Лаборатория DSMC',
@@ -72,9 +76,9 @@ const i18n = bindLabLanguage(withCommonTranslations({
     'plot.speed': 'Скорости',
     'plot.temperature': 'Температуры',
     'plot.collisions': 'Столкновения',
-    'plot.speedLegend': 'выборка — Максвелл ╌',
-    'plot.temperatureLegend': 'поступательная — вращательная ╌',
-    'plot.collisionsLegend': 'принятые — выбранные пары ╌',
+    'plot.speedLegend': 'выборка / Максвелл',
+    'plot.temperatureLegend': 'Tпост / Tвращ',
+    'plot.collisionsLegend': 'принято / попытки',
   },
 }));
 
@@ -101,6 +105,8 @@ function required(id) {
 
 const nodes = Object.freeze({
   canvas: required('stage'),
+  distributionCanvas: required('distribution-stage'),
+  distributionPlot: required('distribution-plot'),
   stageControls: required('stage-controls'),
   pause: required('pause'),
   step: required('step'),
@@ -181,6 +187,20 @@ const controller = createDsmcLabController({
   model: parameters(),
   styleName: BOARD_RENDER_STYLE,
 });
+const plotScene = new Scene({ background: '#0d1611' });
+const plotCamera = new Camera2D({ centerX: 8.05, centerY: 1.05, height: 1.8 });
+plotScene.add(
+  controller.view.layers.maxwellian,
+  controller.view.layers.distribution,
+);
+controller.view.layers.distributionFrame.setVisible(false);
+controller.view.layers.distributionLabel.setVisible(false);
+const plotApp = mount(nodes.distributionCanvas, {
+  scene: plotScene,
+  camera: plotCamera,
+  fixedStep: null,
+  adaptiveQuality: false,
+});
 const startsPaused = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 let diagnosticsCountdown = 0;
 const PLOT_MODES = Object.freeze(['speed', 'temperature', 'collisions']);
@@ -199,6 +219,26 @@ function canvasAspect() {
   const width = nodes.canvas.clientWidth || nodes.canvas.width;
   const height = nodes.canvas.clientHeight || nodes.canvas.height;
   return Math.max(0.25, width / Math.max(1, height));
+}
+
+const plotAnchorMatrix = new Float64Array(6);
+
+function positionPlotPanel() {
+  const ratio = app.renderer.pixelRatio || 1;
+  const backingWidth = nodes.canvas.width;
+  const backingHeight = nodes.canvas.height;
+  const width = backingWidth / ratio;
+  const height = backingHeight / ratio;
+  const { domain } = controller.snapshot();
+  controller.camera.matrix(plotAnchorMatrix, backingWidth, backingHeight);
+  const x = (plotAnchorMatrix[0] * domain.maxX
+    + plotAnchorMatrix[2] * domain.minY
+    + plotAnchorMatrix[4]) / ratio;
+  const y = (plotAnchorMatrix[1] * domain.maxX
+    + plotAnchorMatrix[3] * domain.minY
+    + plotAnchorMatrix[5]) / ratio;
+  nodes.distributionTabs.style.setProperty('--plot-right', `${Math.max(0, width - x)}px`);
+  nodes.distributionTabs.style.setProperty('--plot-bottom', `${Math.max(0, height - y)}px`);
 }
 
 function recordPlotHistory(values) {
@@ -242,20 +282,31 @@ function setPlotBuffers(x, primary, reference, { referenceVisible = true } = {})
 function renderPlot() {
   const mode = PLOT_MODES[plotModeIndex];
   const layers = controller.view.layers;
-  layers.distributionFrame.setVisible(plotVisible);
+  layers.distributionFrame.setVisible(false);
   layers.distributionLabel.setVisible(false);
+  const wasVisible = nodes.distributionTabs.dataset.expanded === 'true';
+  if (wasVisible !== plotVisible) {
+    markChalkTransition(nodes.distributionPlot, plotVisible ? 'write' : 'erase');
+  }
   nodes.distributionTabs.dataset.expanded = String(plotVisible);
   nodes.togglePlot.setAttribute('aria-expanded', String(plotVisible));
   const action = i18n.t(plotVisible ? 'plot.hide' : 'plot.show');
   nodes.togglePlot.setAttribute('aria-label', action);
   nodes.togglePlot.setAttribute('title', action);
-  nodes.distributionTabLabel.textContent = plotVisible
+  const label = plotVisible
     ? i18n.t(`plot.${mode}`)
     : `‹ ${i18n.t('plot.show')}`;
-  nodes.distributionTabLegend.textContent = i18n.t(`plot.${mode}Legend`);
+  const legend = i18n.t(`plot.${mode}Legend`);
+  if (nodes.distributionTabLabel.textContent !== label) {
+    writeChalkText(nodes.distributionTabLabel, label);
+  }
+  if (nodes.distributionTabLegend.textContent !== legend) {
+    writeChalkText(nodes.distributionTabLegend, legend);
+  }
   if (!plotVisible) {
     layers.distribution.setVisible(false);
     layers.maxwellian.setVisible(false);
+    plotApp.render();
     return;
   }
 
@@ -266,6 +317,7 @@ function renderPlot() {
       snapshot.state.speedHistogram,
       snapshot.state.maxwellian,
     );
+    plotApp.render();
     return;
   }
 
@@ -277,6 +329,7 @@ function renderPlot() {
       plotHistory.rotationalTemperature,
       { referenceVisible: rotationalVisible },
     );
+    plotApp.render();
     return;
   }
 
@@ -285,6 +338,7 @@ function renderPlot() {
     plotHistory.collisions,
     plotHistory.attempts,
   );
+  plotApp.render();
 }
 
 function localizeCanvas() {
@@ -295,6 +349,7 @@ function localizeCanvas() {
   controller.camera
     .setCenter(5, 3.2)
     .setHeight(Math.max(6.7, 10.35 / canvasAspect()));
+  positionPlotPanel();
   renderPlot();
 }
 
@@ -418,6 +473,8 @@ i18n.onChange(() => {
 
 globalThis.addEventListener?.('pagehide', () => {
   stageControls.dispose();
+  plotApp.destroy();
+  plotScene.clear();
   app.destroy();
   controller.dispose();
 }, { once: true });

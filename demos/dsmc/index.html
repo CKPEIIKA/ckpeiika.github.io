@@ -31,19 +31,24 @@
           <canvas id="stage" width="1120" height="630"
                   aria-label="Particles, collision-cell occupancy, walls, and speed distribution" data-i18n-aria-label="stage.dsmcCanvas"></canvas>
           <div id="distribution-tabs" class="distribution-tabs" data-expanded="true">
-            <button type="button" data-action="previous-plot"
-                    aria-label="Previous graph" title="Previous graph"
-                    data-i18n-aria-label="plot.previous" data-i18n-title="plot.previous">‹</button>
-            <button type="button" class="distribution-tab" data-action="toggle-plot"
-                    aria-expanded="true" aria-controls="stage"
-                    aria-label="Hide graph" title="Hide graph"
-                    data-i18n-aria-label="plot.hide" data-i18n-title="plot.hide">
-              <span id="distribution-tab-label">Speeds</span>
-              <small id="distribution-tab-legend">sample — Maxwellian ╌</small>
-            </button>
-            <button type="button" data-action="next-plot"
-                    aria-label="Next graph" title="Next graph"
-                    data-i18n-aria-label="plot.next" data-i18n-title="plot.next">›</button>
+            <div class="distribution-tabbar">
+              <button type="button" data-action="previous-plot"
+                      aria-label="Previous graph" title="Previous graph"
+                      data-i18n-aria-label="plot.previous" data-i18n-title="plot.previous">‹</button>
+              <button type="button" class="distribution-tab" data-action="toggle-plot"
+                      aria-expanded="true" aria-controls="distribution-stage"
+                      aria-label="Hide graph" title="Hide graph"
+                      data-i18n-aria-label="plot.hide" data-i18n-title="plot.hide">
+                <span id="distribution-tab-label">Speeds</span>
+                <small id="distribution-tab-legend">sample — Maxwellian ╌</small>
+              </button>
+              <button type="button" data-action="next-plot"
+                      aria-label="Next graph" title="Next graph"
+                      data-i18n-aria-label="plot.next" data-i18n-title="plot.next">›</button>
+            </div>
+            <div id="distribution-plot" class="distribution-plot" aria-hidden="true">
+              <canvas id="distribution-stage" width="440" height="210"></canvas>
+            </div>
           </div>
         </div>
         <div id="stage-controls" class="stage-footer" data-stage-controls

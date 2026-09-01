@@ -21,11 +21,14 @@ const omitted = new Set([
 const files = [
   'LICENSE',
   'TODO.md',
+  'docs/LEGACY_PARITY.md',
   'docs/ROADMAP.md',
   'docs/REFERENCE_DEMO_PORTS.md',
   'examples/board-settings.js',
   'examples/chalkboard-theme.css',
+  'examples/chalk-transition.js',
   'examples/reference-labs.css',
+  'examples/stage-controls.js',
   'examples/boards/_shared/dg-fv-lab-controller.js',
   'examples/boards/_shared/dsmc-lab-controller.js',
   'examples/cfd-demos/_shared/profile-demo-controller.js',
@@ -36,7 +39,9 @@ const files = [
   'examples/assets/fonts/walter-turncoat-regular.woff2',
   'test/dg-fv-lab-model.test.js',
   'test/dsmc-lab-model.test.js',
+  'test/chalk-transition.test.js',
   'test/reference-lab-views.test.js',
+  'test/segments.test.js',
   'support/recording-context.js',
 ];
 

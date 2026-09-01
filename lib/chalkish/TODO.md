@@ -87,10 +87,11 @@ forms remain application-owned; Chalkish must not grow into a UI framework.
 
 ### P0 — safe scientific and deployment replacement
 
-- [ ] Publish a DG/DSMC frontend-capability matrix mapping every old drawing
+- [x] Publish a DG/DSMC frontend-capability matrix mapping every old drawing
   and interaction to an existing public Chalkish mechanism, a justified new
   generic mechanism, or application-owned composition. A new core abstraction
   needs at least two concrete consumers or a documented reason it cannot wait.
+  See `docs/LEGACY_PARITY.md`.
 - [x] Make both reference adapters prove the frontend boundary: their page,
   controller, model, and adapter modules must not call `getContext`, `moveTo`,
   `lineTo`, `arc`, `fillRect`, `strokeRect`, or other Canvas drawing commands.

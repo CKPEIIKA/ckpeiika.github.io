@@ -218,28 +218,43 @@ body::after,
   position: absolute;
   inset: 0;
   display: block;
-  width: 100%;
-  height: 100%;
+  width: 100% !important;
+  height: 100% !important;
 }
 
 .distribution-tabs {
   position: absolute;
   z-index: 3;
-  right: 11%;
-  bottom: 38.5%;
+  right: var(--plot-right, 0);
+  bottom: var(--plot-bottom, 0);
   display: grid;
-  grid-template-columns: 1.8rem minmax(0, 1fr) 1.8rem;
-  width: min(30.5%, 22rem);
-  min-height: 1.65rem;
-  border: 0;
-  border-bottom: 1px dashed #f5f2e980;
-  background: #0d1611e8;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: min(42%, 28rem);
+  height: min(31%, 12rem);
+  min-height: 7rem;
+  overflow: hidden;
+  border: 1px dashed #f5f2e980;
+  background-color: #0d1611f2;
+  background-image: var(--board-texture);
+  background-size: 300px 300px;
+  background-blend-mode: soft-light;
   color: var(--chalk-white);
   font-family: var(--font-chalk);
-  transition: width 120ms ease, right 120ms ease;
+  transition:
+    width 180ms ease,
+    height 180ms ease,
+    right 180ms ease,
+    opacity 140ms ease;
 }
 
-.distribution-tabs button {
+.distribution-tabbar {
+  display: grid;
+  grid-template-columns: 1.8rem minmax(0, 1fr) 1.8rem;
+  min-width: 0;
+  border-bottom: 1px dashed #f5f2e980;
+}
+
+.distribution-tabbar button {
   min-width: 0;
   min-height: 1.65rem;
   margin: 0;
@@ -257,41 +272,52 @@ body::after,
 }
 
 .distribution-tab {
-  display: grid;
+  display: flex;
   min-width: 0;
-  place-content: center;
+  gap: 0.35rem;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.62rem;
 }
 
 .distribution-tab small {
   overflow: hidden;
   color: var(--chalk-dim);
   font-family: var(--font-chalk);
-  font-size: 0.62rem;
+  font-size: inherit;
   line-height: 1;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.distribution-tabs button:last-child {
+.distribution-tab > span {
+  flex: 0 0 auto;
+}
+
+.distribution-tabbar button:last-child {
   border-right: 0;
 }
 
-.distribution-tabs button:hover,
-.distribution-tabs button:focus-visible {
+.distribution-tabbar button:hover,
+.distribution-tabbar button:focus-visible {
   background: #f5f2e914;
   color: var(--chalk-yellow);
 }
 
 .distribution-tabs[data-expanded="false"] {
-  right: 0;
-  grid-template-columns: auto;
+  grid-template-rows: auto;
   width: auto;
+  height: 1.8rem;
+  min-height: 0;
   max-width: 10rem;
-  border: 1px dashed #f5f2e980;
-  border-right: 0;
 }
 
-.distribution-tabs[data-expanded="false"] > button:not(.distribution-tab) {
+.distribution-tabs[data-expanded="false"] .distribution-tabbar {
+  grid-template-columns: auto;
+  border-bottom: 0;
+}
+
+.distribution-tabs[data-expanded="false"] .distribution-tabbar > button:not(.distribution-tab) {
   display: none;
 }
 
@@ -302,6 +328,28 @@ body::after,
 
 .distribution-tabs[data-expanded="false"] .distribution-tab small {
   display: none;
+}
+
+.distribution-plot {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  opacity: 1;
+  transition: opacity 140ms ease;
+}
+
+.distribution-tabs[data-expanded="false"] .distribution-plot {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.distribution-plot canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 #diagnostics {
@@ -334,7 +382,15 @@ body::after,
   align-items: stretch;
   margin: 0.28rem 0.42rem 0.38rem;
   border: 1px dashed #f5f2e999;
-  background: #0d1813;
+  background-color: #0d1813;
+  background-image:
+    url("../lib/chalkish/examples/assets/board-grain.png"),
+    radial-gradient(circle at 23% 45%, #f5f2e909 0 0.4px, transparent 0.8px);
+  background-size: 300px 300px, 19px 23px;
+  background-blend-mode: soft-light, screen;
+  box-shadow:
+    0.08rem 0.1rem 0 #0204038c,
+    inset 0 0 0.8rem #f5f2e908;
   color: var(--chalk-white);
   font-family: var(--font-chalk-label);
 }
@@ -350,6 +406,10 @@ body::after,
   box-shadow: none;
   font-family: inherit;
   scrollbar-width: none;
+  transform-origin: left center;
+  transition:
+    max-width 180ms steps(7, end),
+    opacity 140ms ease;
 }
 
 .stage-controls-toggle {
@@ -422,7 +482,17 @@ body::after,
 }
 
 .stage-footer.stage-controls-hidden .stage-controls {
-  display: none;
+  max-width: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .distribution-tabs,
+  .distribution-plot,
+  .stage-controls {
+    transition-duration: 0.001ms !important;
+  }
 }
 
 @media (max-width: 760px) {
@@ -461,6 +531,10 @@ body::after,
   .lab-header h1 {
     font-size: 1rem;
     white-space: nowrap;
+  }
+
+  .distribution-tabs {
+    width: min(78%, 22rem);
   }
 
   .control-row {

@@ -27,6 +27,7 @@
   --chalk-rule: #e9eed55e;
   --chalk-yellow: #efd677;
   --board-texture: url("./assets/board-grain.png");
+  --chalk-transition-duration: 180ms;
   --control-corner: 1px;
   --radius: 2px;
 }
@@ -229,8 +230,11 @@ button {
   gap: 0;
   align-items: stretch;
   overflow-x: auto;
-  border: 1px solid #edf1df75;
-  background: #0d1813ed;
+  border: 1px dashed #edf1df75;
+  background-color: #0d1813ed;
+  background-image: var(--board-texture);
+  background-size: 300px 300px;
+  background-blend-mode: soft-light;
   box-shadow:
     0.18rem 0.22rem 0 #030604a8,
     inset 0 0 1rem #dfe9dc08;
@@ -283,6 +287,44 @@ button {
   stroke-width: 1.65;
   stroke-linecap: round;
   stroke-linejoin: round;
+  filter:
+    drop-shadow(0.04rem 0.03rem 0 #f5f2e952)
+    drop-shadow(-0.025rem 0.02rem 0 #f5f2e92e);
+}
+
+@keyframes chalk-write {
+  from {
+    clip-path: inset(0 100% 0 0);
+    opacity: 0.2;
+    filter: blur(0.7px);
+  }
+  72% { opacity: 0.92; }
+  to {
+    clip-path: inset(0);
+    opacity: 1;
+    filter: none;
+  }
+}
+
+@keyframes chalk-erase {
+  from {
+    clip-path: inset(0);
+    opacity: 1;
+    filter: none;
+  }
+  to {
+    clip-path: inset(0 0 0 100%);
+    opacity: 0.08;
+    filter: blur(1.1px);
+  }
+}
+
+[data-chalk-transition="write"] {
+  animation: chalk-write var(--chalk-transition-duration) steps(9, end) both;
+}
+
+[data-chalk-transition="erase"] {
+  animation: chalk-erase var(--chalk-transition-duration) steps(7, end) both;
 }
 
 .stage-icon .play-glyph {
@@ -427,5 +469,6 @@ a:focus-visible {
   *::after {
     scroll-behavior: auto !important;
     transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
   }
 }

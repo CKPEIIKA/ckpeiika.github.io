@@ -57,10 +57,18 @@ test('DSMC plot is a localized right-edge tab with selectable contents', async (
   assert.match(html, /data-action="previous-plot"/);
   assert.match(html, /data-action="next-plot"/);
   assert.match(html, /data-action="toggle-plot"/);
+  assert.match(html, /class="distribution-plot"[^>]*>[\s\S]*id="distribution-stage"/);
   assert.match(app, /PLOT_MODES[^;]+speed[^;]+temperature[^;]+collisions/s);
+  assert.match(app, /writeChalkText\(nodes\.distributionTabLabel/);
+  assert.match(app, /markChalkTransition\(nodes\.distributionPlot/);
   assert.match(app, /'plot\.speed': 'Скорости'/);
   assert.match(view, /distributionFrame,\s*distributionLabel,/s);
-  assert.match(css, /\.distribution-tabs\[data-expanded="false"\][^{]*\{[^}]*right:\s*0/s);
+  assert.match(css, /\.distribution-tabs\s*\{[^}]*right:\s*var\(--plot-right, 0\);[^}]*bottom:\s*var\(--plot-bottom, 0\)/s);
+  assert.match(css, /\.distribution-tabs\s*\{[^}]*grid-template-rows:[^}]*border:\s*1px dashed/s);
+  assert.match(app, /new Scene\(\{ background: '#0d1611' \}\)/);
+  assert.match(app, /controller\.camera\.matrix\(plotAnchorMatrix, backingWidth, backingHeight\)/);
+  assert.match(app, /app\.renderer\.pixelRatio/);
+  assert.match(app, /domain\.maxX[\s\S]+domain\.minY/);
 });
 
 test('stage controls stay outside the canvas and can collapse independently', async () => {
@@ -70,8 +78,10 @@ test('stage controls stay outside the canvas and can collapse independently', as
   ]);
 
   assert.match(css, /\.stage-viewport\s*\{[^}]*grid-template-rows:\s*minmax\(0, 1fr\) auto/s);
+  assert.match(css, /\.stage-canvas canvas\s*\{[^}]*width:\s*100%\s*!important;[^}]*height:\s*100%\s*!important/s);
   assert.match(css, /\.stage-controls\s*\{[^}]*position:\s*static/s);
   assert.match(css, /\.stage-footer\s*\{[^}]*border:\s*1px dashed/s);
+  assert.match(css, /\.stage-footer\.stage-controls-hidden \.stage-controls\s*\{[^}]*max-width:\s*0/s);
   assert.match(css, /#diagnostics\s*\{[^}]*white-space:\s*nowrap/s);
   assert.match(controls, /root\.classList\.toggle\('stage-controls-hidden'\)/);
 });
