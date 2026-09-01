@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Local asset smoke test</title>
+  <link rel="stylesheet" href="../assets/fonts/open-sans/open-sans.css">
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(', '\\)']] },
+    };
+  </script>
+  <script src="../vendor/mathjax/es5/tex-mml-chtml.js"></script>
+</head>
+<body style="font-family: 'Open Sans', sans-serif">
+  <p id="font-sample">Кириллица · Ελληνικά · Latin</p>
+  <p id="formula">\(u_t + \alpha u_x = D\,u_{xx}\)</p>
+  <output id="status">WAIT</output>
+  <script>
+    Promise.all([
+      document.fonts.load('400 16px "Open Sans"', 'Кириллица Ελληνικά Latin'),
+      MathJax.startup.promise,
+    ]).then(() => {
+      const fontReady = document.fonts.check(
+        '400 16px "Open Sans"',
+        'Кириллица Ελληνικά Latin',
+      );
+      const mathReady = Boolean(document.querySelector('mjx-container'));
+      document.getElementById('status').textContent = fontReady && mathReady ? 'PASS' : 'FAIL';
+    }).catch((error) => {
+      document.getElementById('status').textContent = `FAIL: ${error.message}`;
+    });
+  </script>
+</body>
+</html>

@@ -3,10 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light">
+  <meta name="color-scheme" content="light dark">
   <meta name="description" content="Compact chalkboard frontend for four deterministic spatial DSMC experiments." data-i18n-content="page.description">
   <title>DSMC Laboratory</title>
   <link rel="icon" href="data:,">
+  <script src="../theme-init.js"></script>
+  <link rel="stylesheet" href="../../assets/fonts/open-sans/open-sans.css">
   <link rel="stylesheet" href="../../lib/chalkish/examples/chalkboard-theme.css">
   <link rel="stylesheet" href="../../lib/chalkish/examples/reference-labs.css">
   <link rel="stylesheet" href="../lab-overrides.css">
@@ -17,11 +19,14 @@
       <span aria-hidden="true">←</span> <span class="course-label" data-i18n="nav.course">course page</span>
     </a>
     <h1 data-i18n="page.title">DSMC</h1>
-    <nav class="locale-switch" data-locale-switch aria-label="Language" data-i18n-aria-label="locale.label">
-      <a href="?lang=en" data-lang="en" lang="en">EN</a>
-      <span aria-hidden="true">/</span>
-      <a href="?lang=ru" data-lang="ru" lang="ru">RU</a>
-    </nav>
+    <div class="header-tools">
+      <button class="demo-theme-toggle" type="button" data-theme-toggle aria-label="Use dark theme">☾</button>
+      <nav class="locale-switch" data-locale-switch aria-label="Language" data-i18n-aria-label="locale.label">
+        <a href="?lang=en" data-lang="en" lang="en">EN</a>
+        <span aria-hidden="true">/</span>
+        <a href="?lang=ru" data-lang="ru" lang="ru">RU</a>
+      </nav>
+    </div>
   </header>
 
   <main class="lab-layout">
@@ -332,6 +337,7 @@
   </dialog>
 
   <noscript>This numerical board requires JavaScript; it uses no remote services.</noscript>
+  <script type="module" src="../theme.js"></script>
   <script type="module" src="./app.js"></script>
 </body>
 </html>
