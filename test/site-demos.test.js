@@ -81,6 +81,7 @@ test('stage controls stay outside the canvas and can collapse independently', as
   assert.match(css, /\.stage-canvas canvas\s*\{[^}]*width:\s*100%\s*!important;[^}]*height:\s*100%\s*!important/s);
   assert.match(css, /\.stage-controls\s*\{[^}]*position:\s*static/s);
   assert.match(css, /\.stage-footer\s*\{[^}]*border:\s*1px dashed/s);
+  assert.match(css, /--board-texture:\s*url\("\.\.\/lib\/chalkish\/examples\/assets\/board-grain\.png"\)/);
   assert.match(css, /\.stage-footer\.stage-controls-hidden \.stage-controls\s*\{[^}]*max-width:\s*0/s);
   assert.match(css, /#diagnostics\s*\{[^}]*white-space:\s*nowrap/s);
   assert.match(controls, /root\.classList\.toggle\('stage-controls-hidden'\)/);

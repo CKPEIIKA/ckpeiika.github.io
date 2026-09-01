@@ -10,6 +10,7 @@
   --chalk-dim: #c4cbc6;
   --chalk-yellow: #efd677;
   --chalk-rule: #d8dde366;
+  --board-texture: url("../lib/chalkish/examples/assets/board-grain.png");
 }
 
 *,
