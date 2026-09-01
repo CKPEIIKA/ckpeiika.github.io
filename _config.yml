@@ -9,7 +9,17 @@ kramdown:
 plugins:
   - kramdown-parser-gfm
 exclude:
+  - AGENTS.md
   - README.md
+  - package.json
+  - scripts
+  - test
   - todo
+  - lib/chalkish/LICENSE
+  - lib/chalkish/README.md
+  - lib/chalkish/SOURCE_REVISION
+  - lib/chalkish/TODO.md
+  - lib/chalkish/docs
+  - lib/chalkish/package.json
   - lib/chalkish/test
   - lib/chalkish/support

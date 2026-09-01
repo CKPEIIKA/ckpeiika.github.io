@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="dark">
-  <meta name="description" content="Compact chalkboard frontend for four deterministic DG and finite-volume experiments.">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Interactive DG and finite-volume laboratory." data-i18n-content="page.description">
   <title>DG / FV Laboratory</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="../../lib/chalkish/examples/chalkboard-theme.css">
@@ -13,31 +13,45 @@
 </head>
 <body>
   <header class="lab-header">
-    <div>
-      <a class="board-home" href="../../pages/fvm-demo.html">← course page</a>
-      <p class="eyebrow">VERIFIED NUMERICAL MODEL</p>
-      <h1 data-i18n="page.title">DG / FV laboratory</h1>
-      <p data-i18n="page.lede">
-        One modal engine, four equation families: compressible Euler flow over
-        an embedded body, periodic diamond translation, scalar advection, and
-        inviscid Burgers. P0 is the finite-volume limit of the same weak form.
-      </p>
-    </div>
-    <p class="method-note">
-      Deterministic and verified against invariants and limiting states.
-      <strong>Not validated</strong> against an experimental configuration.
-      The Euler body is stair-stepped on a Cartesian mesh.
-    </p>
+    <a class="board-home" href="../../pages/fvm-demo.html" aria-label="Course page" data-i18n-aria-label="nav.course">
+      <span aria-hidden="true">←</span> <span class="course-label" data-i18n="nav.course">course page</span>
+    </a>
+    <h1 data-i18n="page.title">DG / FV</h1>
+    <nav class="locale-switch" data-locale-switch aria-label="Language" data-i18n-aria-label="locale.label">
+      <a href="?lang=en" data-lang="en" lang="en">EN</a>
+      <span aria-hidden="true">/</span>
+      <a href="?lang=ru" data-lang="ru" lang="ru">RU</a>
+    </nav>
   </header>
 
   <main class="lab-layout">
-    <section class="lab-stage" aria-label="DG and finite-volume numerical stage">
+    <section class="lab-stage" aria-label="DG and finite-volume numerical stage" data-i18n-aria-label="stage.dg">
       <div class="stage-viewport" data-stage-viewport>
-        <canvas id="stage" width="1120" height="630"
-                aria-label="Selected DG or finite-volume solution field"></canvas>
-        <div id="stage-controls" class="stage-controls" data-stage-controls
-             aria-label="Playback and viewport controls">
-          <button id="pause" type="button" data-action="pause"
+        <div class="stage-canvas">
+          <canvas id="stage" width="1120" height="630"
+                  aria-label="Selected DG or finite-volume solution field" data-i18n-aria-label="stage.dgCanvas"></canvas>
+        </div>
+        <div id="stage-controls" class="stage-footer" data-stage-controls
+             aria-label="Playback and viewport controls" data-i18n-aria-label="stage.controls">
+          <button class="stage-controls-toggle" type="button" data-action="toggle-controls"
+                  aria-label="Hide toolbar" title="Hide toolbar"
+                  data-i18n-aria-label="stage.hideControls" data-i18n-title="stage.hideControls"
+                  aria-pressed="false">
+            <svg data-stage-icon class="stage-icon" viewBox="0 0 24 24"
+                 aria-hidden="true" focusable="false">
+              <g class="hide-controls-glyph">
+                <path d="M2.5 12S6 6.5 12 6.5S21.5 12 21.5 12S18 17.5 12 17.5S2.5 12 2.5 12Z"/>
+                <circle cx="12" cy="12" r="2.5"/>
+                <path d="M4 4L20 20"/>
+              </g>
+              <g class="show-controls-glyph">
+                <path d="M2.5 12S6 6.5 12 6.5S21.5 12 21.5 12S18 17.5 12 17.5S2.5 12 2.5 12Z"/>
+                <circle cx="12" cy="12" r="2.5"/>
+              </g>
+            </svg>
+          </button>
+          <div class="stage-controls" data-stage-control-set>
+            <button id="pause" type="button" data-action="pause"
                   aria-label="Pause animation" title="Pause animation" aria-pressed="false">
             <svg data-stage-icon class="stage-icon" viewBox="0 0 24 24"
                  aria-hidden="true" focusable="false">
@@ -46,14 +60,15 @@
             </svg>
           </button>
           <button id="step" type="button" data-action="step"
-                  aria-label="Advance one numerical step" title="Advance one numerical step">
+                  aria-label="Advance one numerical step" title="Advance one numerical step"
+                  data-i18n-aria-label="stage.step" data-i18n-title="stage.step">
             <svg data-stage-icon class="stage-icon" viewBox="0 0 24 24"
                  aria-hidden="true" focusable="false">
               <path d="M6 5L16 12L6 19ZM19 5V19"/>
             </svg>
           </button>
           <label class="stage-speed">
-            <span class="visually-hidden">Playback speed</span>
+            <span class="visually-hidden" data-i18n="stage.speed">Playback speed</span>
             <svg data-stage-icon class="stage-icon" viewBox="0 0 24 24"
                  aria-hidden="true" focusable="false">
               <path d="M4 17A8 8 0 0 1 20 17M12 16L16 10M6 19H18"/>
@@ -66,21 +81,24 @@
             </select>
           </label>
           <button type="button" data-action="grab"
-                  aria-label="Toggle grab tool" title="Grab and pan" aria-pressed="false">
+                  aria-label="Toggle grab tool" title="Grab and pan" aria-pressed="false"
+                  data-i18n-aria-label="stage.grab" data-i18n-title="stage.grab">
             <svg data-stage-icon class="stage-icon" viewBox="0 0 24 24"
                  aria-hidden="true" focusable="false">
               <path d="M7.2 11V6.2A1.8 1.8 0 0 1 10.8 6V10V4.8A1.8 1.8 0 0 1 14.4 4.8V10V6.2A1.8 1.8 0 0 1 18 6.2V12V9A1.8 1.8 0 0 1 21.6 9V14.2C21.6 18.4 18.4 21 14.2 21H12C8.8 21 7.1 19.4 5.5 17L2.8 13A1.9 1.9 0 0 1 5.8 10.7L7.2 12.1"/>
             </svg>
           </button>
           <span class="stage-zoom" role="group" aria-label="Zoom controls">
-            <button type="button" data-action="zoom-out" aria-label="Zoom out" title="Zoom out">
+            <button type="button" data-action="zoom-out" aria-label="Zoom out" title="Zoom out"
+                    data-i18n-aria-label="stage.zoomOut" data-i18n-title="stage.zoomOut">
               <svg data-stage-icon class="stage-icon" viewBox="0 0 24 24"
                    aria-hidden="true" focusable="false">
                 <circle cx="10.5" cy="10.5" r="6.5"/>
                 <path d="M6.8 10.5H14.2M15.2 15.2L21 21"/>
               </svg>
             </button>
-            <button type="button" data-action="zoom-in" aria-label="Zoom in" title="Zoom in">
+            <button type="button" data-action="zoom-in" aria-label="Zoom in" title="Zoom in"
+                    data-i18n-aria-label="stage.zoomIn" data-i18n-title="stage.zoomIn">
               <svg data-stage-icon class="stage-icon" viewBox="0 0 24 24"
                    aria-hidden="true" focusable="false">
                 <circle cx="10.5" cy="10.5" r="6.5"/>
@@ -88,10 +106,12 @@
               </svg>
             </button>
             <button type="button" data-action="reset-view"
-                    aria-label="Reset view" title="Reset view">
+                    aria-label="Reset view" title="Reset view"
+                    data-i18n-aria-label="stage.resetView" data-i18n-title="stage.resetView">
               <svg data-stage-icon class="stage-icon" viewBox="0 0 24 24"
                    aria-hidden="true" focusable="false">
-                <path d="M4 9V4H9M15 4H20V9M20 15V20H15M9 20H4V15"/>
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M12 2V5M12 19V22M2 12H5M19 12H22"/>
               </svg>
             </button>
           </span>
@@ -106,22 +126,23 @@
               <path class="collapse-glyph" d="M9 4V9H4M15 4V9H20M20 15H15V20M4 15H9V20"/>
             </svg>
           </button>
+          </div>
+          <pre id="diagnostics" aria-live="polite"></pre>
         </div>
       </div>
-      <pre id="diagnostics" aria-live="polite"></pre>
     </section>
 
-    <aside class="lab-controls" aria-label="DG and finite-volume controls">
+    <aside class="lab-controls" aria-label="DG and finite-volume controls" data-i18n-aria-label="controls.dg">
       <h2 data-i18n="page.settings">Board settings</h2>
       <fieldset>
         <legend data-i18n="page.experiment">Experiment</legend>
         <label class="control-row">
           <span data-i18n="page.case">Case</span>
           <select id="case-id">
-            <option value="euler-cylinder" selected>Euler / body</option>
-            <option value="diamond-translation">Diamond translation</option>
-            <option value="scalar-advection">Scalar advection</option>
-            <option value="burgers">Burgers</option>
+            <option value="euler-cylinder" selected data-i18n="case.euler">Euler / body</option>
+            <option value="diamond-translation" data-i18n="case.diamond">Diamond translation</option>
+            <option value="scalar-advection" data-i18n="case.advection">Scalar advection</option>
+            <option value="burgers" data-i18n="case.burgers">Burgers</option>
           </select>
         </label>
         <label class="control-row">
@@ -162,9 +183,9 @@
           <label class="control-row" data-control="body">
             <span data-i18n="page.body">Body</span>
             <select id="body-shape">
-              <option value="square" selected>Square</option>
-              <option value="wedge">10° wedge</option>
-              <option value="cylinder">Cylinder</option>
+              <option value="square" selected data-i18n="body.square">Square</option>
+              <option value="wedge" data-i18n="body.wedge">10° wedge</option>
+              <option value="cylinder" data-i18n="body.cylinder">Cylinder</option>
             </select>
           </label>
           <label class="control-row" data-control="initial" hidden>
@@ -174,9 +195,9 @@
           <label class="control-row" data-control="velocity" hidden>
             <span data-i18n="page.velocity">Velocity</span>
             <select id="velocity-field">
-              <option value="uniform">Uniform</option>
-              <option value="swirl">Periodic swirl</option>
-              <option value="shear">Shear</option>
+              <option value="uniform" data-i18n="velocity.uniform">Uniform</option>
+              <option value="swirl" data-i18n="velocity.swirl">Periodic swirl</option>
+              <option value="shear" data-i18n="velocity.shear">Shear</option>
             </select>
           </label>
           <label class="control-row">
@@ -187,11 +208,6 @@
       </details>
 
       <button id="reset" class="reset-model" type="button" data-i18n="page.reset">Reset numerical model</button>
-      <p class="scientific-status" data-i18n-html="page.status">
-        Status: <strong>verified numerical model</strong>, not validated.
-        Scalar mass, deterministic replay, and positive limited Euler states
-        are tested. Inviscid drag is pressure and numerical wave drag.
-      </p>
     </aside>
   </main>
 

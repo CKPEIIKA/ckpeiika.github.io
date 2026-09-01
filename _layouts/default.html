@@ -4,8 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ page.title }}</title>
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="{{ '/style.css' | relative_url }}">
   {% if page.math %}
   <script>
     window.MathJax = {
@@ -36,7 +35,7 @@
   </main>
 
   <p class="footer-links">
-    <a href="/index.html">⬅ Обратно на домашнюю страничку</a>
+    <a href="{{ '/index.html' | relative_url }}">⬅ Обратно на домашнюю страничку</a>
     <span> </span>
     <a href="#top">↑ Наверх</a>
   </p>

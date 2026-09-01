@@ -5,6 +5,93 @@ import {
 } from '../../lib/chalkish/examples/boards/_shared/dsmc-lab-controller.js';
 import { BOARD_RENDER_STYLE } from '../../lib/chalkish/examples/board-settings.js';
 import { bindStageControls } from '../../lib/chalkish/examples/stage-controls.js';
+import { bindLabLanguage, withCommonTranslations } from '../lab-i18n.js';
+
+const i18n = bindLabLanguage(withCommonTranslations({
+  en: {
+    'page.documentTitle': 'DSMC Laboratory',
+    'page.description': 'Interactive laboratory for deterministic spatial DSMC experiments.',
+    'page.title': 'DSMC',
+    'stage.dsmc': 'Spatial DSMC numerical stage',
+    'stage.dsmcCanvas': 'Particles, collision-cell occupancy, walls, and speed distribution',
+    'controls.dsmc': 'Spatial DSMC controls',
+    'page.particles': 'Particles',
+    'page.model': 'Model',
+    'page.cellClock': 'Cell and time step',
+    'page.cellSize': 'Cell size',
+    'page.wallControls': 'Wall controls',
+    'page.maxwell': 'Maxwell boundary',
+    'page.accommodation': 'Accommodation',
+    'page.leftTemperature': 'Left T / K',
+    'page.rightTemperature': 'Right T / K',
+    'page.wallSpeed': 'Wall speed / m s⁻¹',
+    'page.reset': 'Reseed calculation',
+    'case.equilibrium': 'Equilibrium box',
+    'case.heat': 'Heat transfer x',
+    'case.rotation': 'Rotational N₂',
+    'case.couette': 'Couette flow',
+    'model.hs': 'Hard sphere',
+    'plot.previous': 'Previous graph',
+    'plot.next': 'Next graph',
+    'plot.hide': 'Hide graph',
+    'plot.show': 'Show graph',
+    'plot.speed': 'Speeds',
+    'plot.temperature': 'Temperatures',
+    'plot.collisions': 'Collisions',
+    'plot.speedLegend': 'sample — Maxwellian ╌',
+    'plot.temperatureLegend': 'translational — rotational ╌',
+    'plot.collisionsLegend': 'accepted — candidate pairs ╌',
+  },
+  ru: {
+    'page.documentTitle': 'Лаборатория DSMC',
+    'page.description': 'Интерактивная лаборатория пространственных расчётов прямым статистическим моделированием Монте-Карло.',
+    'page.title': 'DSMC',
+    'stage.dsmc': 'Поле пространственного расчёта DSMC',
+    'stage.dsmcCanvas': 'Частицы, заполнение ячеек столкновений, стенки и распределение скоростей',
+    'controls.dsmc': 'Параметры расчёта DSMC',
+    'page.particles': 'Частицы',
+    'page.model': 'Модель',
+    'page.cellClock': 'Ячейка и шаг по времени',
+    'page.cellSize': 'Размер ячейки',
+    'page.wallControls': 'Параметры стенок',
+    'page.maxwell': 'Граничное условие Максвелла',
+    'page.accommodation': 'Аккомодация',
+    'page.leftTemperature': 'Температура слева / К',
+    'page.rightTemperature': 'Температура справа / К',
+    'page.wallSpeed': 'Скорость стенки / м·с⁻¹',
+    'page.reset': 'Перезапустить расчёт',
+    'case.equilibrium': 'Равновесный объём',
+    'case.heat': 'Теплоперенос по x',
+    'case.rotation': 'Вращательная релаксация N₂',
+    'case.couette': 'Течение Куэтта',
+    'model.hs': 'Твёрдые сферы',
+    'plot.previous': 'Предыдущий график',
+    'plot.next': 'Следующий график',
+    'plot.hide': 'Скрыть график',
+    'plot.show': 'Показать график',
+    'plot.speed': 'Скорости',
+    'plot.temperature': 'Температуры',
+    'plot.collisions': 'Столкновения',
+    'plot.speedLegend': 'выборка — Максвелл ╌',
+    'plot.temperatureLegend': 'поступательная — вращательная ╌',
+    'plot.collisionsLegend': 'принятые — выбранные пары ╌',
+  },
+}));
+
+const CANVAS_METHODS = Object.freeze({
+  en: Object.freeze({
+    'equilibrium-box': 'NTC collisions · periodic box · elastic VHS',
+    'heat-transfer-x': 'NTC collisions · diffuse thermal x-walls · periodic y',
+    'rotational-nitrogen': 'NTC collisions · VSS scattering · rotational Larsen–Borgnakke',
+    'couette-flow': 'NTC collisions · periodic x · moving diffuse y-walls',
+  }),
+  ru: Object.freeze({
+    'equilibrium-box': 'Столкновения NTC · периодический объём · упругие VHS',
+    'heat-transfer-x': 'Столкновения NTC · диффузные тепловые стенки по x · периодичность по y',
+    'rotational-nitrogen': 'Столкновения NTC · рассеяние VSS · вращательная модель Ларсена — Боргнакке',
+    'couette-flow': 'Столкновения NTC · периодичность по x · движущиеся диффузные стенки по y',
+  }),
+});
 
 function required(id) {
   const node = document.getElementById(id);
@@ -31,6 +118,12 @@ const nodes = Object.freeze({
   wallTemperatureLeft: required('wall-temperature-left'),
   wallTemperatureRight: required('wall-temperature-right'),
   wallSpeed: required('wall-speed'),
+  distributionTabs: required('distribution-tabs'),
+  distributionTabLabel: required('distribution-tab-label'),
+  distributionTabLegend: required('distribution-tab-legend'),
+  previousPlot: document.querySelector('[data-action="previous-plot"]'),
+  nextPlot: document.querySelector('[data-action="next-plot"]'),
+  togglePlot: document.querySelector('[data-action="toggle-plot"]'),
 });
 
 function closestOption(select, value) {
@@ -90,27 +183,149 @@ const controller = createDsmcLabController({
 });
 const startsPaused = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 let diagnosticsCountdown = 0;
+const PLOT_MODES = Object.freeze(['speed', 'temperature', 'collisions']);
+const plotHistory = {
+  x: [],
+  temperature: [],
+  rotationalTemperature: [],
+  collisions: [],
+  attempts: [],
+  lastStep: -1,
+};
+let plotModeIndex = 0;
+let plotVisible = true;
+
+function canvasAspect() {
+  const width = nodes.canvas.clientWidth || nodes.canvas.width;
+  const height = nodes.canvas.clientHeight || nodes.canvas.height;
+  return Math.max(0.25, width / Math.max(1, height));
+}
+
+function recordPlotHistory(values) {
+  if (values.step === plotHistory.lastStep) return;
+  plotHistory.lastStep = values.step;
+  plotHistory.x.push(plotHistory.x.length);
+  plotHistory.temperature.push(values.temperature);
+  plotHistory.rotationalTemperature.push(
+    Number.isFinite(values.rotationalTemperature) ? values.rotationalTemperature : 0,
+  );
+  plotHistory.collisions.push(values.collisionsLastStep);
+  plotHistory.attempts.push(values.collisionAttemptsLastStep);
+  if (plotHistory.x.length > 80) {
+    for (const valuesArray of Object.values(plotHistory)) {
+      if (Array.isArray(valuesArray)) valuesArray.shift();
+    }
+    for (let index = 0; index < plotHistory.x.length; index += 1) {
+      plotHistory.x[index] = index;
+    }
+  }
+}
+
+function setPlotBuffers(x, primary, reference, { referenceVisible = true } = {}) {
+  const count = Math.min(x.length, primary.length, reference.length);
+  const maximum = Math.max(1e-12, ...primary, ...reference);
+  const maximumX = Math.max(1, ...x);
+  const scaleX = 3.05 / maximumX;
+  const scaleY = 1.1 / maximum;
+  controller.view.layers.distribution
+    .setBuffers({ x, y: primary, count })
+    .setScale(scaleX, scaleY)
+    .setPosition(6.52, 0.43)
+    .setVisible(plotVisible);
+  controller.view.layers.maxwellian
+    .setBuffers({ x, y: reference, count })
+    .setScale(scaleX, scaleY)
+    .setPosition(6.52, 0.43)
+    .setVisible(plotVisible && referenceVisible);
+}
+
+function renderPlot() {
+  const mode = PLOT_MODES[plotModeIndex];
+  const layers = controller.view.layers;
+  layers.distributionFrame.setVisible(plotVisible);
+  layers.distributionLabel.setVisible(false);
+  nodes.distributionTabs.dataset.expanded = String(plotVisible);
+  nodes.togglePlot.setAttribute('aria-expanded', String(plotVisible));
+  const action = i18n.t(plotVisible ? 'plot.hide' : 'plot.show');
+  nodes.togglePlot.setAttribute('aria-label', action);
+  nodes.togglePlot.setAttribute('title', action);
+  nodes.distributionTabLabel.textContent = plotVisible
+    ? i18n.t(`plot.${mode}`)
+    : `‹ ${i18n.t('plot.show')}`;
+  nodes.distributionTabLegend.textContent = i18n.t(`plot.${mode}Legend`);
+  if (!plotVisible) {
+    layers.distribution.setVisible(false);
+    layers.maxwellian.setVisible(false);
+    return;
+  }
+
+  if (mode === 'speed') {
+    const snapshot = controller.snapshot();
+    setPlotBuffers(
+      snapshot.state.speedBins,
+      snapshot.state.speedHistogram,
+      snapshot.state.maxwellian,
+    );
+    return;
+  }
+
+  if (mode === 'temperature') {
+    const rotationalVisible = plotHistory.rotationalTemperature.some((value) => value > 0);
+    setPlotBuffers(
+      plotHistory.x,
+      plotHistory.temperature,
+      plotHistory.rotationalTemperature,
+      { referenceVisible: rotationalVisible },
+    );
+    return;
+  }
+
+  setPlotBuffers(
+    plotHistory.x,
+    plotHistory.collisions,
+    plotHistory.attempts,
+  );
+}
+
+function localizeCanvas() {
+  const values = controller.diagnostics();
+  controller.view.layers.heading.setText('');
+  controller.view.layers.method.setText(CANVAS_METHODS[i18n.language][values.caseId]);
+  controller.view.layers.status.setText('');
+  controller.camera
+    .setCenter(5, 3.2)
+    .setHeight(Math.max(6.7, 10.35 / canvasAspect()));
+  renderPlot();
+}
 
 function formatRotational(value) {
-  return Number.isFinite(value) ? `${value.toFixed(1)} K` : 'not active';
+  return Number.isFinite(value)
+    ? `${value.toFixed(1)} K`
+    : i18n.language === 'ru' ? 'не учитывается' : 'not active';
 }
 
 function updateDiagnostics() {
   const values = controller.diagnostics();
-  const closed = values.closedSystem
-    ? `closed ΔE ${values.energyError.toExponential(3)} · Δp ${values.momentumError.toExponential(3)}`
-    : `wall-driven q ${Object.values(values.wallEnergy).reduce((sum, value) => sum + value, 0).toExponential(3)} J`;
+  recordPlotHistory(values);
+  const wallHeat = Object.values(values.wallEnergy)
+    .reduce((sum, value) => sum + value, 0)
+    .toExponential(3);
+  const ru = i18n.language === 'ru';
+  const balance = values.closedSystem
+    ? `ΔE ${values.energyError.toExponential(2)} · Δp ${values.momentumError.toExponential(2)}`
+    : `${ru ? 'qст' : 'qwall'} ${wallHeat} ${ru ? 'Дж' : 'J'}`;
   nodes.diagnostics.textContent = [
-    `case / model  ${values.caseId} / ${controller.model.parameters.collisionModel}`,
-    `time / step   ${(1e3 * values.time).toFixed(4)} ms / ${values.step}`,
-    `particles     ${values.particles} · cells ${values.cells} · occupied ${values.occupiedCells}`,
-    `Ttrans / Trot ${values.temperature.toFixed(2)} K / ${formatRotational(values.rotationalTemperature)}`,
-    `bulk velocity ${values.bulkVelocityX.toFixed(3)}, ${values.bulkVelocityY.toFixed(3)} m s⁻¹`,
-    `collisions    ${values.collisions} total · ${values.collisionsLastStep}/${values.collisionAttemptsLastStep} last`,
-    `validity      dx/λ ${values.dxOverMeanFreePath.toFixed(3)} · dt/τ ${values.dtOverMeanCollisionTime.toFixed(3)} · npc ${values.particlesPerCell.toFixed(2)}`,
-    `majorant      ${values.majorantViolations} violations · overflow ${values.overflowed ? 'yes' : 'no'}`,
-    `invariants    ${closed}`,
-  ].join('\n');
+    `t ${(1e3 * values.time).toFixed(2)} ${ru ? 'мс' : 'ms'}`,
+    `${ru ? 'шаг' : 'step'} ${values.step}`,
+    `N ${values.particles}`,
+    `${ru ? 'Tпост' : 'Ttrans'} ${values.temperature.toFixed(1)} K`,
+    `${ru ? 'Tвращ' : 'Trot'} ${formatRotational(values.rotationalTemperature)}`,
+    `${ru ? 'столкновения' : 'collisions'} ${values.collisions}`,
+    `dx/λ ${values.dxOverMeanFreePath.toFixed(2)}`,
+    `dt/τ ${values.dtOverMeanCollisionTime.toFixed(2)}`,
+    `${ru ? 'Nяч' : 'npc'} ${values.particlesPerCell.toFixed(1)}`,
+    balance,
+  ].join(' · ');
 }
 
 const app = mount(nodes.canvas, {
@@ -119,6 +334,7 @@ const app = mount(nodes.canvas, {
   fixedStep: 1 / 30,
   update: () => {
     controller.update();
+    localizeCanvas();
     diagnosticsCountdown -= 1;
     if (diagnosticsCountdown <= 0) {
       diagnosticsCountdown = 4;
@@ -130,10 +346,16 @@ const stageControls = bindStageControls({
   root: nodes.stageControls,
   canvas: nodes.canvas,
   app,
+  translate: i18n.t,
 });
 
 function reset() {
   controller.reset(parameters());
+  for (const valuesArray of Object.values(plotHistory)) {
+    if (Array.isArray(valuesArray)) valuesArray.length = 0;
+  }
+  plotHistory.lastStep = -1;
+  localizeCanvas();
   app.clock?.reset(null);
   diagnosticsCountdown = 0;
   updateDiagnostics();
@@ -171,6 +393,28 @@ nodes.knudsen.addEventListener('change', safeReset);
 nodes.wallAccommodation.addEventListener('change', safeReset);
 nodes.reset.addEventListener('click', safeReset);
 nodes.step.addEventListener('click', updateDiagnostics);
+nodes.previousPlot.addEventListener('click', () => {
+  plotModeIndex = (plotModeIndex - 1 + PLOT_MODES.length) % PLOT_MODES.length;
+  renderPlot();
+  app.render();
+});
+nodes.nextPlot.addEventListener('click', () => {
+  plotModeIndex = (plotModeIndex + 1) % PLOT_MODES.length;
+  renderPlot();
+  app.render();
+});
+nodes.togglePlot.addEventListener('click', () => {
+  plotVisible = !plotVisible;
+  renderPlot();
+  app.render();
+});
+
+i18n.onChange(() => {
+  updateDiagnostics();
+  localizeCanvas();
+  stageControls.sync();
+  app.render();
+});
 
 globalThis.addEventListener?.('pagehide', () => {
   stageControls.dispose();
@@ -179,6 +423,7 @@ globalThis.addEventListener?.('pagehide', () => {
 }, { once: true });
 
 updateDiagnostics();
+localizeCanvas();
 app.render();
 stageControls.captureView();
 stageControls.setPaused(startsPaused);

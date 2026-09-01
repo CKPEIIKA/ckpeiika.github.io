@@ -1,10 +1,10 @@
 <nav class="nav-inline">
   <p>
-    <a href="/index.html">🏠 Главная</a>
+    <a href="{{ '/index.html' | relative_url }}">🏠 Главная</a>
     {% assign subpages = site.pages | where_exp: "p", "p.path contains 'pages/'" | sort: "title" %}
     {% for p in subpages %}
       {% unless p.nav_exclude %}
-        | <a href="{{ p.url }}">{{ p.nav_label | default: p.title }}</a>
+        | <a href="{{ p.url | relative_url }}">{{ p.nav_label | default: p.title }}</a>
       {% endunless %}
     {% endfor %}
     | <button class="theme-toggle" type="button" aria-label="Переключить тему">Темно</button>

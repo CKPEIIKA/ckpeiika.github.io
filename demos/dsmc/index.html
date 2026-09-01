@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="dark">
+  <meta name="color-scheme" content="light">
   <meta name="description" content="Compact chalkboard frontend for four deterministic spatial DSMC experiments." data-i18n-content="page.description">
   <title>DSMC Laboratory</title>
   <link rel="icon" href="data:,">
@@ -13,31 +13,60 @@
 </head>
 <body>
   <header class="lab-header">
-    <div>
-      <a class="board-home" href="../../pages/dsmc-demo.html">← course page</a>
-      <p class="eyebrow">VERIFIED NUMERICAL MODEL</p>
-      <h1 data-i18n="page.title">DSMC laboratory</h1>
-      <p data-i18n="page.lede">
-        Inspect no-time-counter collisions in an equilibrium box, a thermal
-        channel, rotational nitrogen, or rarefied Couette flow. Particle,
-        collision-cell, wall, and speed-distribution state remain explicit.
-      </p>
-    </div>
-    <p class="method-note" data-i18n-html="page.note">
-      Deterministic elastic HS, VHS, or VSS collisions with optional
-      rotational Larsen–Borgnakke exchange. <strong>Not validated</strong>
-      against a configuration-specific experiment or DSMC benchmark.
-    </p>
+    <a class="board-home" href="../../pages/dsmc-demo.html" aria-label="Course page" data-i18n-aria-label="nav.course">
+      <span aria-hidden="true">←</span> <span class="course-label" data-i18n="nav.course">course page</span>
+    </a>
+    <h1 data-i18n="page.title">DSMC</h1>
+    <nav class="locale-switch" data-locale-switch aria-label="Language" data-i18n-aria-label="locale.label">
+      <a href="?lang=en" data-lang="en" lang="en">EN</a>
+      <span aria-hidden="true">/</span>
+      <a href="?lang=ru" data-lang="ru" lang="ru">RU</a>
+    </nav>
   </header>
 
   <main class="lab-layout">
-    <section class="lab-stage" aria-label="Spatial DSMC numerical stage">
+    <section class="lab-stage" aria-label="Spatial DSMC numerical stage" data-i18n-aria-label="stage.dsmc">
       <div class="stage-viewport" data-stage-viewport>
-        <canvas id="stage" width="1120" height="630"
-                aria-label="Particles, collision-cell occupancy, walls, and speed distribution"></canvas>
-        <div id="stage-controls" class="stage-controls" data-stage-controls
-             aria-label="Playback and viewport controls">
-          <button id="pause" type="button" data-action="pause"
+        <div class="stage-canvas">
+          <canvas id="stage" width="1120" height="630"
+                  aria-label="Particles, collision-cell occupancy, walls, and speed distribution" data-i18n-aria-label="stage.dsmcCanvas"></canvas>
+          <div id="distribution-tabs" class="distribution-tabs" data-expanded="true">
+            <button type="button" data-action="previous-plot"
+                    aria-label="Previous graph" title="Previous graph"
+                    data-i18n-aria-label="plot.previous" data-i18n-title="plot.previous">‹</button>
+            <button type="button" class="distribution-tab" data-action="toggle-plot"
+                    aria-expanded="true" aria-controls="stage"
+                    aria-label="Hide graph" title="Hide graph"
+                    data-i18n-aria-label="plot.hide" data-i18n-title="plot.hide">
+              <span id="distribution-tab-label">Speeds</span>
+              <small id="distribution-tab-legend">sample — Maxwellian ╌</small>
+            </button>
+            <button type="button" data-action="next-plot"
+                    aria-label="Next graph" title="Next graph"
+                    data-i18n-aria-label="plot.next" data-i18n-title="plot.next">›</button>
+          </div>
+        </div>
+        <div id="stage-controls" class="stage-footer" data-stage-controls
+             aria-label="Playback and viewport controls" data-i18n-aria-label="stage.controls">
+          <button class="stage-controls-toggle" type="button" data-action="toggle-controls"
+                  aria-label="Hide toolbar" title="Hide toolbar"
+                  data-i18n-aria-label="stage.hideControls" data-i18n-title="stage.hideControls"
+                  aria-pressed="false">
+            <svg data-stage-icon class="stage-icon" viewBox="0 0 24 24"
+                 aria-hidden="true" focusable="false">
+              <g class="hide-controls-glyph">
+                <path d="M2.5 12S6 6.5 12 6.5S21.5 12 21.5 12S18 17.5 12 17.5S2.5 12 2.5 12Z"/>
+                <circle cx="12" cy="12" r="2.5"/>
+                <path d="M4 4L20 20"/>
+              </g>
+              <g class="show-controls-glyph">
+                <path d="M2.5 12S6 6.5 12 6.5S21.5 12 21.5 12S18 17.5 12 17.5S2.5 12 2.5 12Z"/>
+                <circle cx="12" cy="12" r="2.5"/>
+              </g>
+            </svg>
+          </button>
+          <div class="stage-controls" data-stage-control-set>
+            <button id="pause" type="button" data-action="pause"
                   aria-label="Pause animation" title="Pause animation" aria-pressed="false">
             <svg data-stage-icon class="stage-icon" viewBox="0 0 24 24"
                  aria-hidden="true" focusable="false">
@@ -46,14 +75,15 @@
             </svg>
           </button>
           <button id="step" type="button" data-action="step"
-                  aria-label="Advance one DSMC step" title="Advance one DSMC step">
+                  aria-label="Advance one DSMC step" title="Advance one DSMC step"
+                  data-i18n-aria-label="stage.step" data-i18n-title="stage.step">
             <svg data-stage-icon class="stage-icon" viewBox="0 0 24 24"
                  aria-hidden="true" focusable="false">
               <path d="M6 5L16 12L6 19ZM19 5V19"/>
             </svg>
           </button>
           <label class="stage-speed">
-            <span class="visually-hidden">Playback speed</span>
+            <span class="visually-hidden" data-i18n="stage.speed">Playback speed</span>
             <svg data-stage-icon class="stage-icon" viewBox="0 0 24 24"
                  aria-hidden="true" focusable="false">
               <path d="M4 17A8 8 0 0 1 20 17M12 16L16 10M6 19H18"/>
@@ -66,21 +96,24 @@
             </select>
           </label>
           <button type="button" data-action="grab"
-                  aria-label="Toggle grab tool" title="Grab and pan" aria-pressed="false">
+                  aria-label="Toggle grab tool" title="Grab and pan" aria-pressed="false"
+                  data-i18n-aria-label="stage.grab" data-i18n-title="stage.grab">
             <svg data-stage-icon class="stage-icon" viewBox="0 0 24 24"
                  aria-hidden="true" focusable="false">
               <path d="M7.2 11V6.2A1.8 1.8 0 0 1 10.8 6V10V4.8A1.8 1.8 0 0 1 14.4 4.8V10V6.2A1.8 1.8 0 0 1 18 6.2V12V9A1.8 1.8 0 0 1 21.6 9V14.2C21.6 18.4 18.4 21 14.2 21H12C8.8 21 7.1 19.4 5.5 17L2.8 13A1.9 1.9 0 0 1 5.8 10.7L7.2 12.1"/>
             </svg>
           </button>
           <span class="stage-zoom" role="group" aria-label="Zoom controls">
-            <button type="button" data-action="zoom-out" aria-label="Zoom out" title="Zoom out">
+            <button type="button" data-action="zoom-out" aria-label="Zoom out" title="Zoom out"
+                    data-i18n-aria-label="stage.zoomOut" data-i18n-title="stage.zoomOut">
               <svg data-stage-icon class="stage-icon" viewBox="0 0 24 24"
                    aria-hidden="true" focusable="false">
                 <circle cx="10.5" cy="10.5" r="6.5"/>
                 <path d="M6.8 10.5H14.2M15.2 15.2L21 21"/>
               </svg>
             </button>
-            <button type="button" data-action="zoom-in" aria-label="Zoom in" title="Zoom in">
+            <button type="button" data-action="zoom-in" aria-label="Zoom in" title="Zoom in"
+                    data-i18n-aria-label="stage.zoomIn" data-i18n-title="stage.zoomIn">
               <svg data-stage-icon class="stage-icon" viewBox="0 0 24 24"
                    aria-hidden="true" focusable="false">
                 <circle cx="10.5" cy="10.5" r="6.5"/>
@@ -88,10 +121,12 @@
               </svg>
             </button>
             <button type="button" data-action="reset-view"
-                    aria-label="Reset view" title="Reset view">
+                    aria-label="Reset view" title="Reset view"
+                    data-i18n-aria-label="stage.resetView" data-i18n-title="stage.resetView">
               <svg data-stage-icon class="stage-icon" viewBox="0 0 24 24"
                    aria-hidden="true" focusable="false">
-                <path d="M4 9V4H9M15 4H20V9M20 15V20H15M9 20H4V15"/>
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M12 2V5M12 19V22M2 12H5M19 12H22"/>
               </svg>
             </button>
           </span>
@@ -106,22 +141,23 @@
               <path class="collapse-glyph" d="M9 4V9H4M15 4V9H20M20 15H15V20M4 15H9V20"/>
             </svg>
           </button>
+          </div>
+          <pre id="diagnostics" aria-live="polite"></pre>
         </div>
       </div>
-      <pre id="diagnostics" aria-live="polite"></pre>
     </section>
 
-    <aside class="lab-controls" aria-label="Spatial DSMC controls">
+    <aside class="lab-controls" aria-label="Spatial DSMC controls" data-i18n-aria-label="controls.dsmc">
       <h2 data-i18n="page.settings">Board settings</h2>
       <fieldset>
         <legend data-i18n="page.experiment">Experiment</legend>
         <label class="control-row">
           <span data-i18n="page.case">Case</span>
           <select id="case-id">
-            <option value="equilibrium-box" selected>Equilibrium box</option>
-            <option value="heat-transfer-x">Heat transfer x</option>
-            <option value="rotational-nitrogen">Rotational N₂</option>
-            <option value="couette-flow">Couette flow</option>
+            <option value="equilibrium-box" selected data-i18n="case.equilibrium">Equilibrium box</option>
+            <option value="heat-transfer-x" data-i18n="case.heat">Heat transfer x</option>
+            <option value="rotational-nitrogen" data-i18n="case.rotation">Rotational N₂</option>
+            <option value="couette-flow" data-i18n="case.couette">Couette flow</option>
           </select>
         </label>
         <label class="control-row">
@@ -137,7 +173,7 @@
         <label class="control-row">
           <span data-i18n="page.model">Model</span>
           <select id="collision-model">
-            <option value="hard-sphere">Hard sphere</option>
+            <option value="hard-sphere" data-i18n="model.hs">Hard sphere</option>
             <option value="vhs" selected>VHS</option>
             <option value="vss">VSS</option>
           </select>
@@ -195,11 +231,6 @@
       </details>
 
       <button id="reset" class="reset-model" type="button" data-i18n="page.reset">Reseed numerical model</button>
-      <p class="scientific-status" data-i18n-html="page.status">
-        Status: <strong>verified numerical model</strong>, not validated.
-        Closed periodic energy and momentum, deterministic replay, spatial
-        ownership, and collision-cell contracts are tested.
-      </p>
     </aside>
   </main>
 

@@ -6,6 +6,68 @@ import {
 } from '../../lib/chalkish/examples/boards/_shared/dg-fv-lab-controller.js';
 import { BOARD_RENDER_STYLE } from '../../lib/chalkish/examples/board-settings.js';
 import { bindStageControls } from '../../lib/chalkish/examples/stage-controls.js';
+import { bindLabLanguage, withCommonTranslations } from '../lab-i18n.js';
+
+const i18n = bindLabLanguage(withCommonTranslations({
+  en: {
+    'page.documentTitle': 'DG / FV Laboratory',
+    'page.description': 'Interactive DG and finite-volume laboratory.',
+    'page.title': 'DG / FV',
+    'stage.dg': 'DG and finite-volume numerical stage',
+    'stage.dgCanvas': 'Selected DG or finite-volume solution field',
+    'controls.dg': 'DG and finite-volume controls',
+    'page.degree': 'Degree',
+    'page.mesh': 'Mesh',
+    'page.field': 'Field',
+    'page.fluxClock': 'Flux and time step',
+    'page.caseControls': 'Case-specific controls',
+    'page.state': 'Numerical state',
+    'page.body': 'Body',
+    'page.initial': 'Initial state',
+    'page.velocity': 'Velocity',
+    'page.stabilizer': 'Stabilizer',
+    'page.reset': 'Reset calculation',
+    'case.euler': 'Euler / body',
+    'case.diamond': 'Diamond translation',
+    'case.advection': 'Scalar advection',
+    'case.burgers': 'Burgers',
+    'body.square': 'Square',
+    'body.wedge': '10° wedge',
+    'body.cylinder': 'Cylinder',
+    'velocity.uniform': 'Uniform',
+    'velocity.swirl': 'Periodic swirl',
+    'velocity.shear': 'Shear',
+  },
+  ru: {
+    'page.documentTitle': 'Лаборатория DG / FV',
+    'page.description': 'Интерактивная лаборатория разрывного метода Галёркина и метода конечных объёмов.',
+    'page.title': 'DG / FV',
+    'stage.dg': 'Поле решения DG и метода конечных объёмов',
+    'stage.dgCanvas': 'Выбранное поле численного решения',
+    'controls.dg': 'Параметры DG и метода конечных объёмов',
+    'page.degree': 'Степень',
+    'page.mesh': 'Сетка',
+    'page.field': 'Величина',
+    'page.fluxClock': 'Поток и шаг по времени',
+    'page.caseControls': 'Параметры расчётного случая',
+    'page.state': 'Численная постановка',
+    'page.body': 'Тело',
+    'page.initial': 'Начальное условие',
+    'page.velocity': 'Поле скорости',
+    'page.stabilizer': 'Стабилизация',
+    'page.reset': 'Сбросить расчёт',
+    'case.euler': 'Уравнения Эйлера / тело',
+    'case.diamond': 'Перенос ромба',
+    'case.advection': 'Скалярный перенос',
+    'case.burgers': 'Уравнение Бюргерса',
+    'body.square': 'Квадрат',
+    'body.wedge': 'Клин 10°',
+    'body.cylinder': 'Цилиндр',
+    'velocity.uniform': 'Однородное',
+    'velocity.swirl': 'Периодический вихрь',
+    'velocity.shear': 'Сдвиговое',
+  },
+}));
 
 function required(id) {
   const node = document.getElementById(id);
@@ -69,29 +131,33 @@ const CASE_UI = Object.freeze({
 });
 
 const DISPLAY_LABELS = Object.freeze({
-  schlieren: 'Schlieren |∇ρ|/ρ',
-  density: 'Density ρ',
-  pressure: 'Pressure p',
-  mach: 'Mach number',
-  speed: 'Speed |u|',
-  vorticity: 'Vorticity',
-  entropy: 'Entropy proxy',
-  field: 'DG field',
-  mean: 'Cell mean',
-  error: 'Absolute error',
-  modes: 'Higher-mode energy',
+  en: Object.freeze({ schlieren: 'Schlieren |∇ρ|/ρ', density: 'Density ρ', pressure: 'Pressure p', mach: 'Mach number', speed: 'Speed |u|', vorticity: 'Vorticity', entropy: 'Entropy proxy', field: 'DG field', mean: 'Cell mean', error: 'Absolute error', modes: 'Higher-mode energy' }),
+  ru: Object.freeze({ schlieren: 'Шлирен |∇ρ|/ρ', density: 'Плотность ρ', pressure: 'Давление p', mach: 'Число Маха', speed: 'Скорость |u|', vorticity: 'Завихренность', entropy: 'Мера энтропии', field: 'Поле DG', mean: 'Среднее по ячейке', error: 'Абсолютная погрешность', modes: 'Энергия старших мод' }),
 });
 
 const INITIAL_LABELS = Object.freeze({
-  diamond: 'Diamond',
-  blob: 'Gaussian blob',
-  two: 'Two signed blobs',
-  vortex: 'Radial wave',
-  square: 'Square pulse',
-  sine: 'Sine wave',
-  riemann: 'Riemann states',
-  bump: 'Smooth bump',
-  constant: 'Constant state',
+  en: Object.freeze({ diamond: 'Diamond', blob: 'Gaussian blob', two: 'Two signed blobs', vortex: 'Radial wave', square: 'Square pulse', sine: 'Sine wave', riemann: 'Riemann states', bump: 'Smooth bump', constant: 'Constant state' }),
+  ru: Object.freeze({ diamond: 'Ромб', blob: 'Гауссов импульс', two: 'Два знакопеременных импульса', vortex: 'Радиальная волна', square: 'Прямоугольный импульс', sine: 'Синусоида', riemann: 'Римановские состояния', bump: 'Гладкий импульс', constant: 'Постоянное состояние' }),
+});
+
+const LIMITER_LABELS = Object.freeze({
+  en: Object.freeze({ off: 'Off', pos: 'Positivity', minmod: 'Minmod', flatten: 'Flatten', filter: 'Modal filter' }),
+  ru: Object.freeze({ off: 'Отключена', pos: 'Положительность', minmod: 'Minmod', flatten: 'Сведение к среднему', filter: 'Модальный фильтр' }),
+});
+
+const CANVAS_FORMULAS = Object.freeze({
+  en: Object.freeze({
+    'euler-cylinder': '∂ₜU + ∂ₓF(U) + ∂ᵧG(U) = 0 · modal DG / FV limit',
+    'diamond-translation': 'uₜ + ∇·(a u) = 0 · periodic tensor DG',
+    'scalar-advection': 'uₜ + ∇·(a u) = 0 · periodic tensor DG',
+    burgers: 'uₜ + (u²/2)ₓ = 0 · periodic modal DG',
+  }),
+  ru: Object.freeze({
+    'euler-cylinder': '∂ₜU + ∂ₓF(U) + ∂ᵧG(U) = 0 · модальный DG / предел FV',
+    'diamond-translation': 'uₜ + ∇·(a u) = 0 · периодический тензорный DG',
+    'scalar-advection': 'uₜ + ∇·(a u) = 0 · периодический тензорный DG',
+    burgers: 'uₜ + (u²/2)ₓ = 0 · периодический модальный DG',
+  }),
 });
 
 const LIMITERS = Object.freeze({
@@ -102,6 +168,7 @@ const LIMITERS = Object.freeze({
 });
 
 function replaceOptions(select, values, labels = {}) {
+  const previous = select.value;
   const fragment = document.createDocumentFragment();
   for (const value of values) {
     const option = document.createElement('option');
@@ -110,6 +177,7 @@ function replaceOptions(select, values, labels = {}) {
     fragment.append(option);
   }
   select.replaceChildren(fragment);
+  if (values.includes(previous)) select.value = previous;
 }
 
 function syncCase({ defaults = false } = {}) {
@@ -119,11 +187,11 @@ function syncCase({ defaults = false } = {}) {
   replaceOptions(
     nodes.displayField,
     DG_FV_DISPLAY_FIELDS[caseId],
-    DISPLAY_LABELS,
+    DISPLAY_LABELS[i18n.language],
   );
-  replaceOptions(nodes.limiter, LIMITERS[caseId]);
+  replaceOptions(nodes.limiter, LIMITERS[caseId], LIMITER_LABELS[i18n.language]);
   const initial = DG_FV_INITIAL_CONDITIONS[caseId] ?? [];
-  replaceOptions(nodes.initialCondition, initial, INITIAL_LABELS);
+  replaceOptions(nodes.initialCondition, initial, INITIAL_LABELS[i18n.language]);
   nodes.bodyRow.hidden = caseId !== 'euler-cylinder';
   nodes.initialRow.hidden = initial.length === 0;
   nodes.velocityRow.hidden = caseId !== 'scalar-advection';
@@ -169,33 +237,43 @@ const controller = createDgFvLabController({
 const startsPaused = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 let diagnosticsCountdown = 0;
 
+function localizeCanvas() {
+  const values = controller.diagnostics();
+  const caseId = values.caseId;
+  controller.view.layers.heading.setText('');
+  controller.view.layers.formula.setText(CANVAS_FORMULAS[i18n.language][caseId]);
+  controller.view.layers.status.setText('');
+  if (caseId === 'burgers') {
+    controller.camera.setCenter(0.5, 0.45).setHeight(1.65);
+  } else {
+    const width = nodes.canvas.clientWidth || nodes.canvas.width;
+    const canvasHeight = nodes.canvas.clientHeight || nodes.canvas.height;
+    const aspect = Math.max(0.25, width / Math.max(1, canvasHeight));
+    const domainWidth = caseId === 'euler-cylinder' ? 4.08 : 1.04;
+    const height = Math.max(caseId === 'euler-cylinder' ? 2.25 : 1.16, domainWidth / aspect);
+    controller.camera
+      .setCenter(caseId === 'euler-cylinder' ? 2 : 0.5, caseId === 'euler-cylinder' ? 1.08 : 0.54)
+      .setHeight(height);
+  }
+}
+
 function updateDiagnostics() {
   const values = controller.diagnostics();
-  const common = [
-    `case / degree ${values.caseId} / P${controller.model.parameters.degree}`,
-    `mesh / dof    ${controller.model.parameters.columns} × ${controller.model.parameters.rows} / ${values.degreesOfFreedom}`,
-    `time / step   ${values.time.toFixed(6)} / ${values.step}`,
-    `dt / CFL      ${values.numericalTimeStep.toExponential(3)} / ${controller.model.parameters.cfl.toFixed(2)}`,
-  ];
+  const ru = i18n.language === 'ru';
+  const parameters = controller.model.parameters;
+  const common = ru
+    ? `t ${values.time.toFixed(4)} · шаг ${values.step} · ${parameters.columns}×${parameters.rows} / P${parameters.degree} · CFL ${parameters.cfl.toFixed(2)}`
+    : `t ${values.time.toFixed(4)} · step ${values.step} · ${parameters.columns}×${parameters.rows} / P${parameters.degree} · CFL ${parameters.cfl.toFixed(2)}`;
   if (values.caseId === 'euler-cylinder') {
-    common.push(
-      `ρ range       ${values.minimumDensity.toFixed(5)} … ${values.maximumDensity.toFixed(5)}`,
-      `p range       ${values.minimumPressure.toFixed(5)} … ${values.maximumPressure.toFixed(5)}`,
-      `Mmax / Cd     ${values.maximumMach.toFixed(4)} / ${values.dragCoefficient.toFixed(4)}`,
-      `limited       positivity ${values.positivityLimitedCells} · troubled ${values.troubledCells}`,
-      'boundary      characteristic far field · embedded slip wall',
-    );
-  } else {
-    common.push(
-      `mass          ${values.mass.toFixed(10)}`,
-      `mode fraction ${values.modalEnergyFraction.toExponential(4)}`,
-      Number.isFinite(values.l2Error)
-        ? `L2 error      ${values.l2Error.toExponential(5)}`
-        : 'L2 error      no analytic reference for this velocity field',
-      'boundary      periodic',
-    );
+    nodes.diagnostics.textContent = ru
+      ? `${common} · ρмин ${values.minimumDensity.toFixed(3)} · pмин ${values.minimumPressure.toFixed(3)} · Mмакс ${values.maximumMach.toFixed(2)} · Cd ${values.dragCoefficient.toFixed(2)}`
+      : `${common} · ρmin ${values.minimumDensity.toFixed(3)} · pmin ${values.minimumPressure.toFixed(3)} · Mmax ${values.maximumMach.toFixed(2)} · Cd ${values.dragCoefficient.toFixed(2)}`;
+    return;
   }
-  nodes.diagnostics.textContent = common.join('\n');
+  const accuracy = Number.isFinite(values.l2Error)
+    ? `L2 ${values.l2Error.toExponential(2)}`
+    : `${ru ? 'старшие моды' : 'higher modes'} ${values.modalEnergyFraction.toExponential(2)}`;
+  nodes.diagnostics.textContent = `${common} · ${ru ? 'масса' : 'mass'} ${values.mass.toFixed(6)} · ${accuracy}`;
 }
 
 const app = mount(nodes.canvas, {
@@ -204,6 +282,7 @@ const app = mount(nodes.canvas, {
   fixedStep: 1 / 30,
   update: ({ dt }) => {
     controller.update(dt);
+    localizeCanvas();
     diagnosticsCountdown -= 1;
     if (diagnosticsCountdown <= 0) {
       diagnosticsCountdown = 4;
@@ -215,10 +294,12 @@ const stageControls = bindStageControls({
   root: nodes.stageControls,
   canvas: nodes.canvas,
   app,
+  translate: i18n.t,
 });
 
 function reset() {
   controller.reset(parameters());
+  localizeCanvas();
   app.clock?.reset(null);
   diagnosticsCountdown = 0;
   updateDiagnostics();
@@ -261,6 +342,14 @@ nodes.fluxAlpha.addEventListener('change', safeReset);
 nodes.reset.addEventListener('click', safeReset);
 nodes.step.addEventListener('click', updateDiagnostics);
 
+i18n.onChange(() => {
+  syncCase();
+  updateDiagnostics();
+  localizeCanvas();
+  stageControls.sync();
+  app.render();
+});
+
 globalThis.addEventListener?.('pagehide', () => {
   stageControls.dispose();
   app.destroy();
@@ -268,6 +357,7 @@ globalThis.addEventListener?.('pagehide', () => {
 }, { once: true });
 
 updateDiagnostics();
+localizeCanvas();
 app.render();
 stageControls.captureView();
 stageControls.setPaused(startsPaused);
