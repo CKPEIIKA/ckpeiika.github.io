@@ -30,6 +30,26 @@
         <div class="stage-canvas">
           <canvas id="stage" width="1120" height="630"
                   aria-label="Selected DG or finite-volume solution field" data-i18n-aria-label="stage.dgCanvas"></canvas>
+          <div id="analysis-tabs" class="distribution-tabs" data-expanded="true">
+            <div class="distribution-tabbar">
+              <button type="button" data-action="previous-analysis"
+                      aria-label="Previous graph" title="Previous graph"
+                      data-i18n-aria-label="plot.previous" data-i18n-title="plot.previous">‹</button>
+              <button type="button" class="distribution-tab" data-action="toggle-analysis"
+                      aria-expanded="true" aria-controls="analysis-stage"
+                      aria-label="Hide graph" title="Hide graph"
+                      data-i18n-aria-label="plot.hide" data-i18n-title="plot.hide">
+                <span id="analysis-tab-label">Forces</span>
+                <small id="analysis-tab-legend">Cd / Cl</small>
+              </button>
+              <button type="button" data-action="next-analysis"
+                      aria-label="Next graph" title="Next graph"
+                      data-i18n-aria-label="plot.next" data-i18n-title="plot.next">›</button>
+            </div>
+            <div id="analysis-plot" class="distribution-plot" aria-hidden="true">
+              <canvas id="analysis-stage" width="440" height="210"></canvas>
+            </div>
+          </div>
         </div>
         <div id="stage-controls" class="stage-footer" data-stage-controls
              aria-label="Playback and viewport controls" data-i18n-aria-label="stage.controls">
@@ -158,6 +178,14 @@
           <span data-i18n="page.mesh">Mesh</span>
           <select id="resolution"></select>
         </label>
+        <div class="control-row control-pair" data-control="exact-mesh">
+          <span data-i18n="page.exactMesh">Exact mesh</span>
+          <span class="paired-inputs">
+            <label><span class="visually-hidden">Nx</span><input id="mesh-columns" type="number" min="16" max="320" step="1" value="24" aria-label="Nx"></label>
+            <span aria-hidden="true">×</span>
+            <label><span class="visually-hidden">Ny</span><input id="mesh-rows" type="number" min="1" max="192" step="1" value="12" aria-label="Ny"></label>
+          </span>
+        </div>
         <label class="control-row">
           <span data-i18n="page.field">Field</span>
           <select id="display-field"></select>
@@ -172,7 +200,16 @@
         </label>
         <label class="control-row">
           <span>Rusanov α <output id="flux-alpha-value">1.00</output></span>
-          <input id="flux-alpha" type="range" min="0.5" max="2" step="0.05" value="1">
+          <input id="flux-alpha" type="range" min="0" max="2" step="0.05" value="1">
+        </label>
+        <label class="control-row">
+          <span data-i18n="page.stepsPerFrame">Steps / frame</span>
+          <select id="steps-per-frame">
+            <option value="1" selected>1</option>
+            <option value="2">2</option>
+            <option value="4">4</option>
+            <option value="8">8</option>
+          </select>
         </label>
       </fieldset>
 
@@ -186,7 +223,20 @@
               <option value="square" selected data-i18n="body.square">Square</option>
               <option value="wedge" data-i18n="body.wedge">10° wedge</option>
               <option value="cylinder" data-i18n="body.cylinder">Cylinder</option>
+              <option value="none" data-i18n="body.none">No body</option>
             </select>
+          </label>
+          <label class="control-row" data-control="euler">
+            <span>M∞</span>
+            <input id="mach" type="number" min="0.1" max="5" step="0.05" value="1.5">
+          </label>
+          <label class="control-row" data-control="euler">
+            <span>R</span>
+            <input id="body-radius" type="number" min="0.03" max="0.4" step="0.01" value="0.1">
+          </label>
+          <label class="control-row" data-control="euler">
+            <span>γ</span>
+            <input id="gamma" type="number" min="1.01" max="2" step="0.01" value="1.4">
           </label>
           <label class="control-row" data-control="initial" hidden>
             <span data-i18n="page.initial">Initial state</span>
@@ -204,12 +254,32 @@
             <span data-i18n="page.stabilizer">Stabilizer</span>
             <select id="limiter"></select>
           </label>
+          <label class="control-row">
+            <span data-i18n="page.quality">Quality</span>
+            <select id="render-quality">
+              <option value="auto" selected data-i18n="quality.auto">Automatic</option>
+              <option value="0" data-i18n="quality.high">High</option>
+              <option value="1" data-i18n="quality.balanced">Balanced</option>
+              <option value="2" data-i18n="quality.low">Low</option>
+              <option value="3" data-i18n="quality.minimum">Minimum</option>
+            </select>
+          </label>
         </fieldset>
       </details>
 
-      <button id="reset" class="reset-model" type="button" data-i18n="page.reset">Reset numerical model</button>
+      <div class="command-row">
+        <button id="reset" class="reset-model" type="button" data-i18n="page.reset">Reset numerical model</button>
+        <button id="help" class="icon-command" type="button" aria-label="Help" title="Help">?</button>
+      </div>
     </aside>
   </main>
+
+  <dialog id="help-dialog" class="lab-help">
+    <form method="dialog"><button class="dialog-close" aria-label="Close" title="Close">×</button></form>
+    <h2>DG / FV</h2>
+    <p data-i18n="help.dg">Nx and Ny set the exact mesh. P0 is the finite-volume limit. The dashed curve in Burgers mode is the cell mean. For a wedge, dashed rays show the weak attached-shock solution of the theta-beta-Mach relation when it exists.</p>
+    <p><kbd>Space</kbd> · <kbd>S</kbd> · <kbd>R</kbd> · <kbd>[</kbd>/<kbd>]</kbd> · <kbd>1</kbd>–<kbd>4</kbd> · <kbd>H</kbd></p>
+  </dialog>
 
   <noscript>This numerical board requires JavaScript; it uses no remote services.</noscript>
   <script type="module" src="./app.js"></script>

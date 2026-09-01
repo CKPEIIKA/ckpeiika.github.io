@@ -183,6 +183,14 @@
             <option value="vss">VSS</option>
           </select>
         </label>
+        <label class="control-row">
+          <span data-i18n="page.speciesA">Species A</span>
+          <select id="species-a"><option value="Ar" selected>Ar</option><option value="N2">N₂</option></select>
+        </label>
+        <label class="control-row">
+          <span data-i18n="page.speciesB">Species B</span>
+          <select id="species-b"><option value="Ar" selected>Ar</option><option value="N2">N₂</option></select>
+        </label>
       </fieldset>
 
       <fieldset>
@@ -235,9 +243,89 @@
         </fieldset>
       </details>
 
-      <button id="reset" class="reset-model" type="button" data-i18n="page.reset">Reseed numerical model</button>
+      <details>
+        <summary data-i18n="page.modelControls">Model controls</summary>
+        <fieldset>
+          <legend data-i18n="page.boundaries">Boundaries</legend>
+          <label class="control-row">
+            <span data-i18n="page.boundaryX">x boundary</span>
+            <select id="boundary-x">
+              <option value="periodic" data-i18n="boundary.periodic">Periodic</option>
+              <option value="specular" data-i18n="boundary.specular">Specular</option>
+              <option value="diffuse" data-i18n="boundary.diffuse">Diffuse</option>
+              <option value="mixed" data-i18n="boundary.mixed">Mixed</option>
+            </select>
+          </label>
+          <label class="control-row">
+            <span data-i18n="page.boundaryY">y boundary</span>
+            <select id="boundary-y">
+              <option value="periodic" data-i18n="boundary.periodic">Periodic</option>
+              <option value="specular" data-i18n="boundary.specular">Specular</option>
+              <option value="diffuse" data-i18n="boundary.diffuse">Diffuse</option>
+              <option value="mixed" data-i18n="boundary.mixed">Mixed</option>
+            </select>
+          </label>
+        </fieldset>
+        <fieldset>
+          <legend data-i18n="page.rotationControls">Rotation and display</legend>
+          <label class="control-row checkbox-row">
+            <span data-i18n="page.rotationEnabled">Rotational exchange</span>
+            <input id="rotational-relaxation" type="checkbox">
+          </label>
+          <label class="control-row">
+            <span>Zrot</span>
+            <input id="rotational-collision-number" type="number" min="1" max="100" step="1" value="5">
+          </label>
+          <label class="control-row checkbox-row">
+            <span data-i18n="page.highlights">Collision marks</span>
+            <input id="event-highlights" type="checkbox" checked>
+          </label>
+          <label class="control-row">
+            <span data-i18n="page.boardStyle">Particles</span>
+            <select id="board-style">
+              <option value="dusty" selected data-i18n="style.chalk">Chalk</option>
+              <option value="clean" data-i18n="style.clean">Scientific clean</option>
+            </select>
+          </label>
+          <label class="control-row">
+            <span data-i18n="page.quality">Quality</span>
+            <select id="render-quality">
+              <option value="auto" selected data-i18n="quality.auto">Automatic</option>
+              <option value="0" data-i18n="quality.high">High</option>
+              <option value="1" data-i18n="quality.balanced">Balanced</option>
+              <option value="2" data-i18n="quality.low">Low</option>
+              <option value="3" data-i18n="quality.minimum">Minimum</option>
+            </select>
+          </label>
+        </fieldset>
+        <fieldset>
+          <legend data-i18n="page.replay">Replay</legend>
+          <label class="control-row">
+            <span data-i18n="page.seed">Seed</span>
+            <input id="random-seed" type="number" min="0" max="4294967295" step="1" value="2026">
+          </label>
+          <div class="compact-actions">
+            <button id="new-seed" type="button" data-i18n="page.newSeed">New seed</button>
+            <button id="export-replay" type="button" data-i18n="page.export">Export</button>
+            <button id="import-replay" type="button" data-i18n="page.import">Import</button>
+            <input id="replay-file" type="file" accept="application/json,.json" hidden>
+          </div>
+        </fieldset>
+      </details>
+
+      <div class="command-row">
+        <button id="reset" class="reset-model" type="button" data-i18n="page.reset">Reseed numerical model</button>
+        <button id="help" class="icon-command" type="button" aria-label="Help" title="Help">?</button>
+      </div>
     </aside>
   </main>
+
+  <dialog id="help-dialog" class="lab-help">
+    <form method="dialog"><button class="dialog-close" aria-label="Close" title="Close">×</button></form>
+    <h2>DSMC</h2>
+    <p data-i18n="help.dsmc">The calculation uses no-time-counter collisions. Keep dx/lambda below one, dt/tau below one, and several particles in each collision cell. Majorant violations indicate that the sampled collision envelope was too small.</p>
+    <p><kbd>Space</kbd> · <kbd>S</kbd> · <kbd>R</kbd> · <kbd>N</kbd> · <kbd>H</kbd></p>
+  </dialog>
 
   <noscript>This numerical board requires JavaScript; it uses no remote services.</noscript>
   <script type="module" src="./app.js"></script>

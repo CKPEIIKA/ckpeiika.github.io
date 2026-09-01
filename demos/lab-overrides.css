@@ -190,6 +190,102 @@ body::after,
   outline: 2px solid var(--site-accent);
 }
 
+.paired-inputs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.paired-inputs label {
+  min-width: 0;
+}
+
+.checkbox-row input[type="checkbox"] {
+  width: 1rem;
+  min-height: 1rem;
+  justify-self: end;
+  accent-color: var(--site-accent);
+}
+
+.compact-actions,
+.command-row {
+  display: flex;
+  gap: 0.35rem;
+  align-items: stretch;
+}
+
+.command-row .reset-model {
+  flex: 1 1 auto;
+}
+
+.compact-actions button,
+.icon-command {
+  min-height: 1.85rem;
+  border: 1px solid #9f2d2070;
+  border-radius: 0;
+  background: #eef1f4;
+  color: var(--site-text);
+  font: 700 0.66rem/1 var(--font-board-ui);
+}
+
+.compact-actions button {
+  flex: 1 1 auto;
+  padding: 0.25rem;
+}
+
+.icon-command {
+  flex: 0 0 2.2rem;
+  margin-block: 0.55rem;
+  font-size: 1rem;
+}
+
+.compact-actions button:hover,
+.compact-actions button:focus-visible,
+.icon-command:hover,
+.icon-command:focus-visible {
+  border-color: var(--site-accent);
+  background: var(--site-accent);
+  color: #fff;
+  outline: 2px solid #9f2d2040;
+}
+
+.lab-help {
+  width: min(36rem, calc(100vw - 2rem));
+  border: 2px dashed var(--site-accent);
+  border-radius: 0;
+  background: var(--site-background);
+  color: var(--site-text);
+  font: 0.82rem/1.55 var(--font-board-ui);
+}
+
+.lab-help::backdrop {
+  background: #0d1611b8;
+}
+
+.lab-help h2 {
+  margin-top: 0;
+  color: var(--site-accent);
+  text-transform: uppercase;
+}
+
+.lab-help form {
+  float: right;
+}
+
+.dialog-close {
+  border: 0;
+  background: transparent;
+  color: var(--site-accent);
+  font-size: 1.25rem;
+}
+
+.lab-help kbd {
+  padding-inline: 0.2rem;
+  border: 1px solid #9f2d2070;
+  background: #eef1f4;
+}
+
 .lab-stage {
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr);
@@ -360,11 +456,18 @@ body::after,
   padding: 0.42rem 0.65rem;
   overflow-x: auto;
   border: 0;
-  border-left: 1px dashed #f5f2e95c;
+  border-left: 0;
   background: transparent;
+  background-image: radial-gradient(ellipse at center, #f5f2e978 0 34%, transparent 72%);
+  background-position: left center;
+  background-repeat: repeat-y;
+  background-size: 1.5px 7px;
   color: #eef1eb;
-  font-family: var(--font-chalk-label);
-  font-size: 0.64rem;
+  font-family: var(--font-chalk);
+  font-size: 0.76rem;
+  text-shadow:
+    0.035rem 0.025rem 0 #f5f2e94d,
+    -0.025rem 0.02rem 0 #f5f2e929;
   line-height: 1.25;
   scrollbar-width: none;
   white-space: nowrap;
@@ -376,13 +479,14 @@ body::after,
 }
 
 .stage-footer {
+  position: relative;
   z-index: 1;
   grid-row: 2;
   display: flex;
   min-width: 0;
   align-items: stretch;
   margin: 0.28rem 0.42rem 0.38rem;
-  border: 1px dashed #f5f2e999;
+  border: 0;
   background-color: #0d1813;
   background-image:
     url("../lib/chalkish/examples/assets/board-grain.png"),
@@ -393,7 +497,24 @@ body::after,
     0.08rem 0.1rem 0 #0204038c,
     inset 0 0 0.8rem #f5f2e908;
   color: var(--chalk-white);
-  font-family: var(--font-chalk-label);
+  font-family: var(--font-chalk);
+}
+
+.stage-footer::before {
+  position: absolute;
+  z-index: 2;
+  inset: -1px;
+  background-image:
+    radial-gradient(ellipse at center, #f5f2e9b3 0 35%, transparent 72%),
+    radial-gradient(ellipse at center, #f5f2e99c 0 32%, transparent 70%),
+    radial-gradient(ellipse at center, #f5f2e9a8 0 34%, transparent 72%),
+    radial-gradient(ellipse at center, #f5f2e98f 0 31%, transparent 68%);
+  background-position: left top, left bottom, left top, right top;
+  background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
+  background-size: 8px 1.7px, 11px 1.5px, 1.6px 9px, 1.4px 7px;
+  content: "";
+  filter: drop-shadow(0.6px 0.4px 0 #f5f2e93d);
+  pointer-events: none;
 }
 
 .stage-controls {
@@ -421,7 +542,7 @@ body::after,
   padding: 0.3rem 0.55rem;
   place-items: center;
   border: 0;
-  border-right: 1px dashed #f5f2e95c;
+  border-right: 0;
   border-radius: 0;
   background: transparent;
   color: inherit;
@@ -430,13 +551,38 @@ body::after,
 .stage-controls button,
 .stage-controls select,
 .stage-speed {
-  border-right-style: dashed;
-  border-right-color: #f5f2e95c;
+  border-right: 0;
+  background-image: radial-gradient(ellipse at center, #f5f2e969 0 34%, transparent 72%);
+  background-position: right center;
+  background-repeat: repeat-y;
+  background-size: 1.4px 7px;
+}
+
+.stage-controls-toggle {
+  background-image: radial-gradient(ellipse at center, #f5f2e969 0 34%, transparent 72%);
+  background-position: right center;
+  background-repeat: repeat-y;
+  background-size: 1.4px 7px;
 }
 
 .stage-icon {
+  stroke-linecap: round;
+  stroke-linejoin: round;
   stroke-width: 1.9;
-  filter: drop-shadow(0.06rem 0.05rem 0 #f5f2e94d);
+  filter:
+    drop-shadow(0.04rem 0.03rem 0 #f5f2e968)
+    drop-shadow(-0.025rem 0.02rem 0 #f5f2e936);
+}
+
+.stage-footer button,
+.stage-footer select,
+.stage-footer output,
+.stage-footer .stage-speed {
+  color: inherit;
+  font-family: var(--font-chalk);
+  text-shadow:
+    0.035rem 0.025rem 0 #f5f2e94d,
+    -0.025rem 0.02rem 0 #f5f2e929;
 }
 
 .stage-controls button:hover:not(:disabled),

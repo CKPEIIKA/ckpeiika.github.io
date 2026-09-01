@@ -9,12 +9,21 @@ const ROOT = new URL('../', import.meta.url);
 const DEMOS = [
   {
     directory: 'demos/dg-euler-cylinder/',
-    controls: ['case-id', 'degree', 'resolution', 'cfl', 'display-field'],
+    controls: [
+      'case-id', 'degree', 'resolution', 'mesh-columns', 'mesh-rows', 'cfl',
+      'flux-alpha', 'steps-per-frame', 'mach', 'body-radius', 'gamma',
+      'display-field', 'render-quality',
+    ],
     controller: 'dg-fv-lab-controller.js',
   },
   {
     directory: 'demos/dsmc/',
-    controls: ['case-id', 'particle-count', 'knudsen', 'time-step', 'collision-model'],
+    controls: [
+      'case-id', 'particle-count', 'knudsen', 'time-step', 'collision-model',
+      'species-a', 'species-b', 'boundary-x', 'boundary-y',
+      'rotational-relaxation', 'rotational-collision-number', 'random-seed',
+      'new-seed', 'export-replay', 'import-replay', 'render-quality',
+    ],
     controller: 'dsmc-lab-controller.js',
   },
 ];
@@ -44,6 +53,34 @@ test('both demos are static ES-module frontends backed by the vendored library',
     }
     assert.match(html, /class="stage-canvas"/);
   }
+});
+
+test('legacy scientific controls and teaching panels are model-backed', async () => {
+  const [dgHtml, dgApp, dgModel, dsmcHtml, dsmcApp, dsmcModel] = await Promise.all([
+    readFile(new URL('demos/dg-euler-cylinder/index.html', ROOT), 'utf8'),
+    readFile(new URL('demos/dg-euler-cylinder/app.js', ROOT), 'utf8'),
+    readFile(new URL('lib/chalkish/examples/boards/dg-fv-lab/dg-fv-lab-model.js', ROOT), 'utf8'),
+    readFile(new URL('demos/dsmc/index.html', ROOT), 'utf8'),
+    readFile(new URL('demos/dsmc/app.js', ROOT), 'utf8'),
+    readFile(new URL('lib/chalkish/examples/boards/dsmc-lab/dsmc-lab-model.js', ROOT), 'utf8'),
+  ]);
+
+  assert.match(dgHtml, /id="analysis-tabs"[\s\S]+id="analysis-stage"/);
+  assert.match(dgHtml, /id="flux-alpha"[^>]+min="0"/);
+  assert.match(dgApp, /analysis\.spaceTime/);
+  assert.match(dgApp, /stepsPerFrame/);
+  assert.match(dgModel, /wedgeShockAngleDegrees/);
+  assert.match(dgModel, /positivityLimitedCells/);
+  assert.match(dgModel, /meanScalar/);
+  assert.match(dgModel, /modalSpectrum/);
+
+  assert.match(dsmcHtml, /id="replay-file"[^>]+hidden/);
+  assert.match(dsmcApp, /parseReplayDocument/);
+  assert.match(dsmcApp, /profileTemperature/);
+  assert.match(dsmcModel, /collisionSegments/);
+  assert.match(dsmcModel, /rotationalCollisionNumber/);
+  assert.match(dsmcModel, /temperatureProfile/);
+  assert.match(dsmcModel, /majorantViolationRatio/);
 });
 
 test('DSMC plot is a localized right-edge tab with selectable contents', async () => {
@@ -80,10 +117,13 @@ test('stage controls stay outside the canvas and can collapse independently', as
   assert.match(css, /\.stage-viewport\s*\{[^}]*grid-template-rows:\s*minmax\(0, 1fr\) auto/s);
   assert.match(css, /\.stage-canvas canvas\s*\{[^}]*width:\s*100%\s*!important;[^}]*height:\s*100%\s*!important/s);
   assert.match(css, /\.stage-controls\s*\{[^}]*position:\s*static/s);
-  assert.match(css, /\.stage-footer\s*\{[^}]*border:\s*1px dashed/s);
+  assert.match(css, /\.stage-footer\s*\{[^}]*border:\s*0/s);
+  assert.match(css, /\.stage-footer::before\s*\{[^}]*radial-gradient/s);
   assert.match(css, /--board-texture:\s*url\("\.\.\/lib\/chalkish\/examples\/assets\/board-grain\.png"\)/);
   assert.match(css, /\.stage-footer\.stage-controls-hidden \.stage-controls\s*\{[^}]*max-width:\s*0/s);
   assert.match(css, /#diagnostics\s*\{[^}]*white-space:\s*nowrap/s);
+  assert.match(css, /#diagnostics\s*\{[^}]*font-family:\s*var\(--font-chalk\)/s);
+  assert.doesNotMatch(css, /#diagnostics\s*\{[^}]*ui-monospace/s);
   assert.match(controls, /root\.classList\.toggle\('stage-controls-hidden'\)/);
 });
 

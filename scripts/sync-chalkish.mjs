@@ -41,6 +41,7 @@ const files = [
   'test/dsmc-lab-model.test.js',
   'test/chalk-transition.test.js',
   'test/reference-lab-views.test.js',
+  'test/reference-lab-replays.test.js',
   'test/segments.test.js',
   'support/recording-context.js',
 ];

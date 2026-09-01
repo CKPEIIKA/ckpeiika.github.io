@@ -22,26 +22,26 @@ not yet expose the complete old interaction or comparison.
 | Euler/body, diamond translation, scalar advection, Burgers | Implemented | `DgFvLabModel` case selection | model and site smoke tests |
 | P0/FV through P3 polynomial degree | Implemented | degree control; Euler remains limited to P2 | model validation tests |
 | Mesh presets | Implemented | resolution control | site contract test |
-| Exact `Nx`, `Ny` entry | Missing | application-owned numeric controls | browser smoke required |
+| Exact `Nx`, `Ny` entry | Implemented | application-owned numeric controls | model and frontend contract tests |
 | CFL | Implemented | range control and model validation | model tests |
-| Rusanov dissipation, including central limit `alpha = 0` | Partial | model accepts `0`; current UI starts at `0.5` | boundary-value UI test required |
-| Solver steps per displayed frame | Missing | application loop policy; no renderer change | timing-independent controller test |
+| Rusanov dissipation, including central limit `alpha = 0` | Implemented | model and range control both include `0` | boundary-value model and frontend tests |
+| Solver steps per displayed frame | Implemented | application loop policy; no renderer change | frontend contract test |
 | Scalar initial conditions and velocity fields | Implemented | application controls feeding model reset | model tests |
-| Square, wedge, cylinder, and no-body geometry | Partial | model supports all four; UI omits no-body | UI/model parity fixture |
-| Editable Mach number, body radius, and gamma | Missing | model already accepts all three; add application controls | reset fixture for each parameter |
+| Square, wedge, cylinder, and no-body geometry | Implemented | all four model choices are exposed | UI/model parity fixture |
+| Editable Mach number, body radius, and gamma | Implemented | exact numeric controls feed atomic model resets | parameter fixture |
 | Positivity, minmod, flattening, modal filtering | Implemented | limiter control | model tests |
 | Density, pressure, Mach, speed, vorticity, entropy, field, mean, error, modal energy | Implemented | display-field control and packed scalar field | view tests |
 | Solver-cell grid and stair-step body boundary | Implemented | `CartesianGrid`, `SegmentLayer` | command-stream tests |
 | Chalk rendering on grid, frame, curves, and labels | Implemented | grids use two cheap rough batched passes; short layers may use the full deposit material | view style assertions and `cheap-chalk-grid-cached-redraw-514` benchmark |
-| Wedge theta-beta-Mach reference | Missing | generic curve/line and annotation layers | fixed wedge comparison fixture |
-| Freestream direction and characteristic arrows | Missing | generic arrow/segment layers | command-stream test |
-| Cell means versus higher-order reconstruction | Missing | field plus reconstruction overlay | P0/P1/P2 comparison fixture |
-| Burgers space-time history and modal spectrum | Missing | application-owned ring buffers feeding field/curves | deterministic history fixture |
-| Jump, residual, and solid-mask displays | Partial | solid mask exists; jump and residual views are absent | display-range fixtures |
-| Cd/Cl histories | Missing | diagnostics exist only for instantaneous drag | deterministic ring-buffer fixture |
-| Positivity failure, limiter counts, fallback state | Partial | minima are shown; explicit state and corrective message absent | induced-failure regression |
+| Wedge theta-beta-Mach reference | Implemented | model computes the weak attached branch; batched dashed rays show it | fixed wedge comparison fixture |
+| Freestream direction and characteristic arrows | Implemented | one packed segment layer | view command test |
+| Cell means versus higher-order reconstruction | Implemented | Burgers overlay and analysis panel compare the DG field with cell means | snapshot and view tests |
+| Burgers space-time history and modal spectrum | Implemented | application-owned bounded history feeding packed field/curves | frontend and model fixtures |
+| Jump, residual, and solid-mask displays | Implemented | density jump, time residual, and exact solver-cell mask are selectable | display-range fixtures |
+| Cd/Cl histories | Implemented | bounded application history in the right-edge analysis tab | ring-buffer and frontend tests |
+| Positivity failure, limiter counts, fallback state | Implemented | diagnostics expose health, limiter counts, and a corrective action code | model regression |
 | Pause, single step, reset, pan, zoom, view reset, fullscreen | Implemented | shared stage controls and viewport interactions | interaction tests; browser smoke pending |
-| Quality mode, FPS/workload, keyboard controls, contextual help | Missing | application-owned controls and telemetry | notebook/phone browser smoke |
+| Quality mode, FPS/workload, keyboard controls, contextual help | Implemented | adaptive/manual quality, compact telemetry, shortcuts, and a dialog | notebook/phone browser smoke |
 
 ## DSMC laboratory
 
@@ -52,20 +52,20 @@ not yet expose the complete old interaction or comparison.
 | Hard-sphere, VHS, and VSS collisions | Implemented | collision-model control | deterministic solver parity tests |
 | Explicit collision-cell occupancy and boundaries | Implemented | packed scalar field plus two-pass rough `CartesianGrid` | view tests and cached-redraw benchmark |
 | Wall temperatures, wall speed, Maxwell accommodation | Implemented | wall controls | model tests |
-| Species A/B selection and per-species non-color encoding | Missing | requires solver-owned species state before frontend wiring | mixture fixture and accessibility check |
-| Periodic, specular, diffuse, and mixed boundary selection | Partial | presets configure boundaries; general boundary selector is absent | one fixture per boundary mode |
-| Rotational relaxation control and collision number | Partial | rotational preset exists; live control is absent | equilibrium and relaxation fixtures |
-| Explicit random seed, new seed, replay, export | Partial | deterministic seed exists but is fixed and hidden | replay checksum and export round trip |
-| Particle, collision, and rotational-event highlights | Missing | packed segment/event layer exists; adapter data is absent | event-count command-stream test |
+| Species A/B selection and per-species non-color encoding | Implemented | source-backed Ar/N₂ mixtures use circles and square marks as well as color | mixture fixture and view test |
+| Periodic, specular, diffuse, and mixed boundary selection | Implemented | x and y selectors feed explicit model boundary modes | one fixture per boundary mode |
+| Rotational relaxation control and collision number | Implemented | live Larsen-Borgnakke toggle and `Zrot` parameter | equilibrium and relaxation fixtures |
+| Explicit random seed, new seed, replay, export | Implemented | versioned static JSON configuration with strict import validation | replay checksum and format round trip |
+| Particle, collision, and rotational-event highlights | Implemented | packed particle and two packed event layers; no per-event objects | event-count and view tests |
 | Temperature-derived wall appearance | Implemented | hot/cold wall styles follow boundary state | view command test |
 | Speed distribution | Implemented | dedicated Chalkish plot canvas and curves | site/browser plot test |
 | Translational/rotational temperature and collision histories | Implemented | application-owned bounded histories | site contract test |
-| Velocity, pressure, temperature profiles and moment histories | Missing | application-owned ring buffers feeding curves | deterministic profile fixtures |
+| Velocity, pressure, temperature profiles and moment histories | Implemented | model-owned reusable profile buffers and bounded application histories | deterministic profile fixtures |
 | Energy/momentum drift, `dx/lambda`, `dt/tau`, particles per cell | Implemented | one-line diagnostics | model and site tests |
-| Majorant violations and explicit validity guidance | Partial | model reports collision attempts; violation state and guidance absent | induced-majorant regression |
-| Scientific-clean versus chalk-particle display | Missing | retain clean renderer mode as an explicit comparison control | visual regression required |
+| Majorant violations and explicit validity guidance | Implemented | ratio, health state, and corrective action are explicit | model regression |
+| Scientific-clean versus chalk-particle display | Implemented | explicit style control changes particles and board strokes | view test and browser smoke |
 | Pause, single step, reset, pan, zoom, view reset, fullscreen | Implemented | shared stage controls and viewport interactions | interaction tests; browser smoke pending |
-| Quality mode, FPS/workload, keyboard controls, contextual help | Missing | application-owned controls and telemetry | notebook/phone browser smoke |
+| Quality mode, FPS/workload, keyboard controls, contextual help | Implemented | adaptive/manual quality, compact telemetry, shortcuts, and a dialog | notebook/phone browser smoke |
 
 ## Work orders
 
@@ -93,3 +93,7 @@ not yet expose the complete old interaction or comparison.
    renderer.
 5. Remove the legacy paths only after the P0 browser smoke and P1 scientific
    rows above are all implemented.
+
+Completed in the replacement laboratories. The eight default cases have fixed
+two-step replay checksums. Model-owned state remains DOM-free; histories,
+telemetry, file download, and keyboard policy remain application-owned.

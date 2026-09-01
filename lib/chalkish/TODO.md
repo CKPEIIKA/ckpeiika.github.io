@@ -135,26 +135,26 @@ forms remain application-owned; Chalkish must not grow into a UI framework.
 - [x] Add a packed disconnected-segment/event layer for data-sized independent
   line segments. Use it for collision flashes, mask boundaries, and similar
   overlays instead of creating one semantic `Line` per event.
-- [ ] Restore the DG/FV teaching layers: wedge theta-beta-Mach reference,
+- [x] Restore the DG/FV teaching layers: wedge theta-beta-Mach reference,
   freestream direction, solver-cell means versus higher-order reconstruction,
   Burgers space-time history, modal spectrum, jump/residual/solid displays,
   Cd/Cl histories, and explicit blow-up/fallback state.
-- [ ] Restore the DG/FV controls that affect scientific interpretation:
+- [x] Restore the DG/FV controls that affect scientific interpretation:
   editable Mach number, body radius, gamma, exact Nx/Ny, scalar dissipation
   including the central limit, and solver steps per displayed frame.
-- [ ] Restore the DSMC teaching layers: visible collision-cell boundaries,
+- [x] Restore the DSMC teaching layers: visible collision-cell boundaries,
   collision/rotational-event highlights, temperature-derived wall treatment,
   per-species encoding, speed distribution, moment histories, and `v,p,T`
   histories. Color must not be the only carrier of species or wall meaning.
-- [ ] Restore the DSMC controls for species A/B, boundary mode, rotational
+- [x] Restore the DSMC controls for species A/B, boundary mode, rotational
   relaxation, plot mode, and scientific-clean versus chalk-particle display.
   Keep stochastic state explicitly seeded and exportable even when the UI
   offers a new-seed action.
-- [ ] Expose the same numerical-health information as the old applications:
+- [x] Expose the same numerical-health information as the old applications:
   conservation drift, positivity/failure state, limiter counts, majorant
   violations, cell/time-step validity, wall exchange, and clear corrective
   guidance without moving those calculations into the renderer.
-- [ ] Implement histories with application-owned ring buffers feeding existing
+- [x] Implement histories with application-owned ring buffers feeding existing
   `Axes` and `CurveLayer` objects. Do not add a generic chart framework unless
   at least two real cases cannot be expressed with those mechanisms.
 
@@ -165,7 +165,7 @@ forms remain application-owned; Chalkish must not grow into a UI framework.
   dropped-visual-snapshot diagnostics.
 - [ ] Bind the generic snapshot bridge to a DG-owned worker adapter before
   exposing the original high-resolution mesh range.
-- [ ] Restore optional render-quality modes, FPS/workload reporting, keyboard
+- [x] Restore optional render-quality modes, FPS/workload reporting, keyboard
   shortcuts, and contextual help without coupling them to numerical models.
 - [ ] Compare old and replacement pages at notebook and phone dimensions, then
   record visual diffs and named frame-time/memory evidence before removing the
