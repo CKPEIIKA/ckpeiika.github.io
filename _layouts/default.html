@@ -6,6 +6,7 @@
   <title>{{ page.title }}</title>
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/style.css">
+  {% if page.math %}
   <script>
     window.MathJax = {
       tex: {
@@ -21,6 +22,7 @@
     };
   </script>
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  {% endif %}
 </head>
 <body>
 

@@ -22,17 +22,12 @@ main > * + * {
 
 /* === Header / Title === */
 h1, h2, h3 {
-  font-family: "Open Sans", Arial, sans-serif;
   color: var(--accent-color);
   text-transform: uppercase;
   text-shadow: 1px 1px 0 #000;
   border-bottom: 2px dashed var(--accent-color);
   padding-bottom: 5px;
   margin-bottom: 15px;
-}
-
-p {
-  color: var(--accent-color);
 }
 
 a {
@@ -77,12 +72,6 @@ a[href^="http"]:not([href*="ckpeiika.github.io"])::after {
 
 .theme-toggle:hover {
   color: #000;
-}
-
-.page-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 10px;
 }
 
 .download-btn {
@@ -257,17 +246,4 @@ tbody tr:nth-child(even) {
   border: 2px dashed var(--accent-color);
   padding: 14px 16px;
   background: rgba(255, 255, 255, 0.08);
-}
-
-.demo-shell {
-  border: 2px dashed var(--accent-color);
-  padding: 10px;
-  background: rgba(0, 0, 0, 0.08);
-}
-
-.demo-frame {
-  width: 100%;
-  min-height: 760px;
-  border: 1px solid var(--accent-color);
-  background: #000;
 }
