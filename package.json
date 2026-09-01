@@ -1,0 +1,12 @@
+{
+  "name": "ckpeiika-github-io",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test lib/chalkish/test/*.test.js test/*.test.js",
+    "test:chalkish": "node --test lib/chalkish/test/*.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,94 +1,201 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>DG/FV lab — Euler cylinder, diamond, advection, Burgers</title>
-  <link rel="stylesheet" href="./styles.css" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Compact chalkboard frontend for four deterministic DG and finite-volume experiments.">
+  <title>DG / FV Laboratory</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="../../lib/chalkish/examples/chalkboard-theme.css">
+  <link rel="stylesheet" href="../../lib/chalkish/examples/reference-labs.css">
+  <link rel="stylesheet" href="../lab-overrides.css">
 </head>
 <body>
-  <canvas id="field"></canvas>
-
-  <div id="topbar" class="bar">
-    <button class="chip run" id="runChip" data-act="run">▶</button>
-    <button class="chip" id="caseChip" data-act="case" title="Choose equation/case">case <b>euler</b></button>
-    <button class="chip" id="degreeChip" data-act="degree" title="Polynomial degree. P0/Q0 is the finite-volume limit.">deg <b>P1</b></button>
-    <button class="chip" id="meshChip" data-act="mesh" title="Cycle mesh presets, or edit Nx/Ny directly.">mesh <b>72×36</b></button>
-    <button class="chip" id="nxChip" data-edit="nx" title="Edit number of cells in x">Nx <b>72</b></button>
-    <button class="chip" id="nyChip" data-edit="ny" title="Edit number of cells in y">Ny <b>36</b></button>
-    <button class="chip" id="fluxChip" data-act="flux" title="Cycle numerical flux dissipation">flux <b>rusanov</b></button>
-    <button class="chip" id="alphaChip" data-act="alpha" title="Flux dissipation multiplier α">α <b>1.00</b></button>
-    <button class="chip" id="cflChip" data-edit="cfl" title="Edit Courant number">CFL <b>.18</b></button>
-    <button class="chip" id="spfChip" data-edit="spf" title="Edit solver steps per animation frame">spf <b>1</b></button>
-    <button class="chip" id="initChip" data-act="init" title="Initial condition for scalar cases">init <b>blob</b></button>
-    <button class="chip" id="flowChip" data-act="flow" title="Velocity field for the scalar advection case">vel <b>uniform</b></button>
-    <button class="chip eulerOnly" id="shapeChip" data-act="shape" title="Obstacle shape: square (exact on grid), wedge (oblique-shock theory), cylinder (stair-step)">body <b>square</b></button>
-    <button class="chip eulerOnly" id="machChip" data-edit="mach" title="Edit freestream Mach number">M∞ <b>1.50</b></button>
-    <button class="chip eulerOnly" id="radiusChip" data-edit="radius" title="Edit body half-height R (frontal height 2R for all shapes)">R <b>.10</b></button>
-    <button class="chip eulerOnly" id="gammaChip" data-edit="gamma" title="Edit ratio of specific heats">γ <b>1.40</b></button>
-    <button class="chip" id="limiterChip" data-act="limiter" title="Limiter/stabilizer regime">stab <b>minmod</b></button>
-    <button class="chip" id="displayChip" data-act="display" title="What field is drawn">plot <b>schlieren</b></button>
-    <button class="chip help" data-act="help" title="Help, formulas, hotkeys (H)">?</button>
-  </div>
-
-  <div id="tokenEditor" class="input-help" aria-hidden="true">
-    <p id="tokenEditorTitle"></p>
-    <input id="tokenEditorEntry" class="field-help-entry" type="text" inputmode="decimal" />
-    <ol id="tokenEditorItems"></ol>
-    <p id="tokenEditorMeta" class="help-meta"></p>
-  </div>
-
-  <div id="hud" class="panel">
-    <div class="panel-title" id="hudTitle">Euler diagnostics</div>
-    <canvas id="mini"></canvas>
-    <div id="hudText"></div>
-  </div>
-
-  <div id="configbar" class="backing-controls" aria-hidden="true">
-    <label class="cfg" data-help="Number of cells in x. Larger values show the shock and wake better but cost more.">Nx <input id="nxInput" type="number" min="32" max="900" step="4" value="72"></label>
-    <label class="cfg" data-help="Number of cells in y. For Euler cylinder use roughly Nx/2 for the default 4×2 domain.">Ny <input id="nyInput" type="number" min="16" max="500" step="2" value="36"></label>
-    <label class="cfg" data-help="Courant number. Explicit schemes require CFL below a stability limit.">CFL <input id="cflInput" type="number" min="0.02" max="1.40" step="0.01" value="0.18"></label>
-    <label class="cfg" data-help="Steps per animation frame. Increase for faster physical time; decrease if the browser stutters.">spf <input id="spfInput" type="number" min="1" max="50" step="1" value="1"></label>
-    <label class="cfg eulerOnly" data-help="Freestream Mach number for the Euler cylinder case.">M∞ <input id="machInput" type="number" min="0.1" max="5.0" step="0.05" value="1.50"></label>
-    <label class="cfg eulerOnly" data-help="Cylinder radius in domain units. Domain is 4 × 2 by default.">R <input id="radiusInput" type="number" min="0.03" max="0.25" step="0.01" value="0.10"></label>
-    <label class="cfg eulerOnly" data-help="Ratio of specific heats γ in p=(γ−1)(E−kinetic energy).">γ <input id="gammaInput" type="number" min="1.1" max="1.67" step="0.01" value="1.40"></label>
-    <label class="cfg" data-help="Field plotted on the big canvas.">plot <select id="plotSelect"></select></label>
-    <button class="chip small action" data-act="apply" title="Apply typed values and reset the current case">apply/reset</button>
-  </div>
-
-  <div id="bottombar" class="bar">
-    <button class="chip small status" id="okChip" data-status="ok">ok</button>
-    <button class="chip small status" id="fpsChip" data-status="fps">fps --</button>
-    <button class="chip small status" id="stepChip" data-status="step">step 0</button>
-    <button class="chip small status" id="timeChip" data-status="time">t 0.000</button>
-    <button class="chip small status" id="dtChip" data-status="dt">dt --</button>
-    <button class="chip small status" id="massChip" data-status="mass">mass --</button>
-    <button class="chip small status" id="errChip" data-status="err">err --</button>
-    <button class="chip small status" id="jumpChip" data-status="jump">jump --</button>
-    <button class="chip small status" id="modeChip" data-status="mode">mode --</button>
-    <button class="chip small status" id="dofChip" data-status="dof">dof --</button>
-    <button class="chip small" data-act="reset">R reset</button>
-    <button class="chip small" data-act="step">S step</button>
-  </div>
-
-  <div id="tip"></div>
-
-  <div id="helpOverlay">
-    <div class="helpBox">
-      <button class="chip close" data-act="help">close</button>
-      <h1>DG/FV lab</h1>
-      <p><b>Euler flow over a body</b> solves the two-dimensional inviscid compressible Euler equations with the same vector DG operator used by the scalar cases. Three obstacle shapes are available: a <b>square</b> (default — its walls coincide exactly with cell faces, so there is no geometry error and the entropy plot measures the scheme itself), a <b>10° half-angle wedge</b> (for supersonic M∞ the θ–β–M oblique-shock angle is drawn as a dashed overlay, so the computed shock can be compared against theory; below the attachment Mach the shock detaches), and a <b>cylinder</b> (a stair-step approximation that illustrates geometry error on Cartesian meshes). Exterior boundaries impose Riemann-invariant (characteristic) far-field states, so subsonic as well as supersonic freestreams behave correctly.</p>
-      <p><code>U=(ρ,ρu,ρv,E)</code>, <code>F(U)</code> and <code>G(U)</code> are Euler fluxes, and <code>p=(γ−1)(E−ρ(u²+v²)/2)</code>. The face flux is local Lax–Friedrichs/Rusanov: <code>F̂=½(F_L+F_R)−½α a_max(U_R−U_L)</code>.</p>
-      <div id="formulaText"></div>
-      <p><b>Nx, Ny</b> are the mesh dimensions. <b>CFL</b> controls the explicit time step. <b>spf</b> is solver steps per animation frame. <b>M∞</b> is freestream Mach number. <b>R</b> is cylinder radius. <b>γ</b> is the ratio of specific heats.</p>
-      <p>All cases use modal Legendre coefficients. <b>P0/Q0</b> is the finite-volume limit; higher degrees add modes inside each cell, and the Euler plot is sampled on a subcell grid so you can see the extra in-cell structure. The <b>stab</b> chip switches the Euler limiter live: <i>off</i> (raw DG — expect blow-up at shocks), <i>positivity</i> (Zhang–Shu scaling only), <i>pos+minmod</i> (troubled cells become limited linears), <i>pos+flatten</i> (troubled cells drop to their means).</p>
-      <p>Things to try: compare P0 (FV) with P1/P2 at the same DOF count; run M∞=0.5 vs 1.5 and watch the bow shock appear; on the wedge, refine the mesh and watch the computed shock converge to the dashed theoretical angle, or drop M∞ toward ~1.4 to see the shock detach; compare <i>entropy</i> between the square (exact walls) and the cylinder (stair-step) at the same resolution; watch the Cd/Cl history settle (or oscillate) in the diagnostics panel; lower α or the limiter strength until the scheme fails.</p>
-      <p>Euler is inviscid — drag here is wave/numerical drag, not a Navier–Stokes prediction.</p>
-      <p>Hotkeys: <b>Space</b> run/pause, <b>R</b> reset, <b>S</b> one step, <b>H</b> help, <b>[</b>/<b>]</b> degree, <b>1</b> Euler, <b>2</b> diamond, <b>3</b> advection, <b>4</b> Burgers.</p>
+  <header class="lab-header">
+    <div>
+      <a class="board-home" href="../../pages/fvm-demo.html">← course page</a>
+      <p class="eyebrow">VERIFIED NUMERICAL MODEL</p>
+      <h1 data-i18n="page.title">DG / FV laboratory</h1>
+      <p data-i18n="page.lede">
+        One modal engine, four equation families: compressible Euler flow over
+        an embedded body, periodic diamond translation, scalar advection, and
+        inviscid Burgers. P0 is the finite-volume limit of the same weak form.
+      </p>
     </div>
-  </div>
+    <p class="method-note">
+      Deterministic and verified against invariants and limiting states.
+      <strong>Not validated</strong> against an experimental configuration.
+      The Euler body is stair-stepped on a Cartesian mesh.
+    </p>
+  </header>
 
-  <script src="./dg-engine.js"></script>
-  <script src="./app.js"></script>
+  <main class="lab-layout">
+    <section class="lab-stage" aria-label="DG and finite-volume numerical stage">
+      <div class="stage-viewport" data-stage-viewport>
+        <canvas id="stage" width="1120" height="630"
+                aria-label="Selected DG or finite-volume solution field"></canvas>
+        <div id="stage-controls" class="stage-controls" data-stage-controls
+             aria-label="Playback and viewport controls">
+          <button id="pause" type="button" data-action="pause"
+                  aria-label="Pause animation" title="Pause animation" aria-pressed="false">
+            <svg data-stage-icon class="stage-icon" viewBox="0 0 24 24"
+                 aria-hidden="true" focusable="false">
+              <path class="pause-glyph" d="M7 5V19M17 5V19"/>
+              <path class="play-glyph" d="M8 5L19 12L8 19Z"/>
+            </svg>
+          </button>
+          <button id="step" type="button" data-action="step"
+                  aria-label="Advance one numerical step" title="Advance one numerical step">
+            <svg data-stage-icon class="stage-icon" viewBox="0 0 24 24"
+                 aria-hidden="true" focusable="false">
+              <path d="M6 5L16 12L6 19ZM19 5V19"/>
+            </svg>
+          </button>
+          <label class="stage-speed">
+            <span class="visually-hidden">Playback speed</span>
+            <svg data-stage-icon class="stage-icon" viewBox="0 0 24 24"
+                 aria-hidden="true" focusable="false">
+              <path d="M4 17A8 8 0 0 1 20 17M12 16L16 10M6 19H18"/>
+            </svg>
+            <select data-playback-rate aria-label="Playback speed">
+              <option value="0.25">¼×</option>
+              <option value="0.5">½×</option>
+              <option value="1" selected>1×</option>
+              <option value="2">2×</option>
+            </select>
+          </label>
+          <button type="button" data-action="grab"
+                  aria-label="Toggle grab tool" title="Grab and pan" aria-pressed="false">
+            <svg data-stage-icon class="stage-icon" viewBox="0 0 24 24"
+                 aria-hidden="true" focusable="false">
+              <path d="M7.2 11V6.2A1.8 1.8 0 0 1 10.8 6V10V4.8A1.8 1.8 0 0 1 14.4 4.8V10V6.2A1.8 1.8 0 0 1 18 6.2V12V9A1.8 1.8 0 0 1 21.6 9V14.2C21.6 18.4 18.4 21 14.2 21H12C8.8 21 7.1 19.4 5.5 17L2.8 13A1.9 1.9 0 0 1 5.8 10.7L7.2 12.1"/>
+            </svg>
+          </button>
+          <span class="stage-zoom" role="group" aria-label="Zoom controls">
+            <button type="button" data-action="zoom-out" aria-label="Zoom out" title="Zoom out">
+              <svg data-stage-icon class="stage-icon" viewBox="0 0 24 24"
+                   aria-hidden="true" focusable="false">
+                <circle cx="10.5" cy="10.5" r="6.5"/>
+                <path d="M6.8 10.5H14.2M15.2 15.2L21 21"/>
+              </svg>
+            </button>
+            <button type="button" data-action="zoom-in" aria-label="Zoom in" title="Zoom in">
+              <svg data-stage-icon class="stage-icon" viewBox="0 0 24 24"
+                   aria-hidden="true" focusable="false">
+                <circle cx="10.5" cy="10.5" r="6.5"/>
+                <path d="M6.8 10.5H14.2M10.5 6.8V14.2M15.2 15.2L21 21"/>
+              </svg>
+            </button>
+            <button type="button" data-action="reset-view"
+                    aria-label="Reset view" title="Reset view">
+              <svg data-stage-icon class="stage-icon" viewBox="0 0 24 24"
+                   aria-hidden="true" focusable="false">
+                <path d="M4 9V4H9M15 4H20V9M20 15V20H15M9 20H4V15"/>
+              </svg>
+            </button>
+          </span>
+          <button type="button" data-action="fullscreen"
+                  data-i18n-aria-label="stage.enterFullscreen"
+                  data-i18n-title="stage.enterFullscreen"
+                  aria-label="Enter fullscreen" title="Enter fullscreen"
+                  aria-pressed="false">
+            <svg data-stage-icon class="stage-icon" viewBox="0 0 24 24"
+                 aria-hidden="true" focusable="false">
+              <path class="expand-glyph" d="M4 9V4H9M15 4H20V9M20 15V20H15M9 20H4V15"/>
+              <path class="collapse-glyph" d="M9 4V9H4M15 4V9H20M20 15H15V20M4 15H9V20"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <pre id="diagnostics" aria-live="polite"></pre>
+    </section>
+
+    <aside class="lab-controls" aria-label="DG and finite-volume controls">
+      <h2 data-i18n="page.settings">Board settings</h2>
+      <fieldset>
+        <legend data-i18n="page.experiment">Experiment</legend>
+        <label class="control-row">
+          <span data-i18n="page.case">Case</span>
+          <select id="case-id">
+            <option value="euler-cylinder" selected>Euler / body</option>
+            <option value="diamond-translation">Diamond translation</option>
+            <option value="scalar-advection">Scalar advection</option>
+            <option value="burgers">Burgers</option>
+          </select>
+        </label>
+        <label class="control-row">
+          <span data-i18n="page.degree">Degree</span>
+          <select id="degree">
+            <option value="0" selected>P0 / FV</option>
+            <option value="1">P1</option>
+            <option value="2">P2</option>
+            <option value="3">P3</option>
+          </select>
+        </label>
+        <label class="control-row">
+          <span data-i18n="page.mesh">Mesh</span>
+          <select id="resolution"></select>
+        </label>
+        <label class="control-row">
+          <span data-i18n="page.field">Field</span>
+          <select id="display-field"></select>
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend data-i18n="page.fluxClock">Flux and clock</legend>
+        <label class="control-row">
+          <span>CFL <output id="cfl-value">0.18</output></span>
+          <input id="cfl" type="range" min="0.06" max="0.72" step="0.02" value="0.18">
+        </label>
+        <label class="control-row">
+          <span>Rusanov α <output id="flux-alpha-value">1.00</output></span>
+          <input id="flux-alpha" type="range" min="0.5" max="2" step="0.05" value="1">
+        </label>
+      </fieldset>
+
+      <details>
+        <summary data-i18n="page.caseControls">Case-specific controls</summary>
+        <fieldset>
+          <legend data-i18n="page.state">Numerical state</legend>
+          <label class="control-row" data-control="body">
+            <span data-i18n="page.body">Body</span>
+            <select id="body-shape">
+              <option value="square" selected>Square</option>
+              <option value="wedge">10° wedge</option>
+              <option value="cylinder">Cylinder</option>
+            </select>
+          </label>
+          <label class="control-row" data-control="initial" hidden>
+            <span data-i18n="page.initial">Initial state</span>
+            <select id="initial-condition"></select>
+          </label>
+          <label class="control-row" data-control="velocity" hidden>
+            <span data-i18n="page.velocity">Velocity</span>
+            <select id="velocity-field">
+              <option value="uniform">Uniform</option>
+              <option value="swirl">Periodic swirl</option>
+              <option value="shear">Shear</option>
+            </select>
+          </label>
+          <label class="control-row">
+            <span data-i18n="page.stabilizer">Stabilizer</span>
+            <select id="limiter"></select>
+          </label>
+        </fieldset>
+      </details>
+
+      <button id="reset" class="reset-model" type="button" data-i18n="page.reset">Reset numerical model</button>
+      <p class="scientific-status" data-i18n-html="page.status">
+        Status: <strong>verified numerical model</strong>, not validated.
+        Scalar mass, deterministic replay, and positive limited Euler states
+        are tested. Inviscid drag is pressure and numerical wave drag.
+      </p>
+    </aside>
+  </main>
+
+  <noscript>This numerical board requires JavaScript; it uses no remote services.</noscript>
+  <script type="module" src="./app.js"></script>
 </body>
 </html>

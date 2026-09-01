@@ -11,3 +11,5 @@ plugins:
 exclude:
   - README.md
   - todo
+  - lib/chalkish/test
+  - lib/chalkish/support

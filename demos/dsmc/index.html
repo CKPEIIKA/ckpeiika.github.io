@@ -1,178 +1,209 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Elastic DSMC Demo with Optional Rotational Larsen–Borgnakke Relaxation</title>
-    <link rel="stylesheet" href="./styles.css" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Compact chalkboard frontend for four deterministic spatial DSMC experiments." data-i18n-content="page.description">
+  <title>DSMC Laboratory</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="../../lib/chalkish/examples/chalkboard-theme.css">
+  <link rel="stylesheet" href="../../lib/chalkish/examples/reference-labs.css">
+  <link rel="stylesheet" href="../lab-overrides.css">
 </head>
 <body>
-        <div class="app">
-        <article class="visual-card">
-            <div class="control-strip hud header">
-                <span class="tok neutral">DSMC</span>
-                <button id="tok-case" type="button" class="tok" data-token="case">case <b id="ui-case">mono</b></button>
-                <button id="tok-gas" type="button" class="tok" data-token="gas">gas <b id="ui-gas">Ar:Ar</b></button>
-                <button id="tok-rho" type="button" class="tok" data-token="rho">Kn <b id="ui-rho">.20</b></button>
-                <button id="tok-tl" type="button" class="tok" data-token="tl">TL <b id="ui-tl">300</b></button>
-                <button id="tok-tr" type="button" class="tok" data-token="tr">TR <b id="ui-tr">500</b></button>
-                <button id="tok-wall" type="button" class="tok" data-token="wall">wall <b id="ui-wall">mix α.5</b></button>
-                <button id="tok-rot" type="button" class="tok" data-token="rot">rot <b id="ui-rot">off</b></button>
-                <button id="tok-wall-speed" type="button" class="tok" data-token="uw">Uw <b id="ui-wall-speed">0</b></button>
-                <button id="tok-n" type="button" class="tok" data-token="n">N <b id="ui-n">3200</b></button>
-                <button id="tok-dx" type="button" class="tok" data-token="dx">dx <b id="ui-dx">.20</b></button>
-                <button id="tok-dt" type="button" class="tok" data-token="dt">dt <b id="ui-dt">5.2e-4</b></button>
-                <button id="tok-model" type="button" class="tok" data-token="model">model <b id="ui-model">VHS</b></button>
-                <button id="tok-plot" type="button" class="tok" data-token="plot">plot <b id="ui-plot">dist</b></button>
-                <button id="tok-help" type="button" class="tok help" data-token="help">?</button>
-                <button id="tok-toggle" type="button" class="tok run" data-token="run">▶</button>
-            </div>
-
-            <div class="backing-controls" aria-hidden="true">
-                <select id="case-id" title="Case" data-kind="medium">
-                    <option value="preset_eq_box" selected>preset_eq_box</option>
-                    <option value="preset_heat_x">preset_heat_x</option>
-                    <option value="preset_rot_n2">preset_rot_n2</option>
-                    <option value="preset_couette">preset_couette</option>
-                </select>
-                <input id="species-a" list="species-presets" type="text" inputmode="text" title="Species A" data-kind="species" placeholder="A" />
-                <input id="species-b" list="species-presets" type="text" inputmode="text" title="Species B" data-kind="species" placeholder="B" />
-                <input id="density-scale" type="range" min="0.05" max="1.20" step="0.05" value="0.20" title="Target Knudsen number" />
-                <span id="density-scale-display" class="inline-range-value">0.20</span>
-                <input id="wall-temp-left" list="wall-temp-presets" type="text" inputmode="decimal" data-kind="temp" title="Left wall temperature (K)" value="300" min="50" placeholder="TL" />
-                <input id="wall-temp-right" list="wall-temp-presets" type="text" inputmode="decimal" data-kind="temp" title="Right wall temperature (K)" value="500" min="50" placeholder="TR" />
-                <input id="wall-speed" list="wall-speed-presets" type="text" inputmode="decimal" data-kind="medium" title="Moving wall speed (m/s)" value="0" placeholder="Uw" />
-                <select id="boundary-mode" title="Wall reflection model" data-kind="medium">
-                    <option value="specular">reflection</option>
-                    <option value="diffuse">diffusion</option>
-                    <option value="mixed">mixed</option>
-                    <option value="periodic">periodic</option>
-                </select>
-                <div id="wall-mixed-row">
-                    <input id="wall-mixed-accom" type="text" inputmode="decimal" data-kind="tiny" title="Mixed-wall accommodation fraction" value="0.5" min="0" max="1" step="0.05" placeholder="α" />
-                </div>
-                <input id="particle-count" list="particle-presets" type="text" inputmode="numeric" title="Total simulated particles" data-kind="medium" value="3200" min="250" max="8000" placeholder="N" />
-                <input id="cell-size" list="cell-size-presets" type="text" inputmode="decimal" title="Cell size in world units" data-kind="cell" value="0.20" min="0.05" step="0.05" placeholder="dx" />
-                <button type="button" class="btn step-btn" id="cell-size-dec" title="Decrease cell size" aria-label="Decrease cell size">-</button>
-                <button type="button" class="btn step-btn" id="cell-size-inc" title="Increase cell size" aria-label="Increase cell size">+</button>
-                <input id="sim-dt" list="dt-presets" type="text" inputmode="decimal" title="Integration step size in seconds" data-kind="medium" value="0.00052" min="1e-6" step="0.00001" placeholder="dt" />
-                <button type="button" class="btn step-btn" id="dt-dec" title="Decrease timestep" aria-label="Decrease timestep">-</button>
-                <button type="button" class="btn step-btn" id="dt-inc" title="Increase timestep" aria-label="Increase timestep">+</button>
-                <select id="render-quality" title="Render performance mode" data-kind="tiny">
-                    <option value="quality">quality</option>
-                    <option value="fast">fast</option>
-                </select>
-                <select id="collision-model" title="Collision model" data-kind="medium">
-                    <option value="hard-sphere">hard sphere</option>
-                    <option value="vhs" selected>VHS</option>
-                    <option value="vss">VSS</option>
-                </select>
-                <select id="mini-view" title="Mini panel view" data-kind="tiny">
-                    <option value="off">off</option>
-                    <option value="dist">dist</option>
-                    <option value="moments" selected>moments</option>
-                    <option value="vpt">v,p,T</option>
-                </select>
-                <span id="count">--</span>
-                <span id="mean-speed">--</span>
-                <span id="cell-occupancy">--</span>
-            </div>
-
-                <datalist id="temp-presets">
-                    <option value="180"></option>
-                    <option value="250"></option>
-                    <option value="300"></option>
-                    <option value="500"></option>
-                    <option value="800"></option>
-                    <option value="1200"></option>
-                </datalist>
-                <datalist id="particle-presets">
-                    <option value="800"></option>
-                    <option value="1200"></option>
-                    <option value="1500"></option>
-                    <option value="1800"></option>
-                    <option value="2200"></option>
-                    <option value="2600"></option>
-                    <option value="3200"></option>
-                    <option value="4000"></option>
-                    <option value="5000"></option>
-                    <option value="6200"></option>
-                    <option value="7600"></option>
-                </datalist>
-                <datalist id="dt-presets">
-                    <option value="0.00030"></option>
-                    <option value="0.00040"></option>
-                    <option value="0.00045"></option>
-                    <option value="0.00052"></option>
-                    <option value="0.00060"></option>
-                    <option value="0.00072"></option>
-                </datalist>
-                <datalist id="cell-size-presets">
-                    <option value="0.12"></option>
-                    <option value="0.16"></option>
-                    <option value="0.20"></option>
-                    <option value="0.24"></option>
-                    <option value="0.30"></option>
-                    <option value="0.40"></option>
-                </datalist>
-                <datalist id="wall-temp-presets">
-                    <option value="200"></option>
-                    <option value="300"></option>
-                    <option value="400"></option>
-                    <option value="500"></option>
-                    <option value="600"></option>
-                    <option value="800"></option>
-                </datalist>
-                <datalist id="wall-speed-presets">
-                    <option value="0"></option>
-                    <option value="100"></option>
-                    <option value="150"></option>
-                    <option value="250"></option>
-                    <option value="350"></option>
-                    <option value="500"></option>
-                </datalist>
-                <datalist id="species-presets"></datalist>
-            <div id="field-help" class="input-help" aria-hidden="true">
-                <p id="field-help-text"></p>
-                <input id="field-help-entry" class="field-help-entry" type="text" inputmode="text" />
-                <ol id="field-help-items"></ol>
-                <p id="field-help-meta" class="help-meta"></p>
-            </div>
-
-            <canvas id="scene" width="960" height="540"></canvas>
-            <div id="mini-panel" class="mini-panel">
-                <canvas id="minimap" width="275" height="112"></canvas>
-                <div class="mini-metrics">
-                    <span class="mini-metric"><span id="mini-metric-a-label">μv</span> <span id="mini-metric-a">--</span></span>
-                    <span class="mini-metric"><span id="mini-metric-b-label">rms</span> <span id="mini-metric-b">--</span></span>
-                    <span class="mini-metric"><span id="mini-metric-c-label">σT</span> <span id="mini-metric-c">--</span></span>
-                </div>
-            </div>
-            <div class="status-line hud footer">
-                <span class="tok neutral" id="status">ok</span>
-                <span class="tok" id="fps">fps --</span>
-                <span class="tok" id="f-step">step 0</span>
-                <span class="tok" id="diag-temp">T --</span>
-                <span class="tok" id="diag-collisions">col --</span>
-                <span class="tok" id="diag-trot">Trot --</span>
-                <span class="tok" id="diag-rot-events">rot --</span>
-                <span class="tok" id="diag-wallq">qwall --</span>
-                <span class="tok" id="delta-e">dE/E0 --</span>
-                <span class="tok" id="delta-p">dP/P0 --</span>
-                <span class="tok" id="validity-dx-over-lambda">dx/λ --</span>
-                <span class="tok" id="validity-dt-over-tau">dt/τ --</span>
-                <span class="tok" id="validity-npcell">npc --</span>
-                <span class="tok" id="validity-majorant">maj --</span>
-                <button id="seed" class="tok command" title="Seed [R]">R seed</button>
-                <button id="step" class="tok command" title="Step [S]">S step</button>
-                <button id="toggle" class="tok run" title="Play/Pause [Space]">Space run</button>
-                <button id="tok-help-footer" class="tok command" title="Help [?]">?</button>
-            </div>
-        </article>
+  <header class="lab-header">
+    <div>
+      <a class="board-home" href="../../pages/dsmc-demo.html">← course page</a>
+      <p class="eyebrow">VERIFIED NUMERICAL MODEL</p>
+      <h1 data-i18n="page.title">DSMC laboratory</h1>
+      <p data-i18n="page.lede">
+        Inspect no-time-counter collisions in an equilibrium box, a thermal
+        channel, rotational nitrogen, or rarefied Couette flow. Particle,
+        collision-cell, wall, and speed-distribution state remain explicit.
+      </p>
     </div>
+    <p class="method-note" data-i18n-html="page.note">
+      Deterministic elastic HS, VHS, or VSS collisions with optional
+      rotational Larsen–Borgnakke exchange. <strong>Not validated</strong>
+      against a configuration-specific experiment or DSMC benchmark.
+    </p>
+  </header>
 
-    <script src="./dsmc.js"></script>
-    <script src="./dsmc_typed.js"></script>
-    <script src="./app.js"></script>
+  <main class="lab-layout">
+    <section class="lab-stage" aria-label="Spatial DSMC numerical stage">
+      <div class="stage-viewport" data-stage-viewport>
+        <canvas id="stage" width="1120" height="630"
+                aria-label="Particles, collision-cell occupancy, walls, and speed distribution"></canvas>
+        <div id="stage-controls" class="stage-controls" data-stage-controls
+             aria-label="Playback and viewport controls">
+          <button id="pause" type="button" data-action="pause"
+                  aria-label="Pause animation" title="Pause animation" aria-pressed="false">
+            <svg data-stage-icon class="stage-icon" viewBox="0 0 24 24"
+                 aria-hidden="true" focusable="false">
+              <path class="pause-glyph" d="M7 5V19M17 5V19"/>
+              <path class="play-glyph" d="M8 5L19 12L8 19Z"/>
+            </svg>
+          </button>
+          <button id="step" type="button" data-action="step"
+                  aria-label="Advance one DSMC step" title="Advance one DSMC step">
+            <svg data-stage-icon class="stage-icon" viewBox="0 0 24 24"
+                 aria-hidden="true" focusable="false">
+              <path d="M6 5L16 12L6 19ZM19 5V19"/>
+            </svg>
+          </button>
+          <label class="stage-speed">
+            <span class="visually-hidden">Playback speed</span>
+            <svg data-stage-icon class="stage-icon" viewBox="0 0 24 24"
+                 aria-hidden="true" focusable="false">
+              <path d="M4 17A8 8 0 0 1 20 17M12 16L16 10M6 19H18"/>
+            </svg>
+            <select data-playback-rate aria-label="Playback speed">
+              <option value="0.25">¼×</option>
+              <option value="0.5">½×</option>
+              <option value="1" selected>1×</option>
+              <option value="2">2×</option>
+            </select>
+          </label>
+          <button type="button" data-action="grab"
+                  aria-label="Toggle grab tool" title="Grab and pan" aria-pressed="false">
+            <svg data-stage-icon class="stage-icon" viewBox="0 0 24 24"
+                 aria-hidden="true" focusable="false">
+              <path d="M7.2 11V6.2A1.8 1.8 0 0 1 10.8 6V10V4.8A1.8 1.8 0 0 1 14.4 4.8V10V6.2A1.8 1.8 0 0 1 18 6.2V12V9A1.8 1.8 0 0 1 21.6 9V14.2C21.6 18.4 18.4 21 14.2 21H12C8.8 21 7.1 19.4 5.5 17L2.8 13A1.9 1.9 0 0 1 5.8 10.7L7.2 12.1"/>
+            </svg>
+          </button>
+          <span class="stage-zoom" role="group" aria-label="Zoom controls">
+            <button type="button" data-action="zoom-out" aria-label="Zoom out" title="Zoom out">
+              <svg data-stage-icon class="stage-icon" viewBox="0 0 24 24"
+                   aria-hidden="true" focusable="false">
+                <circle cx="10.5" cy="10.5" r="6.5"/>
+                <path d="M6.8 10.5H14.2M15.2 15.2L21 21"/>
+              </svg>
+            </button>
+            <button type="button" data-action="zoom-in" aria-label="Zoom in" title="Zoom in">
+              <svg data-stage-icon class="stage-icon" viewBox="0 0 24 24"
+                   aria-hidden="true" focusable="false">
+                <circle cx="10.5" cy="10.5" r="6.5"/>
+                <path d="M6.8 10.5H14.2M10.5 6.8V14.2M15.2 15.2L21 21"/>
+              </svg>
+            </button>
+            <button type="button" data-action="reset-view"
+                    aria-label="Reset view" title="Reset view">
+              <svg data-stage-icon class="stage-icon" viewBox="0 0 24 24"
+                   aria-hidden="true" focusable="false">
+                <path d="M4 9V4H9M15 4H20V9M20 15V20H15M9 20H4V15"/>
+              </svg>
+            </button>
+          </span>
+          <button type="button" data-action="fullscreen"
+                  data-i18n-aria-label="stage.enterFullscreen"
+                  data-i18n-title="stage.enterFullscreen"
+                  aria-label="Enter fullscreen" title="Enter fullscreen"
+                  aria-pressed="false">
+            <svg data-stage-icon class="stage-icon" viewBox="0 0 24 24"
+                 aria-hidden="true" focusable="false">
+              <path class="expand-glyph" d="M4 9V4H9M15 4H20V9M20 15V20H15M9 20H4V15"/>
+              <path class="collapse-glyph" d="M9 4V9H4M15 4V9H20M20 15H15V20M4 15H9V20"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <pre id="diagnostics" aria-live="polite"></pre>
+    </section>
+
+    <aside class="lab-controls" aria-label="Spatial DSMC controls">
+      <h2 data-i18n="page.settings">Board settings</h2>
+      <fieldset>
+        <legend data-i18n="page.experiment">Experiment</legend>
+        <label class="control-row">
+          <span data-i18n="page.case">Case</span>
+          <select id="case-id">
+            <option value="equilibrium-box" selected>Equilibrium box</option>
+            <option value="heat-transfer-x">Heat transfer x</option>
+            <option value="rotational-nitrogen">Rotational N₂</option>
+            <option value="couette-flow">Couette flow</option>
+          </select>
+        </label>
+        <label class="control-row">
+          <span data-i18n="page.particles">Particles</span>
+          <select id="particle-count">
+            <option value="800">800</option>
+            <option value="1600">1600</option>
+            <option value="2400" selected>2400</option>
+            <option value="3200">3200</option>
+            <option value="4000">4000</option>
+          </select>
+        </label>
+        <label class="control-row">
+          <span data-i18n="page.model">Model</span>
+          <select id="collision-model">
+            <option value="hard-sphere">Hard sphere</option>
+            <option value="vhs" selected>VHS</option>
+            <option value="vss">VSS</option>
+          </select>
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend data-i18n="page.cellClock">Cell and clock</legend>
+        <label class="control-row">
+          <span>Kn <output id="knudsen-value">0.20</output></span>
+          <input id="knudsen" type="range" min="0.05" max="1" step="0.05" value="0.20">
+        </label>
+        <label class="control-row">
+          <span data-i18n="page.cellSize">Cell size</span>
+          <select id="cell-size">
+            <option value="0.12">0.12</option>
+            <option value="0.16" selected>0.16</option>
+            <option value="0.20">0.20</option>
+            <option value="0.30">0.30</option>
+            <option value="0.50">0.50</option>
+          </select>
+        </label>
+        <label class="control-row">
+          <span>Δt</span>
+          <select id="time-step">
+            <option value="0.00015">0.15 ms</option>
+            <option value="0.00020">0.20 ms</option>
+            <option value="0.00030" selected>0.30 ms</option>
+            <option value="0.00040">0.40 ms</option>
+          </select>
+        </label>
+      </fieldset>
+
+      <details>
+        <summary data-i18n="page.wallControls">Wall controls</summary>
+        <fieldset>
+          <legend data-i18n="page.maxwell">Maxwell boundary</legend>
+          <label class="control-row">
+            <span><span data-i18n="page.accommodation">Accommodation</span> <output id="wall-accommodation-value">1.00</output></span>
+            <input id="wall-accommodation" type="range" min="0" max="1" step="0.05" value="1">
+          </label>
+          <label class="control-row">
+            <span data-i18n="page.leftTemperature">Left T / K</span>
+            <input id="wall-temperature-left" type="number" min="50" max="5000" step="10" value="300">
+          </label>
+          <label class="control-row">
+            <span data-i18n="page.rightTemperature">Right T / K</span>
+            <input id="wall-temperature-right" type="number" min="50" max="5000" step="10" value="300">
+          </label>
+          <label class="control-row">
+            <span data-i18n="page.wallSpeed">Wall speed / m s⁻¹</span>
+            <input id="wall-speed" type="number" min="-2000" max="2000" step="10" value="0">
+          </label>
+        </fieldset>
+      </details>
+
+      <button id="reset" class="reset-model" type="button" data-i18n="page.reset">Reseed numerical model</button>
+      <p class="scientific-status" data-i18n-html="page.status">
+        Status: <strong>verified numerical model</strong>, not validated.
+        Closed periodic energy and momentum, deterministic replay, spatial
+        ownership, and collision-cell contracts are tested.
+      </p>
+    </aside>
+  </main>
+
+  <noscript>This numerical board requires JavaScript; it uses no remote services.</noscript>
+  <script type="module" src="./app.js"></script>
 </body>
 </html>

@@ -1,0 +1,10 @@
+.lab-header h1 {
+  padding-left: 0.35rem;
+}
+
+@media (max-width: 540px) {
+  .lab-controls {
+    max-height: none;
+    overflow: visible;
+  }
+}

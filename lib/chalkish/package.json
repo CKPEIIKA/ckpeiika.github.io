@@ -1,0 +1,35 @@
+{
+  "name": "chalkish",
+  "version": "0.1.0-dev",
+  "description": "Dependency-free scientific canvas primitives and the two numerical labs used by this site.",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.js",
+    "./cfd": "./src/cfd.js",
+    "./interaction": "./src/interaction.js",
+    "./segments": "./src/segments.js"
+  },
+  "files": [
+    "src",
+    "LICENSE",
+    "docs/NOTICE.md",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "keywords": [
+    "canvas",
+    "visualization",
+    "scientific",
+    "cfd",
+    "physics",
+    "machine-learning",
+    "dependency-free"
+  ]
+}
