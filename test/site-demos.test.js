@@ -188,3 +188,8 @@ test('site and demo links do not assume deployment at the domain root', async ()
     );
   }
 });
+
+test('Jekyll publishes the shared demo controller directory', async () => {
+  const config = await readFile(new URL('_config.yml', ROOT), 'utf8');
+  assert.match(config, /include:[\s\S]+lib\/chalkish\/examples\/boards\/_shared/);
+});

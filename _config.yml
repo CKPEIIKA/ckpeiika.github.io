@@ -1,6 +1,10 @@
 title: Sitecity CKPEIIKA
 description: Notes and resources on gas dynamics and ML
 markdown: kramdown
+include:
+  # GitHub Pages/Jekyll otherwise skips this shared ES-module directory because
+  # its name starts with an underscore.
+  - lib/chalkish/examples/boards/_shared
 kramdown:
   input: GFM
   hard_wrap: false
