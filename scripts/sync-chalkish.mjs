@@ -57,9 +57,17 @@ for (const directory of directories) {
 }
 
 for (const file of files) {
-  const destination = resolve(target, file);
+  const destinationFile = file.replace('/_shared/', '/shared/');
+  const destination = resolve(target, destinationFile);
   await mkdir(resolve(destination, '..'), { recursive: true });
-  await cp(resolve(source, file), destination);
+  if (file.includes('/_shared/')) {
+    // Jekyll skips underscore-prefixed directories even when they are part of
+    // a copied static library. Keep the source layout, publish a plain folder.
+    const contents = await readFile(resolve(source, file), 'utf8');
+    await writeFile(destination, contents.replaceAll('/_shared/', '/shared/'));
+  } else {
+    await cp(resolve(source, file), destination);
+  }
 }
 
 const revision = spawnSync('git', ['-C', source, 'rev-parse', 'HEAD'], {

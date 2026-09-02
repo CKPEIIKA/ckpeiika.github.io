@@ -2,7 +2,7 @@ import { Camera2D, Scene, mount } from '../../lib/chalkish/src/index.js';
 import {
   createDsmcLabController,
   getDsmcLabPreset,
-} from '../../lib/chalkish/examples/boards/_shared/dsmc-lab-controller.js';
+} from '../../lib/chalkish/examples/boards/shared/dsmc-lab-controller.js';
 import { BOARD_RENDER_STYLE } from '../../lib/chalkish/examples/board-settings.js';
 import { bindStageControls } from '../../lib/chalkish/examples/stage-controls.js';
 import {

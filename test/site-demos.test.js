@@ -206,9 +206,18 @@ test('site and demo links do not assume deployment at the domain root', async ()
   }
 });
 
-test('Jekyll publishes the shared demo controller directory', async () => {
-  const config = await readFile(new URL('_config.yml', ROOT), 'utf8');
-  assert.match(config, /include:[\s\S]+lib\/chalkish\/examples\/boards\/_shared/);
+test('runtime demo controllers are published from non-underscore directories', async () => {
+  const [dsmc, dg, profile] = await Promise.all([
+    readFile(new URL('demos/dsmc/app.js', ROOT), 'utf8'),
+    readFile(new URL('demos/dg-fvm/app.js', ROOT), 'utf8'),
+    readFile(new URL('lib/chalkish/examples/boards/shared/dg-fv-lab-controller.js', ROOT), 'utf8'),
+  ]);
+  for (const source of [dsmc, dg, profile]) {
+    assert.doesNotMatch(source, /examples\/[^\n]*\/\_shared\//);
+  }
+  assert.match(dsmc, /examples\/boards\/shared\/dsmc-lab-controller\.js/);
+  assert.match(dg, /examples\/boards\/shared\/dg-fv-lab-controller\.js/);
+  assert.match(profile, /cfd-demos\/shared\/profile-demo-controller\.js/);
 });
 
 test('primary navigation keeps the requested teaching order', async () => {

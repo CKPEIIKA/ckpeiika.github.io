@@ -11,7 +11,7 @@ import {
   DG_FV_DISPLAY_FIELDS,
   DG_FV_INITIAL_CONDITIONS,
   createDgFvLabController,
-} from '../../lib/chalkish/examples/boards/_shared/dg-fv-lab-controller.js';
+} from '../../lib/chalkish/examples/boards/shared/dg-fv-lab-controller.js';
 import { BOARD_RENDER_STYLE } from '../../lib/chalkish/examples/board-settings.js';
 import { bindStageControls } from '../../lib/chalkish/examples/stage-controls.js';
 import {
