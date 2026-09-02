@@ -29,7 +29,14 @@
     </div>
   </header>
 
-  <main class="lab-layout">
+  <main>
+    <button class="mobile-controls-toggle" type="button" data-mobile-controls-toggle
+            aria-controls="lab-controls" aria-expanded="false"
+            aria-label="Show parameters" title="Show parameters">
+      <span data-mobile-controls-label="show" data-i18n="page.showControls">Show parameters</span>
+      <span data-mobile-controls-label="hide" data-i18n="page.hideControls">Hide parameters</span>
+    </button>
+    <div class="lab-layout">
     <section class="lab-stage" aria-label="DG and finite-volume numerical stage" data-i18n-aria-label="stage.dg">
       <div class="stage-viewport" data-stage-viewport>
         <div class="stage-canvas">
@@ -157,7 +164,7 @@
       </div>
     </section>
 
-    <aside class="lab-controls" aria-label="DG and finite-volume controls" data-i18n-aria-label="controls.dg">
+    <aside id="lab-controls" class="lab-controls" aria-label="DG and finite-volume controls" data-i18n-aria-label="controls.dg">
       <h2 data-i18n="page.settings">Board settings</h2>
       <fieldset>
         <legend data-i18n="page.experiment">Experiment</legend>
@@ -277,6 +284,7 @@
         <button id="help" class="icon-command" type="button" aria-label="Help" title="Help">?</button>
       </div>
     </aside>
+    </div>
   </main>
 
   <dialog id="help-dialog" class="lab-help">

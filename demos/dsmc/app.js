@@ -10,7 +10,7 @@ import {
   rewriteChalkLabel,
   rewriteChalkText,
 } from '../../lib/chalkish/examples/chalk-transition.js';
-import { bindLabLanguage, withCommonTranslations } from '../lab-i18n.js';
+import { bindLabLanguage, bindMobileControls, withCommonTranslations } from '../lab-i18n.js';
 import {
   RingHistory,
   makeReplayDocument,
@@ -162,6 +162,7 @@ const i18n = bindLabLanguage(withCommonTranslations({
     'help.dsmc': 'Столкновения выбираются методом без счётчика времени. Для корректного разрешения желательно dx/λ < 1, dt/τ < 1 и несколько частиц в каждой ячейке столкновений. Нарушения мажоранты означают, что оценка максимальной частоты столкновений оказалась заниженной.',
   },
 }));
+const mobileControls = bindMobileControls({ translate: i18n.t });
 
 const CHALK_ERASE_DELAY_MS = 1250;
 
@@ -747,6 +748,7 @@ i18n.onChange(() => {
   localizeCanvas({ animate: true });
   updateDiagnostics({ animate: true });
   stageControls.sync();
+  mobileControls.sync();
   app.render();
 });
 
@@ -758,6 +760,7 @@ globalThis.addEventListener?.('pagehide', () => {
   plotScene.clear();
   app.destroy();
   controller.dispose();
+  mobileControls.dispose();
 }, { once: true });
 
 localizeCanvas();

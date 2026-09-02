@@ -1,11 +1,14 @@
 <nav class="nav-inline">
   <p>
     <a href="{{ '/index.html' | relative_url }}">🏠 Главная</a>
-    {% assign subpages = site.pages | where_exp: "p", "p.path contains 'pages/'" | sort: "title" %}
-    {% for p in subpages %}
-      {% unless p.nav_exclude %}
-        | <a href="{{ p.url | relative_url }}">{{ p.nav_label | default: p.title }}</a>
-      {% endunless %}
+    {% assign menu_paths = "pages/resources.md,pages/eucken.md,pages/paper-reviews.md,pages/cfd2025.md,pages/ml2025.md,pages/dsmc-demo.md,pages/fvm-demo.md" | split: "," %}
+    {% for menu_path in menu_paths %}
+      {% assign p = site.pages | where: "path", menu_path | first %}
+      {% if p %}
+        {% unless p.nav_exclude %}
+          | <a href="{{ p.url | relative_url }}">{{ p.nav_label | default: p.title }}</a>
+        {% endunless %}
+      {% endif %}
     {% endfor %}
     | <button class="theme-toggle" type="button" aria-label="Переключить тему">Темно</button>
   </p>

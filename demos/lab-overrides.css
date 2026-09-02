@@ -76,6 +76,10 @@ body::after,
   align-items: center;
 }
 
+.mobile-controls-toggle {
+  display: none;
+}
+
 .demo-theme-toggle {
   display: grid;
   width: 1.6rem;
@@ -745,4 +749,76 @@ html.theme-dark .lab-controls input:not([type="range"]) {
   .control-row {
     grid-template-columns: minmax(7.5rem, 1fr) minmax(10rem, 1.35fr);
   }
+
+}
+
+@media (max-width: 760px) {
+  .mobile-controls-toggle {
+    display: flex;
+    width: min(100%, 112rem);
+    min-height: 2.2rem;
+    margin: 0.35rem auto 0;
+    padding: 0.35rem 0.6rem;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px dashed var(--site-accent);
+    border-radius: 0;
+    background: transparent;
+    color: var(--site-accent);
+    cursor: pointer;
+    font: 700 0.72rem/1.2 var(--font-board-ui);
+    text-transform: uppercase;
+  }
+
+  .mobile-controls-toggle::after {
+    content: '＋';
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  .mobile-controls-toggle[aria-expanded="true"]::after {
+    content: '−';
+  }
+
+  .mobile-controls-toggle:hover,
+  .mobile-controls-toggle:focus-visible {
+    background: var(--site-accent);
+    color: var(--site-background);
+    outline: 2px solid var(--site-accent);
+    outline-offset: 2px;
+  }
+
+  .lab-layout {
+    grid-template-areas:
+      "stage"
+      "controls";
+  }
+
+  .lab-controls {
+    display: none;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .lab-controls.mobile-controls-open {
+    display: grid;
+  }
+}
+
+@media (max-width: 540px) {
+  .lab-controls.mobile-controls-open {
+    display: block;
+  }
+}
+
+[data-mobile-controls-label="hide"] {
+  display: none;
+}
+
+.mobile-controls-toggle[aria-expanded="true"] [data-mobile-controls-label="show"] {
+  display: none;
+}
+
+.mobile-controls-toggle[aria-expanded="true"] [data-mobile-controls-label="hide"] {
+  display: inline;
 }

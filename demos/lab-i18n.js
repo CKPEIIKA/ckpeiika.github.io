@@ -7,6 +7,8 @@ const COMMON = Object.freeze({
     'locale.label': 'Language',
     'nav.course': 'course page',
     'page.settings': 'Calculation settings',
+    'page.showControls': 'Show parameters',
+    'page.hideControls': 'Hide parameters',
     'page.experiment': 'Experiment',
     'page.case': 'Case',
     'stage.controls': 'Playback and viewport controls',
@@ -28,6 +30,8 @@ const COMMON = Object.freeze({
     'locale.label': 'Язык',
     'nav.course': 'к странице курса',
     'page.settings': 'Параметры расчёта',
+    'page.showControls': 'Показать параметры',
+    'page.hideControls': 'Скрыть параметры',
     'page.experiment': 'Задача',
     'page.case': 'Расчётный случай',
     'stage.controls': 'Управление расчётом и областью просмотра',
@@ -119,6 +123,41 @@ export function bindLabLanguage(translations) {
     onChange(listener) {
       listeners.add(listener);
       return () => listeners.delete(listener);
+    },
+  });
+}
+
+export function bindMobileControls({ translate }) {
+  const toggle = document.querySelector('[data-mobile-controls-toggle]');
+  const controls = document.getElementById('lab-controls');
+  if (!toggle || !controls) {
+    return Object.freeze({ sync() {}, dispose() {} });
+  }
+
+  let open = false;
+  const media = globalThis.matchMedia?.('(max-width: 760px)') ?? null;
+
+  function sync() {
+    const mobile = media?.matches === true;
+    controls.classList.toggle('mobile-controls-open', !mobile || open);
+    toggle.setAttribute('aria-expanded', String(mobile ? open : true));
+    const key = mobile && open ? 'page.hideControls' : 'page.showControls';
+    const label = translate(key);
+    toggle.setAttribute('aria-label', label);
+    toggle.setAttribute('title', label);
+  }
+
+  toggle.addEventListener('click', () => {
+    open = !open;
+    sync();
+  });
+  media?.addEventListener?.('change', sync);
+  sync();
+
+  return Object.freeze({
+    sync,
+    dispose() {
+      media?.removeEventListener?.('change', sync);
     },
   });
 }

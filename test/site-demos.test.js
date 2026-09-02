@@ -41,6 +41,8 @@ test('both demos are static ES-module frontends backed by the vendored library',
     assert.match(html, /data-locale-switch/);
     assert.match(html, /data-lang="en"/);
     assert.match(html, /data-lang="ru"/);
+    assert.match(html, /data-mobile-controls-toggle/);
+    assert.match(html, /id="lab-controls"/);
     assert.match(html, /data-action="toggle-controls"/);
     assert.doesNotMatch(html, /example-loader|dsmc_typed\.js|dg-engine\.js/);
     assert.doesNotMatch(html, /verified numerical model|not validated|data-i18n="page\.(?:lede|note|status)"/i);
@@ -54,6 +56,21 @@ test('both demos are static ES-module frontends backed by the vendored library',
     }
     assert.match(html, /class="stage-canvas"/);
   }
+});
+
+test('mobile parameter panels are collapsed until explicitly opened', async () => {
+  const [css, i18n, dsmc, dg] = await Promise.all([
+    readFile(new URL('demos/lab-overrides.css', ROOT), 'utf8'),
+    readFile(new URL('demos/lab-i18n.js', ROOT), 'utf8'),
+    readFile(new URL('demos/dsmc/app.js', ROOT), 'utf8'),
+    readFile(new URL('demos/dg-fvm/app.js', ROOT), 'utf8'),
+  ]);
+  assert.match(css, /\.lab-layout\s*\{[\s\S]*grid-template-areas:\s*\n\s*"stage"\s*\n\s*"controls"/);
+  assert.match(css, /\.lab-controls\s*\{[\s\S]*display:\s*none/);
+  assert.match(css, /\.lab-controls\.mobile-controls-open\s*\{[\s\S]*display:\s*grid/);
+  assert.match(i18n, /export function bindMobileControls/);
+  assert.match(dsmc, /mobileControls\.sync\(\)/);
+  assert.match(dg, /mobileControls\.sync\(\)/);
 });
 
 test('legacy scientific controls and teaching panels are model-backed', async () => {
@@ -192,4 +209,48 @@ test('site and demo links do not assume deployment at the domain root', async ()
 test('Jekyll publishes the shared demo controller directory', async () => {
   const config = await readFile(new URL('_config.yml', ROOT), 'utf8');
   assert.match(config, /include:[\s\S]+lib\/chalkish\/examples\/boards\/_shared/);
+});
+
+test('primary navigation keeps the requested teaching order', async () => {
+  const nav = await readFile(new URL('_includes/nav.html', ROOT), 'utf8');
+  const orderedPaths = [
+    'pages/resources.md',
+    'pages/eucken.md',
+    'pages/paper-reviews.md',
+    'pages/cfd2025.md',
+    'pages/ml2025.md',
+    'pages/dsmc-demo.md',
+    'pages/fvm-demo.md',
+  ];
+
+  let previous = -1;
+  for (const path of orderedPaths) {
+    const position = nav.indexOf(path);
+    assert.ok(position > previous, `${path} is out of menu order`);
+    previous = position;
+  }
+  assert.doesNotMatch(nav, /sort:\s*["']title["']/);
+
+  const expectedLabels = [
+    ['pages/resources.md', 'Полезные ссылки'],
+    ['pages/eucken.md', 'О поправке Эйкена'],
+    ['pages/paper-reviews.md', 'Обзоры статей'],
+    ['pages/cfd2025.md', 'CFD 2026'],
+    ['pages/ml2025.md', 'ML 2026'],
+    ['pages/dsmc-demo.md', 'DSMC DEMO'],
+    ['pages/fvm-demo.md', 'DG/FV DEMO'],
+  ];
+  for (const [path, label] of expectedLabels) {
+    const source = await readFile(new URL(path, ROOT), 'utf8');
+    assert.match(source, new RegExp(`^nav_label:.*${label.replace('/', '\\/')}`, 'm'));
+  }
+});
+
+test('the two demo landing pages opt into the local MathJax bundle', async () => {
+  const [dsmc, dg] = await Promise.all([
+    readFile(new URL('pages/dsmc-demo.md', ROOT), 'utf8'),
+    readFile(new URL('pages/fvm-demo.md', ROOT), 'utf8'),
+  ]);
+  assert.match(dsmc, /^math:\s*true\s*$/m);
+  assert.match(dg, /^math:\s*true\s*$/m);
 });

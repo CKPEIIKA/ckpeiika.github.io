@@ -19,7 +19,7 @@ import {
   rewriteChalkLabel,
   rewriteChalkText,
 } from '../../lib/chalkish/examples/chalk-transition.js';
-import { bindLabLanguage, withCommonTranslations } from '../lab-i18n.js';
+import { bindLabLanguage, bindMobileControls, withCommonTranslations } from '../lab-i18n.js';
 import { RingHistory } from '../lab-parity.js';
 
 const i18n = bindLabLanguage(withCommonTranslations({
@@ -130,6 +130,7 @@ const i18n = bindLabLanguage(withCommonTranslations({
     'help.dg': 'Nx и Ny задают точное число ячеек. P0 соответствует методу конечных объёмов. В режиме уравнения Бюргерса пунктиром показано среднее по ячейке. Для клина пунктирные лучи задают слабое присоединённое решение соотношения тета-бета-Маха, если оно существует.',
   },
 }));
+const mobileControls = bindMobileControls({ translate: i18n.t });
 
 const CHALK_ERASE_DELAY_MS = 1250;
 
@@ -744,6 +745,7 @@ i18n.onChange(() => {
   localizeCanvas({ animate: true });
   updateDiagnostics({ animate: true });
   stageControls.sync();
+  mobileControls.sync();
   app.render();
 });
 
@@ -755,6 +757,7 @@ globalThis.addEventListener?.('pagehide', () => {
   analysisScene.clear();
   app.destroy();
   controller.dispose();
+  mobileControls.dispose();
 }, { once: true });
 
 localizeCanvas();
