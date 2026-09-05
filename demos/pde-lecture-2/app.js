@@ -117,7 +117,7 @@ function renderGallery() {
     equation.textContent = entry.equation;
     const status = document.createElement('small');
     status.textContent = entry.available ? copy().ready : copy().planned;
-    body.append(heading, equation, status);
+    body.append(heading, equation);
     card.append(picture, body);
     fragment.append(card);
     previews.push([canvas, entry]);
@@ -137,6 +137,8 @@ function selectedEntry() {
   return findPdeDemo(id);
 }
 
+let savedLesson = null;
+
 function route() {
   disposeActive();
   const entry = selectedEntry();
@@ -155,10 +157,11 @@ function route() {
   nodes.demoTitle.textContent = localized(entry.title, language);
   const shell = createPdeShell(nodes.host, entry, language);
   activeModule = entry.id === 'derivatives'
-    ? mountDerivativeDemo(shell, language)
-    : mountLessonDemo(shell, entry, language);
+    ? mountDerivativeDemo(shell, language, savedLesson)
+    : mountLessonDemo(shell, entry, language, savedLesson);
+  savedLesson = null;
   for (const element of nodes.host.querySelectorAll(
-    '.pde-concept > *, .pde-stage canvas, .pde-stage-footer > *, .pde-notice > *',
+    '.pde-equation',
   )) {
     markChalkTransition(element, 'write');
   }
@@ -169,7 +172,7 @@ let closing = false;
 function closeDemo() {
   if (closing) return;
   const chalkElements = [...nodes.host.querySelectorAll(
-    '.pde-concept > *, .pde-stage canvas, .pde-stage-footer > *, .pde-notice > *',
+    '.pde-equation',
   )];
   const reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   for (const element of chalkElements) markChalkTransition(element, 'erase');
@@ -179,7 +182,7 @@ function closeDemo() {
     globalThis.history.pushState(null, '', `${globalThis.location.pathname}${globalThis.location.search}`);
     route();
     nodes.galleryTitle.focus?.();
-  }, reducedMotion ? 0 : 1200);
+  }, reducedMotion ? 0 : 180);
 }
 
 function moveDemo(offset) {
@@ -197,6 +200,7 @@ nodes.locale.addEventListener('click', (event) => {
   const link = event.target.closest('[data-lang]');
   if (!link || link.dataset.lang === language) return;
   event.preventDefault();
+  savedLesson = activeModule?.snapshot?.() ?? null;
   language = link.dataset.lang;
   const url = new URL(globalThis.location.href);
   url.searchParams.set('lang', language);
@@ -207,7 +211,7 @@ nodes.locale.addEventListener('click', (event) => {
 });
 globalThis.addEventListener('hashchange', route);
 globalThis.addEventListener('site-theme-change', () => {
-  if (!nodes.gallery.hidden) renderGallery();
+  renderGallery();
 });
 globalThis.addEventListener('pagehide', () => {
   disposeActive();
@@ -217,7 +221,7 @@ document.addEventListener('keydown', (event) => {
   if (nodes.demo.hidden || event.altKey || event.ctrlKey || event.metaKey) return;
   const target = event.target;
   if (target instanceof HTMLElement
-    && (target.matches('input, select, textarea, button') || target.isContentEditable)) return;
+    && (target.matches('input, select, textarea') || target.isContentEditable)) return;
   const key = event.key.toLowerCase();
   if (key === 'q' || key === 'й') closeDemo();
   else if (event.key === 'ArrowLeft') moveDemo(-1);

@@ -14,8 +14,8 @@ import {
 } from '../demos/pde-lecture-2/lesson-models.js';
 import { LESSON_SPECS } from '../demos/pde-lecture-2/lesson-specs.js';
 
-function finiteArray(values) {
-  return [...values].every((value) => Number.isFinite(value) || Number.isNaN(value));
+function finiteArray(values, allowGaps = false) {
+  return values.some(Number.isFinite) && [...values].every(value => Number.isFinite(value) || (allowGaps && Number.isNaN(value)));
 }
 
 function mean(values) {
@@ -67,7 +67,7 @@ test('all curve lessons remain finite after deterministic evolution', () => {
     const model = new CurveLessonModel(id);
     for (let step = 0; step < 8; step += 1) model.step(1 / 120);
     for (const panel of model.panels) {
-      for (const curve of panel.curves) assert.ok(finiteArray(curve.data), id);
+      for (const curve of panel.curves) assert.ok(finiteArray(curve.data, panel.label === 'x–t'), id);
     }
   }
 });
@@ -78,7 +78,7 @@ test('two-dimensional lesson fields step without losing their visible state', ()
     model.step(1 / 60);
     assert.equal(model.data.length, model.columns * model.rows, id);
     assert.ok(model.data.some(Number.isFinite), id);
-    assert.ok(finiteArray(model.data), id);
+    assert.ok(finiteArray(model.data, id === 'geometry'), id);
   }
 });
 
@@ -93,11 +93,11 @@ test('control-volume bookkeeping satisfies accumulation identity', () => {
   assert.ok(Math.abs(model.stored - (stored + 0.2 * model.rate)) < 1e-12);
 });
 
-test('linear shallow-water evolution approximately conserves mean height', () => {
+test('nonlinear shallow-water evolution conserves mean height', () => {
   const model = new ShallowWaterLessonModel();
   const initial = mean(model.height);
   for (let step = 0; step < 12; step += 1) model.step(1 / 240);
-  assert.ok(Math.abs(mean(model.height) - initial) < 2e-3);
+  assert.ok(Math.abs(mean(model.height) - initial) < 2e-6);
   assert.ok(model.data.every(Number.isFinite));
 });
 
@@ -107,7 +107,7 @@ test('pressure correction leaves a small finite divergence', () => {
   let maximum = 0;
   for (const value of model.divergence) maximum = Math.max(maximum, Math.abs(value));
   assert.ok(Number.isFinite(maximum));
-  assert.ok(maximum < 0.3, `max divergence ${maximum}`);
+  assert.ok(maximum < 1e-5, `max divergence ${maximum}`);
 });
 
 test('unlisted lecture page routes every card to an interactive module without server paths', async () => {
@@ -123,10 +123,10 @@ test('unlisted lecture page routes every card to an interactive module without s
   assert.match(html, /\.\.\/\.\.\/pages\/cfd2025\.html/);
   assert.match(html, /name="robots" content="noindex, nofollow"/);
   assert.doesNotMatch(html, /(?:src|href)="\//);
-  assert.match(app, /mountLessonDemo\(shell, entry, language\)/);
+  assert.match(app, /mountLessonDemo\(shell, entry, language, savedLesson\)/);
   assert.doesNotMatch(app + shell, /mountConceptRecord|module will be added|будет добавлен/);
   assert.match(controls, /createLessonModel\(entry\.id\)/);
-  assert.match(controls, /model\.step\(dt\)/);
+  assert.match(controls, /model\.step\(/);
   assert.match(shell, /board\.append\(concept, stage, stageFooter, notice\)/);
   assert.match(toolbar, /requestFullscreen/);
   assert.match(toolbar, /0\.25, 0\.5, 1, 2/);

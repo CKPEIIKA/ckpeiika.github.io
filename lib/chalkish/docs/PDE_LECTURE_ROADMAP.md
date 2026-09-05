@@ -22,6 +22,11 @@ on server-side routing.
 
 ## Modules
 
+Checked entries below mean that an interactive page exists. They are not a
+claim that every original TODO interaction or the entire acceptance gate has
+been satisfied. The [model contracts and audit](PDE_PRIMITIVES.md) record the
+equations actually used, tests, and limits.
+
 - [x] Derivative microscope: linked plots of `u`, `u_x`, and `u_xx`, including
   direct drawing and point probing.
 - [x] One field, three PDEs: transport, diffusion, and wave evolution from the
@@ -44,7 +49,7 @@ on server-side routing.
 - [x] Exact one-dimensional Euler Riemann problem and named wave regions.
 - [x] Coupled shallow-water fields `h`, `u`, and `v`.
 - [x] Incompressibility, pressure response, and divergence visualization.
-- [x] Advection-diffusion with local, pulsed, moving, and negative sources.
+- [x] Advection-diffusion with local, pulsed, manually positioned, and negative sources.
 - [x] Geometry comparison with obstacles and channel constrictions.
 - [x] Integral and differential conservation as the control volume shrinks.
 
@@ -52,13 +57,31 @@ on server-side routing.
 
 The baseline catalogue is interactive. These narrower improvements remain:
 
-- [ ] highlight the exact origin of a hovered characteristic;
+- [x] highlight the exact origin of a hovered characteristic, including variable speed;
 - [ ] add the optional `x-t` history under the wave field;
 - [ ] draw prescribed-value, prescribed-flux, and periodic boundary glyphs;
 - [ ] add movable conductors and interior obstacles to the Laplace module;
 - [ ] expose a brief tentative-velocity frame before pressure correction;
 - [ ] make geometry obstacles draggable with the pointer;
-- [ ] add point probes for numerical divergence and curl values.
+- [x] add pointer probes for divergence and curl values;
+- [ ] automatic moving sources and a simultaneous source–sink pair;
+- [ ] full incompressible momentum advection beyond the labeled Stokes lesson;
+- [ ] a flow-around-geometry lesson separate from the insulated diffusion lesson;
+- [ ] accessible keyboard-positioned probes and editable interior Laplace conductors;
+- [ ] additional material-derivative examples beyond the canonical traveling sine wave;
+
+## September 2026 refinement
+
+- [x] fixed labeled graph scales, responsive plot width, field color keys;
+- [x] pause at the initial state, explicit drawing action, meaningful visible controls;
+- [x] desktop panel beside the board; mobile settings collapsed and toolbar visible;
+- [x] no full-canvas write/erase mask during physical evolution;
+- [x] heat conservation, outgoing waves, exact affine characteristics;
+- [x] editable Euler states, vacuum cases, time inspection and named fronts;
+- [x] conservative nonlinear water equations and compatible pressure projection;
+- [x] steady Laplace solves after painting, without a fictitious time animation;
+- [x] volume-dependent conservation bookkeeping and moving tracer overlays;
+- [x] browser rendering regression page covering all 72 non-microscope presets.
 
 Each increment should keep one pure model, one Chalkish view, one thin DOM
 adapter, deterministic tests, and a browser screenshot check.

@@ -77,9 +77,9 @@ function outputRange(input, digits = 2) {
   return { wrapper, output, sync };
 }
 
-export function mountDerivativeDemo(shell, language) {
+export function mountDerivativeDemo(shell, language, saved = null) {
   const copy = COPY[language] ?? COPY.ru;
-  const model = new DerivativeMicroscopeModel();
+  const model = saved?.model ?? new DerivativeMicroscopeModel();
   const view = bindDerivativeMicroscopeView(model);
   const canvas = document.createElement('canvas');
   canvas.width = 1200;
@@ -89,6 +89,7 @@ export function mountDerivativeDemo(shell, language) {
   const app = mount(canvas, {
     scene: view.scene,
     camera: view.camera,
+    fitBounds: { minX: -6.3, maxX: 5.3, minY: -3.9, maxY: 3.9 },
     fixedStep: null,
     adaptiveQuality: false,
   });
@@ -161,7 +162,7 @@ export function mountDerivativeDemo(shell, language) {
 
   preset.addEventListener('change', () => {
     updateModel();
-    markChalkTransition(canvas, 'rewrite');
+    markChalkTransition(shell.equation, 'rewrite');
   });
   for (const input of [amplitude, width, position]) input.addEventListener('input', updateModel);
   for (const [input, linked] of [
@@ -197,7 +198,7 @@ export function mountDerivativeDemo(shell, language) {
     view.update();
     syncDrawingState();
     updateProbe(model.parameters.position);
-    markChalkTransition(canvas, 'rewrite');
+    markChalkTransition(shell.equation, 'rewrite');
   });
 
   let drawing = false;
@@ -257,7 +258,9 @@ export function mountDerivativeDemo(shell, language) {
   updateProbe(model.parameters.position);
 
   return Object.freeze({
+    snapshot() { return { model }; },
     dispose() {
+      shell.dispose();
       toolbar.dispose();
       observer.disconnect();
       app.destroy();

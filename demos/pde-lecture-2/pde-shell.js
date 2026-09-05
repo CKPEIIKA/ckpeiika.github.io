@@ -39,6 +39,21 @@ export function createPdeShell(host, entry, language) {
   notice.append(noticeTitle, prompt);
   board.append(concept, stage, stageFooter, notice);
   shell.append(controls, board);
+  const settingsToggle = element('button', 'pde-settings-toggle', language === 'ru' ? 'Параметры' : 'Settings');
+  settingsToggle.type = 'button';
+  const mobile = globalThis.matchMedia('(max-width: 760px)');
+  const syncSettings = () => {
+    controls.hidden = mobile.matches;
+    settingsToggle.setAttribute('aria-expanded', String(!controls.hidden));
+  };
+  syncSettings();
+  mobile.addEventListener('change', syncSettings);
+  settingsToggle.addEventListener('click', () => {
+    controls.hidden = !controls.hidden;
+    settingsToggle.setAttribute('aria-expanded', String(!controls.hidden));
+  });
+  // The toggle lives outside the board and never obscures the drawing.
+  shell.prepend(settingsToggle);
   host.replaceChildren(shell);
   return Object.freeze({
     shell,
@@ -53,5 +68,6 @@ export function createPdeShell(host, entry, language) {
     controls,
     notice,
     prompt,
+    dispose() { mobile.removeEventListener('change', syncSettings); },
   });
 }

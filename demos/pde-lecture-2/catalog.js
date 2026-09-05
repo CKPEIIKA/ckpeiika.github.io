@@ -12,8 +12,8 @@ export const PDE_DEMOS = Object.freeze([
       'The local slope of a field and the change of that slope.',
     ),
     prompt: text(
-      'Почему в вершине гладкого максимума uₓ = 0, но uₓₓ < 0?',
-      'Why is uₓ = 0 but uₓₓ < 0 at a smooth maximum?',
+      'Почему в вершине гауссова профиля uₓ = 0, но uₓₓ < 0?',
+      'Why is uₓ = 0 but uₓₓ < 0 at the peak of a Gaussian?',
     ),
     controls: text('форма, амплитуда, ширина, положение', 'shape, amplitude, width, position'),
   },
@@ -86,7 +86,7 @@ export const PDE_DEMOS = Object.freeze([
     title: text('Уравнение Лапласа', 'Laplace equation'), equation: '∇²φ = 0',
     meaning: text('Поле удовлетворяет пространственному ограничению сразу во всей области.', 'The field satisfies a spatial constraint throughout the domain.'),
     prompt: text('Почему изменение малого участка границы влияет на всю область?', 'Why does changing a small boundary segment affect the whole domain?'),
-    controls: text('граничные значения, проводники, препятствия, линии уровня', 'boundary values, conductors, obstacles, contours'),
+    controls: text('граничные значения, направление −∇φ', 'boundary values, direction −∇φ'),
   },
   {
     id: 'classification', todo: 9,
@@ -105,13 +105,13 @@ export const PDE_DEMOS = Object.freeze([
   {
     id: 'riemann', todo: 11,
     title: text('Задача Римана для уравнений Эйлера', 'Euler Riemann problem'), equation: 'Uₜ + F(U)ₓ = 0',
-    meaning: text('Один начальный разрыв распадается на ударную волну, контактный разрыв и волну разрежения.', 'One initial jump separates into a shock, contact discontinuity, and rarefaction.'),
+    meaning: text('Начальные состояния определяют ударные волны, волны разрежения и контактный разрыв.', 'Initial states determine shocks, rarefactions, and a contact discontinuity.'),
     prompt: text('Какие волны меняют давление, скорость и плотность?', 'Which waves change pressure, velocity, and density?'),
     controls: text('ρ_L, u_L, p_L, ρ_R, u_R, p_R, время', 'ρ_L, u_L, p_L, ρ_R, u_R, p_R, time'),
   },
   {
     id: 'shallow-water', todo: 12,
-    title: text('Связанная система: мелкая вода', 'Coupled system: shallow water'), equation: 'hₜ + ∇·(hu)=0,   (hu)ₜ + … = 0',
+    title: text('Связанная система: мелкая вода', 'Coupled system: shallow water'), equation: 'hₜ + ∇·(hv)=0; (hv)ₜ + ∇·(hv⊗v + gh²I/2)=0',
     meaning: text('Высота слоя и скорость изменяют друг друга.', 'Water depth and velocity change one another.'),
     prompt: text('Как возмущение высоты порождает движение воды?', 'How does a height disturbance generate water motion?'),
     controls: text('высота, начальная скорость, g, препятствие, возмущение', 'height, initial velocity, g, obstacle, disturbance'),
@@ -121,7 +121,7 @@ export const PDE_DEMOS = Object.freeze([
     title: text('Несжимаемость и давление', 'Incompressibility and pressure'), equation: '∇·u = 0',
     meaning: text('Давление согласует поле скорости с условием несжимаемости.', 'Pressure reconciles the velocity field with incompressibility.'),
     prompt: text('Как меняется давление после локального возмущения скорости?', 'How does pressure respond to a local velocity perturbation?'),
-    controls: text('импульс, вязкость, препятствие, скорость входа, отображаемое поле', 'momentum impulse, viscosity, obstacle, inflow speed, displayed field'),
+    controls: text('импульс, вязкость, средняя скорость, отображаемое поле', 'momentum impulse, viscosity, mean velocity, displayed field'),
   },
   {
     id: 'sources', todo: 15,
@@ -132,8 +132,8 @@ export const PDE_DEMOS = Object.freeze([
   },
   {
     id: 'geometry', todo: 14,
-    title: text('Роль геометрии', 'Geometry matters'), equation: 'УЧП + НУ + ГУ + область',
-    meaning: text('Форма области меняет градиенты, линии тока и след за препятствием.', 'Domain shape changes gradients, streamlines, and obstacle wakes.'),
+    title: text('Роль геометрии', 'Geometry matters'), equation: 'uₜ = D∇²u · ∂u/∂n = 0',
+    meaning: text('Тепло обходит изолированное препятствие; сужение замедляет обмен между частями области.', 'Heat spreads around an insulated obstacle; a narrowing slows exchange between regions.'),
     prompt: text('Что изменилось, если уравнение и параметры остались прежними?', 'What changed when the equation and parameters stayed the same?'),
     controls: text('форма и положение препятствия, сужение канала', 'obstacle shape and position, channel contraction'),
   },

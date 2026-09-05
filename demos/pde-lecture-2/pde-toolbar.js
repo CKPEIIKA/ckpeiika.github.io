@@ -97,6 +97,12 @@ export function createPdeToolbar(shell, language, options = {}) {
   const drawLabel = options.inject ? copy.inject : copy.draw;
   const draw = options.drawable ? toolButton(ICONS.draw, drawLabel) : null;
   if (draw) draw.setAttribute('aria-pressed', 'false');
+  if (draw) {
+    const label = document.createElement('span');
+    label.textContent = options.inject ? (language === 'ru' ? 'Импульс' : 'Impulse') : (language === 'ru' ? 'Рисовать' : 'Draw');
+    draw.append(label);
+    draw.classList.add('pde-draw-tool');
+  }
   const fullscreen = toolButton(ICONS.fullscreen, copy.fullscreen);
   fullscreen.classList.add('pde-fullscreen-tool');
 

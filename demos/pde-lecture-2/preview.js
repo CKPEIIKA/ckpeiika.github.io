@@ -7,7 +7,6 @@ import {
   Line,
   Rectangle,
   Scene,
-  TextLabel,
   chalkStyle,
   mount,
 } from '../../lib/chalkish/src/index.js';
@@ -105,8 +104,8 @@ function populate(scene, id, palette) {
   }
   if (id === 'wave') {
     curve(scene, (x) => Math.exp(-3 * (x + 1.6) ** 2) + Math.exp(-3 * (x - 1.6) ** 2), { color: CYAN });
-    arrow(scene, -0.5, -1.5, -2.5, -1.5);
-    arrow(scene, 0.5, -1.5, 2.5, -1.5);
+    arrow(scene, -0.5, -1.5, -2.5, -1.5, YELLOW);
+    arrow(scene, 0.5, -1.5, 2.5, -1.5, YELLOW);
     return;
   }
   if (id === 'characteristics' || id === 'nonlinearity') {
@@ -123,7 +122,7 @@ function populate(scene, id, palette) {
   if (id === 'advection-diffusion' || id === 'sources') {
     scene.add(new Circle(1.05, { x: id === 'sources' ? -1.3 : 0, style: style(CYAN, 1.5, { fill: '#72dce52c' }) }));
     if (id === 'sources') scene.add(new Circle(0.24, { x: -1.3, style: style(RED, 2, { fill: RED }) }));
-    for (let y = -1.5; y <= 1.5; y += 0.75) arrow(scene, -3.7, y, 3.4, y);
+    for (let y = -1.5; y <= 1.5; y += 0.75) arrow(scene, -3.7, y, 3.4, y, YELLOW);
     return;
   }
   if (id === 'vector-calculus' || id === 'incompressibility') {
@@ -140,13 +139,13 @@ function populate(scene, id, palette) {
   if (id === 'material-derivative') {
     curve(scene, (x) => Math.sin(1.5 * x), { color: CYAN, scale: 0.8 });
     scene.add(new Circle(0.16, { x: 0.8, y: 0.75, style: style(RED, 1.5, { fill: RED }) }));
-    arrow(scene, 0.8, 1.35, 2.4, 1.35);
+    arrow(scene, 0.8, 1.35, 2.4, 1.35, YELLOW);
     return;
   }
   if (id === 'conservation' || id === 'integral-conservation') {
     const size = id === 'integral-conservation' ? 2.1 : 3.2;
     scene.add(new Rectangle(size, 2.5, { style: style(CYAN, 1.8, { dash: [5, 4] }) }));
-    arrow(scene, -4, 0.7, -size * 0.5, 0.7);
+    arrow(scene, -4, 0.7, -size * 0.5, 0.7, CYAN);
     arrow(scene, size * 0.5, -0.7, 4, -0.7, RED);
     arrow(scene, 0, -1.8, 0, -0.4, YELLOW);
     return;
@@ -168,7 +167,7 @@ function populate(scene, id, palette) {
     for (const radius of [0.55, 1.15, 1.8]) {
       scene.add(new Circle(radius, { style: style(radius === 1.15 ? YELLOW : CYAN, 1.4) }));
     }
-    arrow(scene, 0, 0, 2.7, 0);
+    arrow(scene, 0, 0, 2.7, 0, YELLOW);
     return;
   }
   if (id === 'geometry') {
@@ -186,20 +185,11 @@ export function mountPdePreview(canvas, entry, { surface = 'board' } = {}) {
   if (!palette) throw new RangeError(`unknown PDE preview surface: ${surface}`);
   const scene = baseScene(palette);
   populate(scene, entry.id, palette);
-  scene.add(new TextLabel(entry.equation, {
-    x: 0,
-    y: 2.18,
-    maxWidth: 8,
-    zIndex: 4,
-    font: '11px "Schoolbell", cursive',
-    style: chalkStyle('dusty', {
-      fill: palette.primary, stroke: null, passes: 2, roughness: 0.25,
-    }),
-  }));
   const app = mount(canvas, {
     scene,
     camera: new Camera2D({ centerX: 0, centerY: 0, height: 6 }),
     fixedStep: null,
+    fitBounds: { minX: -4.5, maxX: 4.5, minY: -2.5, maxY: 2.5 },
     adaptiveQuality: false,
   });
   app.resize().render();

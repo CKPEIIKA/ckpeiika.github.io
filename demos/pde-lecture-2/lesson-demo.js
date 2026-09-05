@@ -1,9 +1,9 @@
 import { mount, screenToWorld } from '../../lib/chalkish/src/index.js';
-import { markChalkTransition } from '../../lib/chalkish/examples/chalk-transition.js';
 import { createLessonModel } from './lesson-models.js';
 import { lessonSpec, localizedSpec } from './lesson-specs.js';
 import { createPdeToolbar } from './pde-toolbar.js';
 import { bindLessonView } from './lesson-views.js';
+import { lessonPresentation, controlVisible } from './lesson-presentation.js';
 
 const COPY = Object.freeze({
   ru: Object.freeze({
@@ -72,11 +72,11 @@ function formatRange(value, step) {
   return Number(value).toFixed(decimals);
 }
 
-export function mountLessonDemo(shell, entry, language) {
+export function mountLessonDemo(shell, entry, language, saved = null) {
   const copy = COPY[language] ?? COPY.ru;
   const spec = lessonSpec(entry.id);
-  const model = createLessonModel(entry.id);
-  model.reset(spec.presets[0].value);
+  const model = saved?.model ?? createLessonModel(entry.id);
+  if (!saved) model.reset(spec.presets[0].value);
   const view = bindLessonView(model);
   const canvas = document.createElement('canvas');
   canvas.width = 1200;
@@ -84,10 +84,11 @@ export function mountLessonDemo(shell, entry, language) {
   canvas.setAttribute('aria-label', `${copy.canvas}: ${localizedSpec(entry.title, language)}`);
   shell.stage.append(canvas);
 
-  let paused = false;
+  let paused = saved?.paused ?? true;
+  let disposed = false;
   let readoutFrames = 0;
   const toolbar = createPdeToolbar(shell, language, {
-    animated: true,
+    animated: entry.id !== 'laplace',
     drawable: spec.paint || spec.inject,
     inject: spec.inject,
   });
@@ -95,13 +96,23 @@ export function mountLessonDemo(shell, entry, language) {
   const app = mount(canvas, {
     scene: view.scene,
     camera: view.camera,
+    fitBounds: view.bounds,
+    onResize: view.resize,
     fixedStep: 1 / 60,
     adaptiveQuality: false,
     update: ({ dt }) => {
-      if (!paused) model.step(dt);
-      view.update();
+      if (!paused) {
+        model.step(entry.id === 'riemann' ? dt * 0.12 : dt * 0.4);
+        view.update();
+        if (entry.id === 'riemann' && model.time >= 0.5) { paused = true; toolbar.setPaused(true); }
+        if (['characteristics', 'nonlinearity'].includes(entry.id) && model.time >= 2) { paused = true; toolbar.setPaused(true); }
+      }
       readoutFrames += 1;
-      if (readoutFrames % 6 === 0) readout.textContent = model.observable ?? '';
+      if (readoutFrames % 6 === 0) {
+        readout.textContent = model.observable ?? '';
+        const timeControl = controlRecords.get('time');
+        if (timeControl && !paused) { timeControl.input.value = model.time; timeControl.output.value = model.time.toFixed(3); }
+      }
     },
   });
 
@@ -112,6 +123,13 @@ export function mountLessonDemo(shell, entry, language) {
   preset.value = model.preset;
   const controlRecords = new Map();
   shell.controls.append(heading, makeControl(copy.preset, preset, copy.presetHelp));
+  const context = document.createElement('p');
+  context.className = 'pde-context';
+  shell.concept.append(context);
+  const units = document.createElement('p');
+  units.className = 'pde-units';
+  units.textContent = language === 'ru' ? 'Величины безразмерные. «Режим» восстанавливает исходную задачу.' : 'All quantities are nondimensional. Presets restore the original problem.';
+  shell.controls.append(units);
 
   for (const definition of spec.controls) {
     let record;
@@ -121,12 +139,14 @@ export function mountLessonDemo(shell, entry, language) {
       const input = selectInput(definition.options, language);
       record = { input, element: input, output: null };
     }
-    controlRecords.set(definition.name, { ...record, definition });
-    shell.controls.append(makeControl(
+    record.label = makeControl(
       localizedSpec(definition.label, language),
       record.element,
       localizedSpec(definition.help, language),
-    ));
+    );
+    controlRecords.set(definition.name, { ...record, definition });
+    record.input.setAttribute('aria-label', localizedSpec(definition.label, language));
+    shell.controls.append(record.label);
   }
 
   const drawToggle = toolbar.draw;
@@ -134,7 +154,8 @@ export function mountLessonDemo(shell, entry, language) {
   function syncControls() {
     preset.value = model.preset;
     for (const [name, record] of controlRecords) {
-      const value = model.parameters[name];
+      const value = name === 'time' ? model.time : model.parameters[name];
+      record.label.hidden = !controlVisible(entry.id, name, model.parameters);
       if (record.definition.type === 'checkbox') {
         record.input.checked = value !== false;
       } else {
@@ -143,27 +164,48 @@ export function mountLessonDemo(shell, entry, language) {
       if (record.output) record.output.value = formatRange(record.input.value, record.definition.step);
     }
     readout.textContent = model.observable ?? '';
+    const presentation = lessonPresentation(model, entry, language);
+    shell.equation.textContent = presentation.equation;
+    context.textContent = presentation.detail;
   }
 
   function redraw(phase = null) {
     view.update();
     app.render();
     readout.textContent = model.observable ?? '';
-    if (phase) markChalkTransition(canvas, phase);
+    if (phase) { syncControls(); view.resetRanges?.(); view.update(); app.render(); }
   }
 
-  toolbar.pause.addEventListener('click', () => {
+  const defaults = document.createElement('button');
+  defaults.type = 'button';
+  defaults.className = 'pde-defaults';
+  defaults.textContent = language === 'ru' ? 'Исходная задача' : 'Reset defaults';
+  defaults.addEventListener('click', () => {
+    const canonical = createLessonModel(entry.id);
+    Object.assign(model.parameters, canonical.parameters);
+    model.reset(spec.presets[0].value);
+    paused = true; toolbar.setPaused(true); syncControls(); redraw('rewrite');
+  });
+  shell.controls.append(defaults);
+
+  toolbar.pause?.addEventListener('click', () => {
     paused = !paused;
     toolbar.setPaused(paused);
   });
   toolbar.restart.addEventListener('click', () => {
-    model.reset(preset.value);
+    if (model.restart) model.restart();
+    else model.reset(preset.value);
+    paused = true;
+    toolbar.setPaused(true);
     syncControls();
     redraw('rewrite');
   });
-  toolbar.speed.addEventListener('change', () => app.setPlaybackRate(Number(toolbar.speed.value)));
+  toolbar.speed?.addEventListener('change', () => app.setPlaybackRate(Number(toolbar.speed.value)));
   preset.addEventListener('change', () => {
+    Object.assign(model.parameters, createLessonModel(entry.id).parameters);
     model.reset(preset.value);
+    paused = true;
+    toolbar.setPaused(true);
     syncControls();
     redraw('rewrite');
   });
@@ -176,7 +218,9 @@ export function mountLessonDemo(shell, entry, language) {
         : record.definition.type === 'checkbox'
           ? record.input.checked
           : record.input.value;
-      model.setParameter(name, value);
+      if (name === 'time') { model.time = value; model.setParameter('time', value); paused = true; toolbar.setPaused(true); }
+      else model.setParameter(name, value);
+      syncControls();
       if (record.output) record.output.value = formatRange(value, record.definition.step);
       redraw(eventName === 'change' ? 'rewrite' : null);
     });
@@ -187,13 +231,15 @@ export function mountLessonDemo(shell, entry, language) {
           Number(record.definition.minimum),
           Math.min(Number(record.definition.maximum), Number(record.output.value)),
         );
-        if (!Number.isFinite(value)) {
+        if (!Number.isFinite(value) || record.output.value.trim() === '') {
           record.output.value = formatRange(record.input.value, record.definition.step);
           return;
         }
         record.input.value = String(value);
         record.output.value = formatRange(value, record.definition.step);
+        if (name === 'time') model.time = value;
         model.setParameter(name, value);
+        syncControls();
         redraw('rewrite');
       });
     }
@@ -206,6 +252,7 @@ export function mountLessonDemo(shell, entry, language) {
     const active = drawToggle.getAttribute('aria-pressed') !== 'true';
     drawToggle.setAttribute('aria-pressed', String(active));
     canvas.classList.toggle('is-drawing', active && !spec.inject);
+    if (active) { paused = true; toolbar.setPaused(true); }
   });
 
   function worldPoint(event) {
@@ -233,7 +280,7 @@ export function mountLessonDemo(shell, entry, language) {
     } else if (typeof model.paintAt === 'function') {
       const point = view.fieldPoint(world.x, world.y);
       const paintValue = Number(model.parameters.amplitude ?? model.parameters.brushValue ?? 1);
-      model.paintAt(point.x, point.y, paintValue);
+      if (point.inside) model.paintAt(point.x, point.y, paintValue);
     }
     redraw();
   }
@@ -247,6 +294,21 @@ export function mountLessonDemo(shell, entry, language) {
   });
   canvas.addEventListener('pointermove', (event) => {
     if (pointerActive) applyPointer(event);
+    else if (entry.id === 'characteristics') {
+      const world = worldPoint(event), point = view.profilePoint(world.x, world.y);
+      if (point.inside) {
+        const probe = model.probe(point.x);
+        view.update(); app.render();
+        readout.textContent = `x = ${probe.x.toFixed(2)} ← x₀ = ${probe.origin.toFixed(2)} · u = ${probe.value.toFixed(3)}`;
+      }
+    }
+    else if (entry.id === 'vector-calculus') {
+      const world = worldPoint(event), point = view.fieldPoint(world.x, world.y);
+      if (point.inside) {
+        const probe = model.probeAt(point.x, point.y);
+        readout.textContent = `x ${probe.x.toFixed(2)} · y ${probe.y.toFixed(2)} · ${model.parameters.display === 'curl' ? '∂v/∂x − ∂u/∂y' : '∇·v'} = ${probe.value.toFixed(3)}`;
+      }
+    }
   });
   const releasePointer = (event) => {
     pointerActive = false;
@@ -257,12 +319,17 @@ export function mountLessonDemo(shell, entry, language) {
   canvas.addEventListener('pointercancel', releasePointer);
 
   syncControls();
+  toolbar.setPaused(paused);
   app.resize();
   redraw();
-  app.start();
+  document.fonts.ready.then(() => { if (!disposed) app.render(); });
+  if (entry.id !== 'laplace') app.start();
 
   return Object.freeze({
+    snapshot() { return { model, paused }; },
     dispose() {
+      disposed = true;
+      shell.dispose();
       toolbar.dispose();
       app.destroy();
       view.dispose();

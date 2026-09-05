@@ -4,6 +4,8 @@ import {
   CartesianGrid,
   Circle,
   CurveLayer,
+  Line,
+  SampledPlot,
   makeColorLut,
   ParticleCloud,
   Rectangle,
@@ -28,7 +30,7 @@ const CHALK_FIELD_MAP = makeColorLut([
 const CHALK_DIVERGING_MAP = makeColorLut([
   [0, '#527d99'],
   [0.28, '#82a8ad'],
-  [0.5, '#e9e6d6'],
+  [0.5, '#18261f'],
   [0.72, '#d7a17f'],
   [1, '#b85f54'],
 ]);
@@ -49,88 +51,131 @@ function maximumAbsolute(values) {
 
 export function bindCurveLessonView(model) {
   const panelCount = model.panels.length;
-  const centers = panelCount === 1 ? [0] : panelCount === 2 ? [1.55, -1.55] : [2.35, 0, -2.35];
-  const halfHeight = panelCount === 1 ? 2.45 : panelCount === 2 ? 1.12 : 0.78;
-  const cameraHeight = panelCount === 1 ? 6 : panelCount === 2 ? 7 : 7.4;
+  const centers = panelCount === 1 ? [0] : panelCount === 2 ? [1.9, -1.9] : [2.8, 0, -2.8];
+  const halfHeight = panelCount === 1 ? 2.1 : panelCount === 2 ? 1.3 : 0.85;
   const scene = new Scene({ background: '#0d1611' });
-  const camera = new Camera2D({ centerX: 0, centerY: 0, height: cameraHeight });
-  const worldX = new Float32Array(model.x.length);
-  for (let index = 0; index < worldX.length; index += 1) worldX[index] = model.x[index] * 5;
-  const curveRecords = [];
-  const scales = new Float32Array(panelCount);
-  const frame = style('#e8eadb8f', 1.1);
-  const grid = style('#d8dfd0', 0.55, { opacity: 0.13, passes: 1, roughness: 0.12 });
-
+  const camera = new Camera2D({ height: 9 });
+  const plots = [];
+  const pathPanel = model.id === 'characteristics' || model.id === 'nonlinearity';
+  let previousTime = -1;
+  let previousRevision = -1;
+  const timeCoordinates = Float32Array.from(model.x, x => x + 1);
+  const pathPositions = [];
+  const bounds = { minX: -6.1, maxX: 5.35, minY: centers.at(-1) - halfHeight - 0.4, maxY: centers[0] + halfHeight + 0.6 };
   for (let panelIndex = 0; panelIndex < panelCount; panelIndex += 1) {
     const panel = model.panels[panelIndex];
-    const centerY = centers[panelIndex];
-    scene.add(
-      new Rectangle(10, 2 * halfHeight, { x: 0, y: centerY, zIndex: -1, style: frame }),
-      new CartesianGrid({
-        columns: 10, rows: panelCount === 1 ? 6 : 2,
-        minX: -5, maxX: 5, minY: centerY - halfHeight, maxY: centerY + halfHeight,
-        zIndex: -2, style: grid,
-      }),
-      new TextLabel(panel.label, {
-        x: -4.85, y: centerY + halfHeight * 0.72, align: 'left', zIndex: 4,
-        font: '14px "Schoolbell", cursive',
-        style: chalkStyle('dusty', { fill: COLORS.yellow, stroke: null, passes: 2 }),
-      }),
-    );
+    const plot = new SampledPlot({ width: 10, height: 2 * halfHeight, y: centers[panelIndex], title: panel.label });
     for (const curve of panel.curves) {
-      const plotted = new Float32Array(model.x.length);
-      const layer = new CurveLayer({
-        x: worldX, y: plotted, count: plotted.length, zIndex: 2,
-        style: style(curve.color ?? COLORS.cyan, 1.7, curve.dash ? { dash: curve.dash } : {}),
-      });
-      curveRecords.push({ source: curve.data, plotted, layer, panelIndex });
-      scene.add(layer);
+      if (pathPanel && panelIndex === 1) {
+        const positions = new Float32Array(model.x.length);
+        pathPositions.push(positions);
+        plot.addCurve(positions, timeCoordinates, { stroke: curve.color, opacity: 0.65 });
+      } else plot.addCurve(model.x, curve.data, { stroke: curve.color, ...(curve.dash ? { dash: curve.dash, opacity: 0.55 } : {}) });
     }
+    if (model.id === 'diffusion' && panelIndex === 0) plot.addCurve(model.x, model.initial, { stroke: COLORS.white, dash: [5, 4], opacity: 0.45 });
+    plots.push(plot);
+    scene.add(plot);
+  }
+  const marker = new Circle(0.065, { zIndex: 5, visible: false, style: style(COLORS.red, 1.3, { fill: COLORS.red }) });
+  const originMarker = new Circle(0.065, { zIndex: 5, visible: false, style: style(COLORS.yellow, 1.3, { fill: COLORS.yellow }) });
+  const timeLine = new Line(-5, 0, 5, 0, { visible: pathPanel, style: style(COLORS.white, 1, { dash: [4, 4] }) });
+  const probeX = new Float32Array(41), probeY = new Float32Array(41);
+  const originLine = new CurveLayer({ x: probeX, y: probeY, visible: false, style: style(COLORS.yellow, 1.4) });
+  scene.add(marker, originMarker, timeLine, originLine);
+  const waveLines = model.id === 'riemann' ? Array.from({ length: 5 }, () => {
+    const line = new Line(0, -3.7, 0, 3.7, { visible: false, style: style(COLORS.yellow, 0.8, { opacity: 0.6, dash: [4, 4] }) });
+    scene.add(line);
+    return line;
+  }) : [];
+
+  function resetRanges() {
+    plots.forEach((plot, i) => {
+      let max = Math.max(0.1, ...model.panels[i].curves.map(curve => maximumAbsolute(curve.data)));
+      if (model.id === 'wave' && i === 1) max = Math.max(max, Number(model.parameters.c) * Number(model.parameters.amplitude) / Number(model.parameters.width));
+      if (model.id === 'riemann') max = model.plotBounds[i];
+      if (model.preset === 'drawing') max = Math.max(max, 2);
+      plot.setRanges([-1, 1], pathPanel && i === 1 ? [0, 2]
+        : model.id === 'riemann' && i !== 1 ? [0, max * 1.15] : [-max * 1.15, max * 1.15]);
+    });
   }
 
-  const marker = new Circle(0.08, {
-    zIndex: 5,
-    visible: false,
-    style: style(COLORS.red, 1.3, { fill: COLORS.red }),
-  });
-  scene.add(marker);
+  function place(object, x, y, panel = 0) {
+    const p = plots[panel].point(x, y);
+    object.setVisible(x >= -1 && x <= 1).setPosition(p[0], centers[panel] + p[1]);
+  }
 
   function update() {
-    for (let panelIndex = 0; panelIndex < panelCount; panelIndex += 1) {
-      let maximum = 0;
-      for (const record of curveRecords) {
-        if (record.panelIndex === panelIndex) maximum = Math.max(maximum, maximumAbsolute(record.source));
+    if (previousTime < 0 || model.time < previousTime || model.revision !== previousRevision) resetRanges();
+    previousRevision = model.revision;
+    previousTime = model.time;
+    for (let path = 0; path < pathPositions.length; path++) {
+      const origin = -0.8 + 1.6 * path / (pathPositions.length - 1);
+      const value = model.initial[Math.round((origin + 1) / 2 * (model.initial.length - 1))];
+      for (let i = 0; i < timeCoordinates.length; i++) {
+        const t = timeCoordinates[i];
+        const x = model.id === 'characteristics' ? model.characteristicPosition(origin, t)
+          : origin + (model.parameters.law === 'linear' ? 0.6 : value) * t;
+        pathPositions[path][i] = x;
       }
-      scales[panelIndex] = halfHeight * 0.8 / Math.max(0.25, maximum);
+      const count = pathPositions[path].findIndex(x => Math.abs(x) > 1);
+      plots[1].records[path].layer.setCount(count < 0 ? model.x.length : count);
     }
-    for (const record of curveRecords) {
-      const centerY = centers[record.panelIndex];
-      const scale = scales[record.panelIndex];
-      for (let index = 0; index < record.plotted.length; index += 1) {
-        const value = record.source[index];
-        record.plotted[index] = Number.isFinite(value) ? centerY + value * scale : Number.NaN;
+    plots.forEach(plot => plot.update());
+    waveLines.forEach((line, i) => {
+      const front = model.waveFronts[i];
+      const x = front ? front.speed * model.time : 2;
+      line.setVisible(model.time > 0 && Math.abs(x) <= 1);
+      if (front) {
+        const px = plots[0].point(x, 0)[0];
+        line.setEndpoints(px, centers.at(-1) - halfHeight, px, centers[0] + halfHeight);
+        line.setStyle({ stroke: front.kind === 'contact' ? COLORS.yellow : front.kind === 'shock' ? COLORS.red : COLORS.cyan });
       }
-      record.layer.markDataDirty();
+    });
+    if (model.marker) place(marker, model.marker.x, model.marker.y);
+    else marker.setVisible(false);
+    if (pathPanel) {
+      const t = Math.min(2, model.time);
+      const p = plots[1].point(0, t);
+      timeLine.setEndpoints(-plots[1].width / 2, centers[1] + p[1], plots[1].width / 2, centers[1] + p[1]);
     }
-    if (model.marker) {
-      const panel = model.marker.panel ?? 0;
-      marker.setVisible(true).setPosition(
-        model.marker.x * 5,
-        centers[panel] + model.marker.y * scales[panel],
-      );
-    } else marker.setVisible(false);
+    if (model.probePoint) {
+      const probe = model.probe(model.probePoint.x);
+      place(marker, probe.x, probe.value);
+      place(originMarker, probe.origin, probe.value);
+      for (let i = 0; i < probeX.length; i++) {
+        const t = Math.min(2, model.time) * i / (probeX.length - 1);
+        const point = plots[1].point(model.characteristicPosition(probe.origin, t), t);
+        probeX[i] = point[0]; probeY[i] = point[1] + centers[1];
+      }
+      originLine.setVisible(Math.abs(probe.origin) <= 1).markDataDirty();
+    }
     return view;
   }
 
   const view = Object.freeze({
     scene,
     camera,
+    bounds,
+    plots,
     update,
+    resetRanges,
+    resize({ width, height }) {
+      // Plot axes stretch independently; a physical 2-D domain keeps its aspect.
+      const w = Math.max(3, (bounds.maxY - bounds.minY) * width / height - 1.6);
+      for (const plot of plots) {
+        plot.width = w;
+        plot.title.setPosition(-w / 2, halfHeight + 0.3);
+        plot.setRanges(plot.xRange, plot.yRange);
+      }
+      bounds.minX = -w / 2 - 1;
+      bounds.maxX = w / 2 + 0.3;
+      update();
+    },
     profilePoint(worldXValue, worldYValue) {
       return {
-        x: Math.max(-1, Math.min(1, worldXValue / 5)),
-        value: (worldYValue - centers[0]) / scales[0],
-        inside: Math.abs(worldXValue) <= 5 && Math.abs(worldYValue - centers[0]) <= halfHeight,
+        x: Math.max(-1, Math.min(1, worldXValue * 2 / plots[0].width)),
+        value: plots[0].coordinates(worldXValue, worldYValue - centers[0])[1],
+        inside: Math.abs(worldXValue) <= plots[0].width / 2 && Math.abs(worldYValue - centers[0]) <= halfHeight,
       };
     },
     dispose() { scene.clear(); },
@@ -140,15 +185,15 @@ export function bindCurveLessonView(model) {
 }
 
 function fieldRange(model) {
-  if (model.id === 'laplace' || model.id === 'vector-calculus') return [-1, 1];
-  if (model.id === 'shallow-water' && model.parameters.display === 'height') return [0.7, 1.4];
+  if (model.id === 'laplace') return [-1, 1];
+  if (model.id === 'vector-calculus') return [-30, 30];
+  if (model.id === 'shallow-water' && model.parameters.display === 'height') return [0.5, 2];
   if (model.id === 'incompressibility' && model.parameters.display !== 'velocity') return [-1, 1];
-  if (model.id === 'sources') return [-0.2, 1.2];
+  if (model.id === 'sources') return [-2, 2];
   return [0, 1.2];
 }
 
 function chalkifyField(source, target, minimum, maximum) {
-  const tonalStep = (maximum - minimum) / 14;
   for (let index = 0; index < source.length; index += 1) {
     const value = source[index];
     if (!Number.isFinite(value)) {
@@ -159,10 +204,9 @@ function chalkifyField(source, target, minimum, maximum) {
     hash = Math.imul(hash ^ (hash >>> 15), hash | 1);
     hash ^= hash + Math.imul(hash ^ (hash >>> 7), hash | 61);
     hash = (hash ^ (hash >>> 14)) >>> 0;
-    const grain = ((hash & 255) / 255 - 0.5) * tonalStep * 2.2;
-    const quantized = minimum
-      + Math.round((value + grain - minimum) / tonalStep) * tonalStep;
-    target[index] = Math.max(minimum, Math.min(maximum, quantized));
+    // Multiplicative, weak, static grain: zero remains exactly zero.
+    const grain = 1 - (hash & 255) / 255 * 0.025;
+    target[index] = Math.max(minimum, Math.min(maximum, value * grain));
   }
 }
 
@@ -228,12 +272,30 @@ export function bindFieldLessonView(model) {
     style: style(COLORS.red, 1.2, { fill: COLORS.red }),
   });
   scene.add(obstacle, obstacle2, square, source);
+  const legendData = Float32Array.from({ length: 128 }, (_, i) => i / 127);
+  const legend = new ScalarField(legendData, 128, 1, {
+    minX: -0.65, maxX: 0.65, minY: -0.75, maxY: -0.71, min: 0, max: 1,
+    lut: field.lut, interpolation: 'linear',
+  });
+  const legendLabels = [-1, 0, 1].map((_, i) => new TextLabel('', {
+    x: -0.65 + 0.65 * i, y: -0.81, font: '13px "Schoolbell", cursive',
+    style: chalkStyle('dusty', { fill: COLORS.white, stroke: null, passes: 2 }),
+  }));
+  const fieldName = new TextLabel('', { x: -1, y: 0.66, align: 'left', font: '14px "Schoolbell", cursive', style: chalkStyle('dusty', { fill: COLORS.white, stroke: null }) });
+  scene.add(legend, ...legendLabels, fieldName);
+  const constrictions = [new Rectangle(0.45, 0.3, { visible: false, zIndex: 5, style: style(COLORS.white, 1.2, { fill: '#0d1611' }) }), new Rectangle(0.45, 0.3, { visible: false, zIndex: 5, style: style(COLORS.white, 1.2, { fill: '#0d1611' }) })];
+  scene.add(...constrictions);
 
   function update() {
     const [minimum, maximum] = fieldRange(model);
     chalkifyField(model.data, chalkData, minimum, maximum);
     field.markDataDirty();
     field.setRange(minimum, maximum);
+    const diverging = ['laplace', 'vector-calculus', 'sources'].includes(model.id) || (model.id === 'incompressibility' && model.parameters.display !== 'velocity');
+    field.lut = legend.lut = diverging ? CHALK_DIVERGING_MAP : CHALK_FIELD_MAP;
+    legend.markDataDirty();
+    [minimum, (minimum + maximum) / 2, maximum].forEach((v, i) => legendLabels[i].setText(String(Number(v.toPrecision(3)))));
+    fieldName.setText(model.id === 'laplace' ? 'φ · −∇φ →' : model.id === 'vector-calculus' ? (model.parameters.display === 'curl' ? '∂v/∂x − ∂u/∂y' : '∂u/∂x + ∂v/∂y') : model.parameters.display === 'height' ? 'h · v →' : model.parameters.display === 'pressure' ? 'p/ρ' : model.parameters.display === 'divergence' ? '∇·v' : model.parameters.display === 'velocity' || model.parameters.display === 'speed' ? '|v| · v →' : 'u · v →');
     const vectorsVisible = model.parameters.showVectors !== false;
     for (const record of arrows) {
       const velocity = model.velocityAt?.(record.x, record.y) ?? [0, 0];
@@ -253,6 +315,8 @@ export function bindFieldLessonView(model) {
     square.setVisible(geometry === 'square');
     const obstacleX = Number(model.parameters.obstacleX ?? 0);
     const obstacleY = Number(model.parameters.obstacleY ?? 0);
+    obstacle.setRadius(model.id === 'shallow-water' ? Math.sqrt(0.045) : geometry === 'two-cylinders' ? Math.sqrt(0.035) : Math.sqrt(0.075));
+    constrictions.forEach((box, i) => box.setVisible(geometry === 'narrowing').setPosition(obstacleX + 0.125, obstacleY + (i === 0 ? -0.45 : 0.45)));
     if (geometry === 'two-cylinders') {
       obstacle.setPosition(obstacleX - 0.22, obstacleY + 0.16);
       obstacle2.setPosition(obstacleX + 0.22, obstacleY - 0.16);
@@ -268,9 +332,10 @@ export function bindFieldLessonView(model) {
   const view = Object.freeze({
     scene,
     camera,
+    bounds: { minX: -1.04, maxX: 1.04, minY: -0.87, maxY: 0.71 },
     update,
     fieldPoint(worldX, worldY) {
-      return { x: Math.max(-1, Math.min(1, worldX)), y: Math.max(-0.6, Math.min(0.6, worldY)) };
+      return { x: worldX, y: worldY, inside: Math.abs(worldX) <= 1 && Math.abs(worldY) <= 0.6 };
     },
     dispose() { scene.clear(); },
   });
@@ -288,11 +353,11 @@ export function bindBalanceLessonView(model) {
   const outflow = new Arrow(1.5, -0.7, 4.7, -0.7, { headLength: 9, style: style(COLORS.red, 2) });
   const source = new Arrow(0, -2.5, 0, -1.3, { headLength: 9, style: style(COLORS.cyan, 2) });
   const stored = new TextLabel('', {
-    x: 0, y: 0, maxWidth: 2.8, font: '25px "Schoolbell", cursive',
+    x: 0, y: 0, font: '25px "Schoolbell", cursive',
     style: chalkStyle('dusty', { fill: COLORS.white, stroke: null, passes: 2 }),
   });
   const balance = new TextLabel('', {
-    x: 0, y: 2.25, maxWidth: 9.5, font: '17px "Schoolbell", cursive',
+    x: 0, y: 2.25, font: '17px "Schoolbell", cursive',
     style: chalkStyle('dusty', { fill: COLORS.yellow, stroke: null, passes: 2 }),
   });
   scene.add(box, inflow, outflow, source, stored, balance);
@@ -306,11 +371,11 @@ export function bindBalanceLessonView(model) {
     source.setVisible(Number(model.parameters.source) !== 0);
     source.setStyle({ stroke: Number(model.parameters.source) >= 0 ? COLORS.cyan : COLORS.red });
     stored.setText(`M = ${model.stored.toFixed(3)}`);
-    balance.setText(model.observable);
+    balance.setText(model.stored === 0 && model.id === 'conservation' ? 'M = 0 · dM/dt = 0' : `dM/dt = ${model.fluxIn.toFixed(2)} − ${model.fluxOut.toFixed(2)} + ${(Number(model.parameters.source) * (model.id === 'integral-conservation' ? Number(model.parameters.size) : 1)).toFixed(2)} = ${model.rate.toFixed(2)}`);
     return view;
   }
 
-  const view = Object.freeze({ scene, camera, update, dispose() { scene.clear(); } });
+  const view = Object.freeze({ scene, camera, bounds: { minX: -5, maxX: 5, minY: -2.8, maxY: 2.8 }, update, dispose() { scene.clear(); } });
   update();
   return view;
 }

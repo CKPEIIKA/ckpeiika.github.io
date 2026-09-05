@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PDE browser regression checks</title>
+<link rel="stylesheet" href="../lib/chalkish/examples/chalkboard-theme.css">
+<style>body { margin: 1rem; background: #d8dde3; color: #222; } canvas { width: min(90vw, 800px) !important; height: 400px !important; } output { display: block; white-space: pre-wrap; }</style>
+<h1>PDE browser checks</h1>
+<p>Open over HTTP. Imports the deployed modules directly; no test dependencies.</p>
+<canvas aria-label="Current test scene"></canvas>
+<output id="result">Running…</output>
+<script type="module">
+import { mount } from '../lib/chalkish/src/index.js';
+import { createLessonModel } from '../demos/pde-lecture-2/lesson-models.js';
+import { LESSON_SPECS } from '../demos/pde-lecture-2/lesson-specs.js';
+import { bindLessonView } from '../demos/pde-lecture-2/lesson-views.js';
+const canvas = document.querySelector('canvas'), output = document.querySelector('output');
+const failures = [];
+let count = 0;
+await document.fonts.ready;
+for (const [id, spec] of Object.entries(LESSON_SPECS)) {
+  for (const preset of spec.presets) {
+    let app, view;
+    try {
+      const model = createLessonModel(id).reset(preset.value);
+      view = bindLessonView(model);
+      app = mount(canvas, { scene: view.scene, camera: view.camera, fitBounds: view.bounds, onResize: view.resize, fixedStep: null });
+      app.render();
+      model.step(0.08); view.update(); app.render();
+      if (model.id === 'characteristics') { model.probe(-0.3); view.update(); app.render(); }
+      count++;
+    } catch (error) { failures.push(`${id}/${preset.value}: ${error.message}`); console.error(error); }
+    finally { app?.destroy(); view?.dispose(); }
+  }
+  output.textContent = `Checked ${count} presets…`;
+  await new Promise(requestAnimationFrame);
+}
+output.textContent = failures.length ? failures.join('\n') : `PASS: ${count} presets rendered before and after evolution.`;
+output.dataset.status = failures.length ? 'fail' : 'pass';
+if (failures.length) throw new Error(output.textContent);
+</script>
+</html>
