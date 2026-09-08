@@ -6,33 +6,33 @@ import { createPdeToolbar } from './pde-toolbar.js';
 
 const COPY = Object.freeze({
   ru: Object.freeze({
-    preset: 'Форма профиля',
-    presetHelp: 'Функция u(x), для которой вычисляются первая и вторая производные.',
+    preset: 'u(x)',
+    presetHelp: 'Форма поля u(x), для которой вычисляются uₓ и uₓₓ.',
     presets: Object.freeze({
       line: 'Прямая', parabola: 'Парабола', gaussian: 'Гауссов профиль',
       sine: 'Синус', 'smooth-step': 'Плавная ступень', drawing: 'Рисунок',
     }),
-    amplitude: 'Амплитуда',
-    amplitudeHelp: 'Вертикальный масштаб поля u.',
-    width: 'Ширина',
-    widthHelp: 'Характерная длина, на которой меняется поле.',
-    position: 'Положение',
-    positionHelp: 'Координата центра профиля.',
+    amplitude: 'A',
+    amplitudeHelp: 'Масштаб поля u.',
+    width: 'ℓ',
+    widthHelp: 'Характерная длина изменения u.',
+    position: 'x₀',
+    positionHelp: 'Центр профиля.',
     canvas: 'Три синхронизированных графика поля и его производных',
   }),
   en: Object.freeze({
-    preset: 'Profile shape',
-    presetHelp: 'The function u(x) whose first and second derivatives are shown.',
+    preset: 'u(x)',
+    presetHelp: 'The field shape u(x) whose uₓ and uₓₓ are shown.',
     presets: Object.freeze({
       line: 'Line', parabola: 'Parabola', gaussian: 'Gaussian',
       sine: 'Sine', 'smooth-step': 'Smooth step', drawing: 'Drawing',
     }),
-    amplitude: 'Amplitude',
-    amplitudeHelp: 'The vertical scale of the field u.',
-    width: 'Width',
-    widthHelp: 'The characteristic length over which the field changes.',
-    position: 'Position',
-    positionHelp: 'The coordinate of the profile center.',
+    amplitude: 'A',
+    amplitudeHelp: 'The scale of the field u.',
+    width: 'ℓ',
+    widthHelp: 'The characteristic length of change in u.',
+    position: 'x₀',
+    positionHelp: 'The profile center.',
     canvas: 'Three synchronized plots of a field and its derivatives',
   }),
 });
@@ -143,7 +143,6 @@ export function mountDerivativeDemo(shell, language, saved = null) {
       `u ${values.value.toFixed(3)}`,
       `uₓ ${values.first.toFixed(3)}`,
       `uₓₓ ${values.second.toFixed(3)}`,
-      `uₜ/D ${values.second.toFixed(3)}`,
     ].join('  ·  ');
     app.render();
   }

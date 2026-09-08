@@ -1,5 +1,5 @@
 import { markChalkTransition } from '../../lib/chalkish/examples/chalk-transition.js';
-import { PDE_DEMOS, findPdeDemo, localized } from './catalog.js';
+import { PDE_DEMOS, localized } from './catalog.js';
 import { mountDerivativeDemo } from './derivative-demo.js';
 import { mountLessonDemo } from './lesson-demo.js';
 import { createPdeShell } from './pde-shell.js';
@@ -7,7 +7,7 @@ import { mountPdePreview } from './preview.js';
 
 const COPY = Object.freeze({
   ru: Object.freeze({
-    documentTitle: 'Лекция 2 CFD — интерактивные УЧП',
+    documentTitle: 'Лекция 2 CFD: интерактивные УЧП',
     course: 'к странице курса',
     title: 'Лекция 2 CFD: уравнения в частных производных',
     catalogue: 'Каталог',
@@ -20,7 +20,7 @@ const COPY = Object.freeze({
     navigation: 'Навигация по демонстрациям',
   }),
   en: Object.freeze({
-    documentTitle: 'CFD Lecture 2 — interactive PDEs',
+    documentTitle: 'CFD Lecture 2: interactive PDEs',
     course: 'course page',
     title: 'CFD Lecture 2: partial differential equations',
     catalogue: 'Catalogue',
@@ -33,6 +33,10 @@ const COPY = Object.freeze({
     navigation: 'Demo navigation',
   }),
 });
+
+const VISIBLE_DEMOS = Object.freeze(
+  PDE_DEMOS.filter((entry) => entry.hidden !== true),
+);
 
 const nodes = Object.freeze({
   course: document.querySelector('[data-course-label]'),
@@ -97,7 +101,7 @@ function renderGallery() {
   disposePreviews();
   const fragment = document.createDocumentFragment();
   const previews = [];
-  for (const entry of PDE_DEMOS) {
+  for (const entry of VISIBLE_DEMOS) {
     const card = document.createElement('a');
     card.className = 'catalogue-card';
     card.href = `#${entry.id}`;
@@ -134,7 +138,7 @@ function renderGallery() {
 
 function selectedEntry() {
   const id = globalThis.location.hash.slice(1);
-  return findPdeDemo(id);
+  return VISIBLE_DEMOS.find((entry) => entry.id === id);
 }
 
 let savedLesson = null;
@@ -188,9 +192,9 @@ function closeDemo() {
 function moveDemo(offset) {
   if (closing) return;
   const current = selectedEntry();
-  const index = Math.max(0, PDE_DEMOS.findIndex((entry) => entry.id === current?.id));
-  const nextIndex = (index + offset + PDE_DEMOS.length) % PDE_DEMOS.length;
-  globalThis.location.hash = PDE_DEMOS[nextIndex].id;
+  const index = Math.max(0, VISIBLE_DEMOS.findIndex((entry) => entry.id === current?.id));
+  const nextIndex = (index + offset + VISIBLE_DEMOS.length) % VISIBLE_DEMOS.length;
+  globalThis.location.hash = VISIBLE_DEMOS[nextIndex].id;
 }
 
 nodes.close.addEventListener('click', closeDemo);

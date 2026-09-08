@@ -4,6 +4,7 @@ import { lessonSpec, localizedSpec } from './lesson-specs.js';
 import { createPdeToolbar } from './pde-toolbar.js';
 import { bindLessonView } from './lesson-views.js';
 import { lessonPresentation, controlVisible } from './lesson-presentation.js';
+import { lessonMathState } from './lesson-math-state.js';
 
 const COPY = Object.freeze({
   ru: Object.freeze({
@@ -110,6 +111,7 @@ export function mountLessonDemo(shell, entry, language, saved = null) {
       readoutFrames += 1;
       if (readoutFrames % 6 === 0) {
         readout.textContent = model.observable ?? '';
+        mathState.textContent = lessonMathState(model, entry, language);
         const timeControl = controlRecords.get('time');
         if (timeControl && !paused) { timeControl.input.value = model.time; timeControl.output.value = model.time.toFixed(3); }
       }
@@ -126,6 +128,10 @@ export function mountLessonDemo(shell, entry, language, saved = null) {
   const context = document.createElement('p');
   context.className = 'pde-context';
   shell.concept.append(context);
+  const mathState = document.createElement('p');
+  mathState.className = 'pde-math-state';
+  mathState.setAttribute('aria-live', 'polite');
+  shell.concept.append(mathState);
   const units = document.createElement('p');
   units.className = 'pde-units';
   units.textContent = language === 'ru' ? 'Величины безразмерные. «Режим» восстанавливает исходную задачу.' : 'All quantities are nondimensional. Presets restore the original problem.';
@@ -167,6 +173,7 @@ export function mountLessonDemo(shell, entry, language, saved = null) {
     const presentation = lessonPresentation(model, entry, language);
     shell.equation.textContent = presentation.equation;
     context.textContent = presentation.detail;
+    mathState.textContent = lessonMathState(model, entry, language);
   }
 
   function redraw(phase = null) {

@@ -63,7 +63,7 @@ export const PDE_DEMOS = Object.freeze([
   {
     id: 'vector-calculus', todo: 17,
     title: text('Дивергенция и ротор', 'Divergence and curl'), equation: '∇·v,   ∇×v',
-    meaning: text('Дивергенция измеряет локальное расширение, ротор — локальное вращение.', 'Divergence measures local expansion; curl measures local rotation.'),
+    meaning: text('Дивергенция измеряет локальное расширение, ротор: локальное вращение.', 'Divergence measures local expansion; curl measures local rotation.'),
     prompt: text('Где поле расширяется, сжимается и вращается?', 'Where does the field expand, contract, and rotate?'),
     controls: text('источник, сток, вихрь, сдвиг, точка измерения', 'source, sink, vortex, shear, probe point'),
   },
@@ -75,7 +75,7 @@ export const PDE_DEMOS = Object.freeze([
     controls: text('скорость, поле, неподвижный наблюдатель, движущаяся частица', 'velocity, field, fixed observer, moving particle'),
   },
   {
-    id: 'conservation', todo: 7,
+    id: 'conservation', hidden: true, todo: 7,
     title: text('Закон сохранения', 'Conservation law'), equation: 'uₜ + ∇·F = S',
     meaning: text('Накопление равно притоку минус отток плюс источники.', 'Accumulation equals inflow minus outflow plus sources.'),
     prompt: text('Согласуется ли изменение запаса с потоками через границу?', 'Does the stored amount agree with boundary fluxes?'),
@@ -138,7 +138,7 @@ export const PDE_DEMOS = Object.freeze([
     controls: text('форма и положение препятствия, сужение канала', 'obstacle shape and position, channel contraction'),
   },
   {
-    id: 'integral-conservation', todo: 19,
+    id: 'integral-conservation', hidden: true, todo: 19,
     title: text('От интегрального закона к локальному', 'Integral to differential conservation'),
     equation: 'd/dt ∫Ωu dV = −∫∂ΩF·n dS + ∫ΩS dV',
     meaning: text('Локальное уравнение возникает при рассмотрении всё меньшего контрольного объёма.', 'The local equation emerges as the control volume becomes smaller.'),

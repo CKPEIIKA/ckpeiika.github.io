@@ -258,7 +258,7 @@ export class CurveLessonModel {
       this.pathArrays = paths;
       return [
         { label: 'u(x,t)', curves: [curve(this.value, '#72dce5'), curve(this.initial, '#eeeada', [5, 4])] },
-        { label: 'x–t', curves: paths.map((data, index) => curve(data, index === 4 ? '#efd677' : '#ed8e79')) },
+        { label: 'x-t', curves: paths.map((data, index) => curve(data, index === 4 ? '#efd677' : '#ed8e79')) },
       ];
     }
     if (this.id === 'riemann') {
@@ -868,8 +868,8 @@ export class FieldLessonModel {
       }
     }
     const pe = Number(this.parameters.D) > 0 ? (2 * Number(this.parameters.speed) / Number(this.parameters.D)).toFixed(1) : '∞';
-    this.observable = this.id === 'laplace' ? '∇²φ = 0 · t —'
-      : `${this.id === 'advection-diffusion' ? `Pe = ${pe} · ` : ''}t ${this.time.toFixed(2)} · ⟨u⟩ ${count ? (mean / count).toFixed(3) : '—'}`;
+    this.observable = this.id === 'laplace' ? '∇²φ = 0 · ∂φ/∂t = 0'
+      : `${this.id === 'advection-diffusion' ? `Pe = ${pe} · ` : ''}t ${this.time.toFixed(2)} · ⟨u⟩ ${count ? (mean / count).toFixed(3) : '?'}`;
   }
 
   step(elapsed) {

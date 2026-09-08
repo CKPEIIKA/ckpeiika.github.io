@@ -110,7 +110,7 @@ test('pressure correction leaves a small finite divergence', () => {
   assert.ok(maximum < 1e-5, `max divergence ${maximum}`);
 });
 
-test('unlisted lecture page routes every card to an interactive module without server paths', async () => {
+test('lecture page routes every card to an interactive module without server paths', async () => {
   const [html, app, shell, controls, toolbar, preview, course] = await Promise.all([
     readFile(new URL('../demos/pde-lecture-2/index.html', import.meta.url), 'utf8'),
     readFile(new URL('../demos/pde-lecture-2/app.js', import.meta.url), 'utf8'),
@@ -131,7 +131,7 @@ test('unlisted lecture page routes every card to an interactive module without s
   assert.match(toolbar, /requestFullscreen/);
   assert.match(toolbar, /0\.25, 0\.5, 1, 2/);
   assert.match(preview, /removeProperty\('width'\)/);
-  assert.doesNotMatch(course, /pde-lecture-2|интерактивный каталог УЧП/i);
+  assert.match(course, /\/demos\/pde-lecture-2\/'\s*\|\s*relative_url/);
 });
 
 test('field chalkification is stable and does not add per-frame random noise', async () => {
