@@ -94,7 +94,7 @@ export function bindDerivativeMicroscopeView(model) {
     y: PANEL_CENTERS[index],
     align: 'right',
     zIndex: 4,
-    font: '18px "Schoolbell", cursive',
+    font: '18px "Neucha", "Shantell Sans", sans-serif',
     style: chalkStyle('dusty', {
       fill: [COLORS.value, COLORS.first, COLORS.second][index],
       stroke: null,

@@ -1,23 +1,24 @@
 @font-face {
-  font-family: "Schoolbell";
+  font-family: "Neucha";
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("./assets/fonts/schoolbell-regular.woff2") format("woff2");
+  src: url("./assets/fonts/neucha-regular.ttf") format("truetype");
 }
 
 @font-face {
-  font-family: "Walter Turncoat";
+  font-family: "Shantell Sans";
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("./assets/fonts/walter-turncoat-regular.woff2") format("woff2");
+  src: url("./assets/fonts/shantell-sans-regular.ttf") format("truetype");
 }
 
 :root {
-  --font-chalk: "Schoolbell", "Comic Sans MS", cursive;
-  --font-chalk-label: "Walter Turncoat", "Arial Narrow", sans-serif;
-  --font-board-ui: "Schoolbell", "Comic Sans MS", cursive;
+  --font-chalk: "Neucha", "Shantell Sans", sans-serif;
+  --font-chalk-clean: "Shantell Sans", sans-serif;
+  --font-chalk-label: var(--font-chalk-clean);
+  --font-board-ui: "Open Sans", Arial, sans-serif;
   --board-black: #101411;
   --board-green: #152c21;
   --board-green-deep: #0c1a14;

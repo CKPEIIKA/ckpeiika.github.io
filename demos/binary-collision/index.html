@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark"><meta name="description" content="Трёхмерная лаборатория бинарного столкновения: прицельный параметр, цилиндр столкновений, углы рассеяния, сечения и межмолекулярные потенциалы.">
+<title>Бинарное столкновение · Chalkish</title>
+<script src="../theme-init.js"></script>
+<link rel="stylesheet" href="../../assets/fonts/open-sans/open-sans.css">
+<link rel="stylesheet" href="../../lib/chalkish/examples/chalkboard-theme.css">
+<link rel="stylesheet" href="../../lib/chalkish/examples/reference-labs.css">
+<link rel="stylesheet" href="../lab-overrides.css">
+<link rel="stylesheet" href="lab.css">
+</head>
+<body class="collision-lab">
+<header class="lab-header">
+  <a class="board-home" href="../../pages/physico-chemical-gas-dynamics-2026.html" aria-label="Вернуться к странице курса" data-i18n-aria-label="nav.course"><span aria-hidden="true">←</span></a>
+  <h1 data-i18n="page.title">Бинарное столкновение</h1>
+  <div class="header-tools">
+    <button class="demo-theme-toggle" type="button" data-theme-toggle aria-label="Включить светлую тему" title="Включить светлую тему">☾</button>
+    <nav class="locale-switch" data-locale-switch aria-label="Язык" data-i18n-aria-label="locale.label"><a href="?lang=en" data-lang="en" lang="en">EN</a><span aria-hidden="true">/</span><a href="?lang=ru" data-lang="ru" lang="ru">RU</a></nav>
+  </div>
+</header>
+<nav id="chapters" class="chapters" aria-label="Разделы лаборатории"></nav>
+<main class="workspace">
+  <section class="board-column" aria-label="Визуализация и измерения">
+    <div class="board" id="board">
+      <button id="boardFullscreenButton" class="widget-fullscreen" type="button" title="Полный экран сцены" aria-label="Полный экран сцены" data-i18n-title="stage.enterFullscreen" data-i18n-aria-label="stage.enterFullscreen" aria-pressed="false"><svg data-stage-icon class="stage-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="expand-glyph" d="M4 9V4H9M15 4H20V9M20 15V20H15M9 20H4V15"/><path class="collapse-glyph" d="M9 4V9H4M15 4V9H20M20 15H15V20M4 15H9V20"/></svg></button>
+      <canvas id="stage" tabindex="0" aria-label="Трёхмерная сцена. Перетаскивание вращает камеру; колесо изменяет масштаб."></canvas>
+      <div id="sceneReadout" class="scene-readout" aria-live="off"></div>
+      <div class="camera-bar" role="group" aria-label="Положение камеры"><button id="view3d" class="active" title="Объёмный вид" aria-label="Объёмный вид" aria-pressed="true"><svg data-stage-icon class="stage-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3 20 7.5v9L12 21l-8-4.5v-9L12 3Z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/></svg></button><button id="viewPlane" title="В плоскости столкновения" aria-label="В плоскости столкновения" aria-pressed="false"><svg data-stage-icon class="stage-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 6h16v12H4z"/><path d="m4 18 16-12"/></svg></button><button id="viewFront" title="Смотреть вдоль входящей скорости" aria-label="Смотреть вдоль входящей скорости" aria-pressed="false"><svg data-stage-icon class="stage-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 12h16M7 7l-3 5 3 5M17 7l3 5-3 5"/></svg></button><button id="perspective" title="Переключить проекцию" aria-label="Переключить проекцию" aria-pressed="false"><svg data-stage-icon class="stage-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 8V4h4M16 4h4v4M20 16v4h-4M8 20H4v-4"/></svg></button></div>
+    </div>
+    <div class="transport"><button id="playButton" class="play-button" title="Пуск / пауза (пробел)" aria-label="Воспроизвести" data-i18n-title="stage.play"><svg data-stage-icon class="stage-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="pause-glyph" d="M7 5V19M17 5V19"/><path class="play-glyph" d="M8 5L19 12L8 19Z"/></svg></button><button id="rewindButton" title="В начало движения" aria-label="В начало движения" data-i18n-title="stage.resetView" data-i18n-aria-label="stage.resetView"><svg data-stage-icon class="stage-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7v5h5"/><path d="M4.5 12a7.5 7.5 0 1 1 2.2 5.3"/></svg></button><label class="scrub-label" for="timeSlider">Ход опыта</label><input type="range" id="timeSlider" min="0" max="1" step="0.001" value="0.4" aria-label="Положение на временной шкале"><output id="timeValue">40%</output><select id="speed" aria-label="Скорость воспроизведения"><option value=".5">½×</option><option value="1" selected>1×</option><option value="2">2×</option></select></div>
+    <section id="plotPanel" class="plot-panel"><div class="plot-heading"><span id="plotTitle">Измерение</span><div id="plotSwitch" hidden><button data-plot="deflection" class="active">Θ(b)</button><button data-plot="dcs">dσ/dΩ</button></div><span id="plotHint"></span><button id="plotFullscreenButton" class="widget-fullscreen" type="button" title="Полный экран графика" aria-label="Полный экран графика" data-i18n-title="stage.enterFullscreen" data-i18n-aria-label="stage.enterFullscreen" aria-pressed="false"><svg data-stage-icon class="stage-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="expand-glyph" d="M4 9V4H9M15 4H20V9M20 15V20H15M9 20H4V15"/><path class="collapse-glyph" d="M9 4V9H4M15 4V9H20M20 15H15V20M4 15H9V20"/></svg></button></div><canvas id="plot" aria-label="Связанный количественный график"></canvas></section>
+    <div class="diagnostics" hidden><span id="diagnosticLeft"></span><span id="diagnosticRight"></span></div>
+  </section>
+  <aside class="lesson" aria-label="Пояснения и параметры">
+    <div class="lesson-scroll">
+    <h1 id="lessonTitle"></h1>
+    <div id="steps" class="steps" aria-label="Шаги объяснения"></div>
+    <h2 id="stepTitle"></h2>
+    <div id="explanation" class="explanation"></div>
+    <div id="equations" class="equations"></div>
+    <div id="observation" class="observation"></div>
+    <section class="controls" aria-label="Параметры столкновения">
+      <div class="control-heading">Параметры <button id="resetButton" title="Вернуть параметры текущего шага" aria-label="Вернуть параметры текущего шага"><svg data-stage-icon class="stage-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 12a8 8 0 1 0 2.3-5.6"/><path d="M4 5v6h6"/></svg></button></div>
+      <div id="modelControl" class="control"><label for="model">Потенциал</label><select id="model"><option value="hs">Твёрдые сферы</option><option value="ipl">Степенное отталкивание</option><option value="sutherland">Сазерленд</option><option value="lj">Леннард-Джонс</option><option value="coulomb">Кулоновское отталкивание</option></select></div>
+      <div id="bControl" class="control"><label for="b"><span id="bLabel">b / d</span><output id="bValue"></output></label><input type="range" id="b" min="0" max="1.3" step=".001" value=".65"></div>
+      <div id="energyControl" class="control"><label for="energy">E / ε <output id="energyValue"></output></label><input type="range" id="energy" min="-1.09691" max=".90309" step=".002" value="0"></div>
+      <div id="phiControl" class="control"><label for="phi">Азимут φ <output id="phiValue"></output></label><input type="range" id="phi" min="0" max="360" step="1" value="28"></div>
+      <div id="massControl" class="control"><label for="mass">Отношение масс m₁ / m₂ <output id="massValue"></output></label><input type="range" id="mass" min=".25" max="4" step=".05" value="1"></div>
+      <div id="widthControl" class="control"><label for="width">Ширина кольца Δb / d <output id="widthValue"></output></label><input type="range" id="width" min=".012" max=".25" step=".002" value=".10"></div>
+      <div id="powerControl" class="control"><label for="power">Показатель n <output id="powerValue"></output></label><input type="range" id="power" min="4" max="24" step="1" value="12"></div>
+      <div id="collisionModelControl" class="control"><label for="collisionModel">Модель столкновения</label><select id="collisionModel"><option value="hs">HS</option><option value="vhs">VHS</option><option value="vss">VSS</option></select></div>
+      <div id="alphaControl" class="control"><label for="alpha">Параметр рассеяния α <output id="alphaValue"></output></label><input type="range" id="alpha" min="1" max="3" step=".02" value="1.5"></div>
+      <div id="omegaControl" class="control"><label for="omega">Показатель вязкости ω <output id="omegaValue"></output></label><input type="range" id="omega" min=".5" max="1" step=".01" value=".75"></div>
+      <div id="countControl" class="control count-control"><label for="count">Число частиц</label><select id="count"><option>200</option><option selected>800</option><option>2400</option></select><button id="seedButton" title="Новая воспроизводимая выборка">Новая выборка</button></div>
+      <div id="precisionControl" class="precision-control" hidden><label>Точное b / <span id="precisionUnit">d</span><input id="exactB" type="number" min="0" max="3.1" step="any"></label><label id="exactEnergyControl">Точное E / ε<input id="exactEnergy" type="number" min=".08" max="8" step="any"></label></div>
+      <div id="presets" class="presets"><button data-preset="weak">Слабое отклонение</button><button data-preset="rainbow">Радуга</button><button data-preset="orbit">Орбитирование</button></div>
+      <label id="compareControl" class="check-control"><input type="checkbox" id="compare"> Наложить другие потенциалы</label>
+      <label id="wrongControl" class="check-control"><input type="checkbox" id="wrongSampling"> Равномерно по b: показать ошибку</label>
+    </section>
+    </div>
+    <div class="lesson-bottom"><button id="prevButton" title="Предыдущий шаг (←)" aria-label="Предыдущий шаг">‹</button><span id="pageCount"></span><button id="nextButton" class="primary" title="Следующий шаг (→)" aria-label="Следующий шаг">›</button></div>
+  </aside>
+</main>
+<dialog id="helpDialog"><div class="dialog-heading"><h2>Соглашения и управление</h2><button id="closeHelp" aria-label="Закрыть">✕</button></div><div class="help-content">
+<p>Во всех сценах <b>g = v₁ − v₂</b> направлена вдоль +x до столкновения. <b>b</b>: расстояние от центра взаимодействия до входящей асимптоты. <b>χ ∈ [0, π]</b>: угол между входящим и выходящим направлениями относительной скорости. <b>φ</b>: азимут плоскости столкновения, отсчитываемый от +y к +z вокруг +x.</p>
+<p>Для твёрдых сфер <b>d = R₁ + R₂</b>: расстояние между центрами при касании, а не радиус каждой молекулы. В относительной задаче нарисована сфера исключения радиуса d. Для Леннарда-Джонса ℓ₀: расстояние, где U = 0; минимум достигается при r = 2<sup>1/6</sup>ℓ₀.</p>
+<p>Динамические сцены с потенциалами показаны в приведённых единицах: ℓ₀ = ε = μ = 1. E = g²/2 задана на бесконечности. Энергия и момент количества движения сохраняются; частицы не теряют энергию и не остаются связанными после упругого столкновения.</p>
+<p>Для гладких потенциалов решается уравнение Ньютона методом Дормана-Принса 5(4). Кривые Θ(b) вычисляются независимо, радиальной квадратурой. Вблизи критической орбиты задача чувствительна к параметрам; гладкая линия между редкими отсчётами не заменяет уточнения сетки.</p>
+<p>Распределение по телесному углу строится в равных интервалах cos χ. Для LJ/IPL полное геометрическое сечение не подменяется площадью конечного пучка. На графике таких потенциалов явно указан срез b ≤ b<sub>max</sub>. Параметры VHS/VSS нормированы при g<sub>ref</sub> = √2; это не таблица параметров конкретного газа.</p>
+<p><b>Управление:</b> стрелки: шаги; Shift + стрелки: разделы; пробел: пуск/пауза; R: сброс. Колесо: масштаб; перетаскивание: вращение. Щелчок по входному диску меняет b и φ; щелчок по графику Θ(b) выбирает траекторию. «Состояние» сохраняет параметры в ссылке; CSV содержит единицы и параметры расчёта.</p>
+<h3>Источники</h3>
+<p><a href="https://qiweb.tudelft.nl/mecharela/scattering/" target="_blank" rel="noopener">TU Delft: Scattering</a>: кольцо прицельных параметров, телесный угол, дифференциальное сечение.</p>
+<p><a href="https://sparta.github.io/doc/collide.html" target="_blank" rel="noopener">SPARTA: collide</a>: разграничение HS, VHS и VSS. G. A. Bird, <i>Molecular Gas Dynamics and the Direct Simulation of Gas Flows</i> (1994), §§ 2.6-2.7.</p>
+<p>Книжный контекст курса: М. Н. Коган, <i>Динамика разреженного газа</i>; G. M. Kremer, <i>An Introduction to the Boltzmann Equation and Transport Processes in Gases</i> (2010). Конкретные страницы не указываются без сверки издания.</p>
+<p class="smallprint">3D-модуль добавлен к Chalkish отдельным API и не изменяет существующее 2D-ядро. Лаборатория и модуль работают без внешних библиотек и сетевых запросов.</p>
+</div></dialog>
+<noscript><p class="noscript">Для лаборатории необходим JavaScript.</p></noscript>
+<script type="module" src="../theme.js"></script>
+<script type="module" src="app.js"></script>
+</body></html>

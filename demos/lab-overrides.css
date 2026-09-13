@@ -1,11 +1,28 @@
+@font-face {
+  font-family: "Neucha";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../lib/chalkish/examples/assets/fonts/neucha-regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Shantell Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../lib/chalkish/examples/assets/fonts/shantell-sans-regular.ttf") format("truetype");
+}
+
 :root {
   color-scheme: light;
   --site-background: #d8dde3;
   --site-accent: #9f2d20;
   --site-text: #24282c;
   --site-rule: #9f2d20;
-  --font-chalk: "Schoolbell", "Comic Sans MS", cursive;
-  --font-chalk-label: "Walter Turncoat", "Arial Narrow", sans-serif;
+  --font-chalk: "Neucha", "Shantell Sans", sans-serif;
+  --font-chalk-clean: "Shantell Sans", sans-serif;
+  --font-chalk-label: var(--font-chalk-clean);
   --font-board-ui: "Open Sans", Arial, sans-serif;
   --chalk-white: #f5f2e9;
   --chalk-dim: #c4cbc6;

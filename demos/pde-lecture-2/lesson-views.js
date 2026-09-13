@@ -278,10 +278,10 @@ export function bindFieldLessonView(model) {
     lut: field.lut, interpolation: 'linear',
   });
   const legendLabels = [-1, 0, 1].map((_, i) => new TextLabel('', {
-    x: -0.65 + 0.65 * i, y: -0.81, font: '13px "Schoolbell", cursive',
+    x: -0.65 + 0.65 * i, y: -0.81, font: '13px "Neucha", "Shantell Sans", sans-serif',
     style: chalkStyle('dusty', { fill: COLORS.white, stroke: null, passes: 2 }),
   }));
-  const fieldName = new TextLabel('', { x: -1, y: 0.66, align: 'left', font: '14px "Schoolbell", cursive', style: chalkStyle('dusty', { fill: COLORS.white, stroke: null }) });
+  const fieldName = new TextLabel('', { x: -1, y: 0.66, align: 'left', font: '14px "Neucha", "Shantell Sans", sans-serif', style: chalkStyle('dusty', { fill: COLORS.white, stroke: null }) });
   scene.add(legend, ...legendLabels, fieldName);
   const constrictions = [new Rectangle(0.45, 0.3, { visible: false, zIndex: 5, style: style(COLORS.white, 1.2, { fill: '#0d1611' }) }), new Rectangle(0.45, 0.3, { visible: false, zIndex: 5, style: style(COLORS.white, 1.2, { fill: '#0d1611' }) })];
   scene.add(...constrictions);
@@ -353,11 +353,11 @@ export function bindBalanceLessonView(model) {
   const outflow = new Arrow(1.5, -0.7, 4.7, -0.7, { headLength: 9, style: style(COLORS.red, 2) });
   const source = new Arrow(0, -2.5, 0, -1.3, { headLength: 9, style: style(COLORS.cyan, 2) });
   const stored = new TextLabel('', {
-    x: 0, y: 0, font: '25px "Schoolbell", cursive',
+    x: 0, y: 0, font: '25px "Neucha", "Shantell Sans", sans-serif',
     style: chalkStyle('dusty', { fill: COLORS.white, stroke: null, passes: 2 }),
   });
   const balance = new TextLabel('', {
-    x: 0, y: 2.25, font: '17px "Schoolbell", cursive',
+    x: 0, y: 2.25, font: '17px "Neucha", "Shantell Sans", sans-serif',
     style: chalkStyle('dusty', { fill: COLORS.yellow, stroke: null, passes: 2 }),
   });
   scene.add(box, inflow, outflow, source, stored, balance);
