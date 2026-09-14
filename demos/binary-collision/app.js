@@ -304,12 +304,13 @@ function drawStage(){
 }
 
 function chalkStroke(c){
-  const alpha=c.globalAlpha,width=c.lineWidth;
-  c.stroke();
-  if(width<.65||alpha===0)return;
-  c.save();c.globalAlpha=alpha*.18;c.lineWidth=Math.max(.45,width*.72);c.translate(.45,-.3);c.stroke();c.restore();
-  c.save();c.globalAlpha=alpha*.12;c.lineWidth=Math.max(.45,width*.58);c.translate(-.35,.25);c.stroke();c.restore();
-}
+    const alpha=c.globalAlpha,width=c.lineWidth,dash=c.getLineDash(),offset=c.lineDashOffset;
+    c.save();c.globalAlpha=alpha*.86;c.stroke();c.restore();
+    if(width<.65||alpha===0)return;
+    c.save();c.globalAlpha=alpha*.32;c.lineWidth=Math.max(.45,width*.72);c.translate(.45,-.3);c.setLineDash([Math.max(1.4,width*3.8),Math.max(1,width*1.1)]);c.stroke();c.restore();
+    c.save();c.globalAlpha=alpha*.22;c.lineWidth=Math.max(.45,width*.54);c.translate(-.35,.25);c.setLineDash([Math.max(.8,width*1.4),Math.max(1.5,width*2.2)]);c.stroke();c.restore();
+    c.setLineDash(dash);c.lineDashOffset=offset;
+  }
 function plotCanvas(){
   const c=plotContext,w=$('plot').clientWidth,h=$('plot').clientHeight,d=Math.min(2,devicePixelRatio||1);
   c.setTransform(d,0,0,d,0,0);c.globalAlpha=1;c.fillStyle=C.bg;c.fillRect(0,0,w,h);c.lineWidth=1;c.font='10px "Neucha", "Shantell Sans", sans-serif';c.textBaseline='alphabetic';c.setLineDash([]);return {c,w,h};
