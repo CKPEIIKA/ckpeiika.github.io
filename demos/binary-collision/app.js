@@ -25,6 +25,7 @@ function binaryCopy(locale, key) {
 }
 
 import {Vec3,Camera3D,Scene3D,ChalkRenderer3D,OrbitControls3D,clamp} from '../../lib/chalkish/src/collision-3d.js';
+import {CHALK_FONT_STACK,strokeChalkPath2D as chalkStroke} from '../../lib/chalkish/src/chalk.js';
 import {POTENTIALS,potential,radialForce,effectivePotential,hsAngle,vssAngle,vssDcs,vhsDiameter,labFromRelative,mulberry32,sampleDisk,scatterEnsemble,criticalOrbit,solveTrajectory,hardSphereTrajectory,trajectoryAt,deflectionCurve,areaBinnedDcs} from './physics.js';
 import {CHAPTERS,setChapterLanguage} from './chapters.js';
 import {bindLabLanguage,withCommonTranslations} from '../lab-i18n.js';
@@ -106,7 +107,7 @@ function updateText(){
 }
 function syncControls(){
   const c=state.chapter,explore=state.explore;
-  const visible={model:c===5||c===6,b:true,energy:c===5||c===6||c===8,phi:c!==0||state.step===2||explore,mass:c===0&&state.step<2,width:c===4||c===7,power:(c===5||c===6)&&state.model==='ipl',collisionModel:c===8,alpha:c===8&&state.collisionModel==='vss',omega:c===8&&state.collisionModel!=='hs',count:c>=7};
+  const visible={model:c===5||c===6,b:c!==8&&(c!==7||state.step===0),energy:c===5||c===6||c===8,phi:c!==8&&c!==7&&(c!==0||state.step===2||explore),mass:c===0&&state.step<2,width:c===4||(c===7&&state.step===0),power:(c===5||c===6)&&state.model==='ipl',collisionModel:c===8,alpha:c===8&&state.collisionModel==='vss',omega:c===8&&state.collisionModel!=='hs',count:c>=7};
   for(const [key,value]of Object.entries(visible))$(key+'Control').hidden=!value;
   $('compareControl').hidden=c!==5&&c!==6;$('presets').hidden=c!==6;$('wrongControl').hidden=c!==7;
   $('b').max=(c===5||c===6)&&state.model!=='hs'?3.1:c===1?1.65:c>=7?1:c===4?.98:1.15;
@@ -195,15 +196,15 @@ function twoBody(){
   else {scene.line([-4,0,0],[4,0,0],{color:C.dim,alpha:.16,dash:[4,6]});dashedRadius(p1,'r₁ − R',C.gold);}
 }
 function cylinderDrawing(){
-  const left=-3.1,right=3.1,selected=world(0,state.b);
+  const left=-3.1,right=3.1,t=clamp(state.time,0,1),progress=t*t*(3-2*t),shownB=state.step===1?state.b*progress:state.b,selected=world(0,shownB);
   scene.cylinder([left,0,0],[right,0,0],1,{color:C.cyan,fillAlpha:.026,alpha:.62});
   scene.line([left-.65,0,0],[right+.45,0,0],{color:C.ink,alpha:.5,dash:[4,4]});
   scene.arrow([-4,0,0],[-2.9,0,0],{color:C.ink,width:2});scene.label([-3.6,0,0],'g',{color:C.ink,size:21,dy:25});
   scene.annulus([left,0,0],[1,0,0],0,1,{color:C.cyan,fillAlpha:.05,alpha:.65,width:1.5});
   scene.line([left,0,0],[left,1,0],{color:C.cyan,width:2});scene.label([left,.52,0],'d',{color:C.cyan,size:22,dx:8,dy:-2});
-  scene.sphere(selected,state.step===0?.5:.11,{color:state.b<1?C.gold:C.red,shadow:'#6f6248'});
+  scene.sphere(selected,state.step===0?.5:.11,{color:shownB<1?C.gold:C.red,shadow:'#6f6248'});
   scene.line([0,0,0],selected,{color:C.gold,width:2});scene.label(V.mul(selected,.5),'b',{color:C.gold,size:21,dx:12,dy:2});
-  scene.label(selected,binaryCopy(document.documentElement.lang === "en" ? "en" : "ru", "centerTwo"),{color:state.b<1?C.gold:C.red,size:14,italic:false,dy:-22});
+  scene.label(selected,binaryCopy(document.documentElement.lang === "en" ? "en" : "ru", "centerTwo"),{color:shownB<1?C.gold:C.red,size:14,italic:false,dy:-22});
   if(state.step===0){
     const x=state.b<1?-Math.sqrt(Math.max(0,1-state.b*state.b)):-.25;
     // This sphere marks the last free-flight configuration; the dashed centerline
@@ -211,27 +212,43 @@ function cylinderDrawing(){
     scene.sphere([Math.min(x,-3.2+3.2*state.time),0,0],.5,{color:C.cyan});
     ghostSphere(selected,1,{alpha:.2});
   }
+  if(state.step===1){
+    const target=world(0,state.b);
+    scene.line([0,0,0],target,{color:C.dim,alpha:.35,dash:[3,5],width:1});
+    scene.point(target,2.7,{color:state.b<1?C.gold:C.red,alpha:.35});
+  }
   if(state.step===2){
-    const rng=mulberry32(54431);let inside=0;
-    for(let i=0;i<74;i++){const p=[-3+rng()*6,(rng()-.5)*3.45,(rng()-.5)*3.45],hit=Math.hypot(p[1],p[2])<1;inside+=hit?1:0;scene.point(p,hit?2.6:1.7,{color:hit?C.gold:C.dim,alpha:hit?.83:.25});}
-    scene.line([left,-1.55,0],[right,-1.55,0],{color:C.dim,width:1.1});
-    for(const x of [left,right])scene.line([x,-1.43,0],[x,-1.68,0],{color:C.dim,width:1.1});scene.label([-.1,-1.55,0],'g Δt',{color:C.ink,size:22,dx:-26,dy:26});
+    const sweepX=left+(right-left)*progress,rng=mulberry32(54431);
+    for(let i=0;i<74;i++){const p=[-3+rng()*6,(rng()-.5)*3.45,(rng()-.5)*3.45];if(p[0]>sweepX)continue;const hit=Math.hypot(p[1],p[2])<1;scene.point(p,hit?2.6:1.7,{color:hit?C.gold:C.dim,alpha:hit?.83:.25});}
+    scene.annulus([sweepX,0,0],[1,0,0],0,1,{color:C.gold,fillAlpha:.035,alpha:.68,width:1.2});
+    scene.line([left,-1.55,0],[sweepX,-1.55,0],{color:C.dim,width:1.1});
+    for(const x of [left,sweepX])scene.line([x,-1.43,0],[x,-1.68,0],{color:C.dim,width:1.1});scene.label([(left+sweepX)/2,-1.55,0],'g Δt',{color:C.ink,size:22,dx:-26,dy:26});
+    const pathEnd=state.b<1?-Math.sqrt(Math.max(0,1-state.b*state.b)):right,particle=world(left+(pathEnd-left)*progress,state.b);
+    scene.line(world(left,state.b),world(pathEnd,state.b),{color:state.b<1?C.gold:C.red,alpha:.55,dash:[5,4],width:1.4});
+    scene.sphere(particle,.13,{color:state.b<1?C.gold:C.red,shadow:'#6f6248'});
   }
 }
+function lessonProgress(){const t=clamp(state.time,0,1);return t*t*(3-2*t);}
+function angularState(){
+  const progress=lessonProgress(),targetChi=hsAngle(state.b),targetPhi=state.phi*DEG;
+  if(state.step===0)return {chi:hsAngle(state.b*progress),phi:targetPhi};
+  if(state.step===1)return {chi:targetChi,phi:(targetPhi+TAU*progress)%TAU};
+  return {chi:.04+(targetChi-.04)*progress,phi:targetPhi};
+}
 function angularDrawing(){
-  const chi=hsAngle(state.b),u=eb(),d=direction(chi),o=[0,0,0],R=2.5;
+  const {chi,phi}=angularState(),u=[0,Math.cos(phi),Math.sin(phi)],d=direction(chi,phi),o=[0,0,0],R=2.5;
   ghostSphere(o,R,{alpha:.14});scene.cone(o,[1,0,0],R,chi,{color:C.gold,fillAlpha:.021});
   axisLine([-3.8,0,0],[3.75,0,0],'x, g',C.dim);axisLine(o,[0,2.85,0],'y',C.muted);axisLine(o,[0,0,2.85],'z',C.muted);
   scene.polygon([[-3.1,0,0],[3.1,0,0],V.add([3.1,0,0],V.mul(u,2.7)),V.add([-3.1,0,0],V.mul(u,2.7))],{color:C.cyan,fill:C.cyan,alpha:.034,stroke:true,width:.6});
   scene.arrow(o,V.mul(d,R),{color:C.gold,width:2.65});scene.label(V.mul(d,R),"g′",{color:C.gold,size:23,dx:12,dy:-12});
-  scene.arc(o,[1,0,0],u,.95,0,chi,{color:C.gold,width:2});scene.label(V.mul(direction(chi/2),1.18),'χ',{color:C.gold,size:24,dx:4,dy:-4});
+  scene.arc(o,[1,0,0],u,.95,0,chi,{color:C.gold,width:2});scene.label(V.mul(direction(chi/2,phi),1.18),'χ',{color:C.gold,size:24,dx:4,dy:-4});
   if(state.step>=1){
     scene.circle(o,[1,0,0],1.6,{color:C.purple,alpha:.28,width:1});scene.arrow(o,V.mul(u,1.65),{color:C.purple,width:1.55});
-    scene.arc(o,[0,1,0],[0,0,1],1.5,0,state.phi*DEG,{color:C.purple,width:2});
-    scene.label([0,1.75*Math.cos(state.phi*DEG/2),1.75*Math.sin(state.phi*DEG/2)],'φ',{color:C.purple,size:24,dx:7,dy:-4});
+    scene.arc(o,[0,1,0],[0,0,1],1.5,0,phi,{color:C.purple,width:2});
+    scene.label([0,1.75*Math.cos(phi/2),1.75*Math.sin(phi/2)],'φ',{color:C.purple,size:24,dx:7,dy:-4});
   }
   if(state.step===2){
-    const lo=clamp(chi-.13,.004,PI-.01),hi=clamp(chi+.13,.01,PI-.004),ph=state.phi*DEG,dp=.42;
+    const lo=clamp(chi-.13,.004,PI-.01),hi=clamp(chi+.13,.01,PI-.004),ph=phi,dp=.42;
     const p=(th,phi)=>V.mul(direction(th,phi),R*1.012),N=12;
     for(let i=0;i<N;i++)for(let j=0;j<6;j++){
       const a=lo+(hi-lo)*i/N,b=lo+(hi-lo)*(i+1)/N,c=ph-dp/2+dp*j/6,e=ph-dp/2+dp*(j+1)/6;
@@ -242,7 +259,7 @@ function angularDrawing(){
     scene.label(V.mul(direction(chi,ph),R*1.17),'ΔΩ',{color:C.gold,size:20,dx:19,dy:17});
   }
 }
-function ringBounds(){return [clamp(state.b-state.width/2,0,1),clamp(state.b+state.width/2,0,1)];}
+function ringBounds(){const width=state.chapter===4&&state.step===0?state.width*lessonProgress():state.width;return [clamp(state.b-width/2,0,1),clamp(state.b+width/2,0,1)];}
 function mappedGeometry(ensembleMode=false){
   const left=[-2.55,0,0],right=[1.7,0,0],R=1.7,scale=1.48,d=dsmcDiameter(),alpha=dsmcAlpha();
   const diskRadius=scale*(state.chapter===8?d:1),[lo,hi]=ringBounds();
@@ -259,8 +276,8 @@ function mappedGeometry(ensembleMode=false){
   if(!ensembleMode){
     const chin=hsAngle(lo),chix=hsAngle(hi);
     if(state.step>=1){scene.sphericalBand(right,R,chix,chin,{color:C.gold,fillAlpha:.3});scene.cone(right,[1,0,0],R,hsAngle(state.b),{color:C.gold,fillAlpha:.01});}
-    const N=60;
-    for(let i=0;i<N;i++){
+    const N=60,visibleN=state.chapter===4&&state.step===0?Math.max(1,Math.floor(N*lessonProgress())):N;
+    for(let i=0;i<visibleN;i++){
       const ph=i*TAU/N,b=state.b,a=V.add(left,[0,diskRadius*b*Math.cos(ph),diskRadius*b*Math.sin(ph)]),z=V.add(right,V.mul(direction(hsAngle(b),ph),R));
       scene.point(a,2.4,{color:C.cyan,alpha:.9});if(state.step>=1)scene.point(z,2.4,{color:C.gold,alpha:.86});
       if(state.step>=1&&i%3===0){
@@ -272,15 +289,15 @@ function mappedGeometry(ensembleMode=false){
     scene.label([-.15,-2.35,0],'соответствие, не траектории',{color:C.muted,size:11,italic:false,dx:-70,dy:5});
   }else{
     const N=Math.floor(state.count*state.time),scaleInput=1.48;
-    for(let i=0;i<ensemble.hits.length;i++){
-      const h=ensemble.hits[i],onRing=h.b/d>=lo&&h.b/d<=hi&&state.chapter===7;
+    for(let i=0;i<N;i++){
+      const h=ensemble.hits[i],onRing=h.b/d>=lo&&h.b/d<=hi&&state.chapter===7&&state.step===0;
       const p=V.add(left,[0,scaleInput*h.b*Math.cos(h.phi),scaleInput*h.b*Math.sin(h.phi)]);
-      scene.point(p,onRing?2:1.25,{color:onRing?C.gold:C.cyan,alpha:i<N?.23:.48});
-      if(i<N){const out=V.add(right,V.mul(h.dir,R));scene.point(out,onRing?2.45:1.8,{color:onRing?C.cyan:C.gold,alpha:onRing?.96:.66});}
+      if(state.step<=1)scene.point(p,onRing?2.5:1.55,{color:state.wrongSampling?C.red:onRing?C.gold:C.cyan,alpha:onRing?.96:.58});
+      if(state.step>=1){const out=V.add(right,V.mul(h.dir,R));scene.point(out,1.9,{color:state.wrongSampling?C.red:C.gold,alpha:.72});}
     }
     const last=Math.max(0,N-1),h=ensemble.hits[last];
-    if(N>0&&h){scene.arrow(right,V.add(right,V.mul(h.dir,R)),{color:C.gold,alpha:.55,width:1.1});}
-    scene.arrow([-.8,0,0],[.05,0,0],{color:C.dim,alpha:.5,width:1.3});
+    if(state.step>=1&&N>0&&h){scene.arrow(right,V.add(right,V.mul(h.dir,R)),{color:C.gold,alpha:.55,width:1.1});}
+    if(state.step>=1)scene.arrow([-.8,0,0],[.05,0,0],{color:C.dim,alpha:.5,width:1.3});
     if(state.chapter===8){scene.circle(left,[1,0,0],1.48,{color:C.dim,alpha:.43,width:1.1,dash:[4,4]});scene.label(V.add(left,[0,-diskRadius-.2,0]),`d / dref = ${fmt(d,3)}`,{color:C.cyan,size:15,italic:false,dx:-44,dy:22});}
   }
   return {left,right,R,diskRadius};
@@ -295,7 +312,7 @@ function drawStage(){
   if(c===0)readout([['m₁ / m₂',fmt(state.mass)],['μ / m₂',fmt(state.mass/(state.mass+1),3),'cyan'],['система',state.step===0?'LAB':state.step===1?'CM':'r₁ − r₂']]);
   if(c===1)readout([['b / d',fmt(state.b,3),'cyan'],[binaryCopy(document.documentElement.lang === "en" ? "en" : "ru", "condition"),state.b<1?'b < d':'b ≥ d','gold'],['σT / d²','π']]);
   if(c===2)readout([['b / d',fmt(state.b,3),'cyan'],['χ',ang(chi),'gold'],['β',state.b<=1?ang(Math.asin(state.b)):'?']]);
-  if(c===3){const a=hsAngle(state.b),lo=clamp(a-.13,.004,PI-.01),hi=clamp(a+.13,.01,PI-.004);readout([['χ',ang(a),'gold'],['φ',fmt(state.phi,0)+'°','cyan'],[state.step===2?'ΔΩ / ср':'плоскость',state.step===2?fmt(.42*(Math.cos(lo)-Math.cos(hi)),3):'span(g, b)']]);}
+  if(c===3){const {chi:a,phi}=angularState(),lo=clamp(a-.13,.004,PI-.01),hi=clamp(a+.13,.01,PI-.004);readout([['χ',ang(a),'gold'],['φ',fmt((phi/DEG+360)%360,0)+'°','cyan'],[state.step===2?'ΔΩ / ср':'плоскость',state.step===2?fmt(.42*(Math.cos(lo)-Math.cos(hi)),3):'span(g, b)']]);}
   if(c===4){const [lo,hi]=ringBounds(),ds=PI*(hi*hi-lo*lo),dO=2*PI*(Math.cos(hsAngle(hi))-Math.cos(hsAngle(lo)));readout([['Δσ / d²',fmt(ds,3),'cyan'],['ΔΩ / ср',state.step>=1?fmt(dO,3):'?','gold'],['(Δσ/ΔΩ) / d²',state.step===2?fmt(ds/dO,3):'?']]);}
   if(c===5)readout([['потенциал',POTENTIALS[state.model].short],['χ',ang(chi),'gold'],['r / ℓ₀',fmt(r,3),'cyan']]);
   if(c===6)readout([['E / ε',fmt(state.E,3)],['χ',ang(chi),'gold'],['Θ',ang(result.theta),'cyan']]);
@@ -303,17 +320,9 @@ function drawStage(){
   if(c===8)readout([['модель',state.collisionModel.toUpperCase()],['d / dref',fmt(dsmcDiameter(),3),'cyan'],['α',fmt(dsmcAlpha(),2),'gold']]);
 }
 
-function chalkStroke(c){
-    const alpha=c.globalAlpha,width=c.lineWidth,dash=c.getLineDash(),offset=c.lineDashOffset;
-    c.save();c.globalAlpha=alpha*.86;c.stroke();c.restore();
-    if(width<.65||alpha===0)return;
-    c.save();c.globalAlpha=alpha*.32;c.lineWidth=Math.max(.45,width*.72);c.translate(.45,-.3);c.setLineDash([Math.max(1.4,width*3.8),Math.max(1,width*1.1)]);c.stroke();c.restore();
-    c.save();c.globalAlpha=alpha*.22;c.lineWidth=Math.max(.45,width*.54);c.translate(-.35,.25);c.setLineDash([Math.max(.8,width*1.4),Math.max(1.5,width*2.2)]);c.stroke();c.restore();
-    c.setLineDash(dash);c.lineDashOffset=offset;
-  }
 function plotCanvas(){
   const c=plotContext,w=$('plot').clientWidth,h=$('plot').clientHeight,d=Math.min(2,devicePixelRatio||1);
-  c.setTransform(d,0,0,d,0,0);c.globalAlpha=1;c.fillStyle=C.bg;c.fillRect(0,0,w,h);c.lineWidth=1;c.font='10px "Neucha", "Shantell Sans", sans-serif';c.textBaseline='alphabetic';c.setLineDash([]);return {c,w,h};
+  c.setTransform(d,0,0,d,0,0);c.globalAlpha=1;c.fillStyle=C.bg;c.fillRect(0,0,w,h);c.lineWidth=1;c.font=`10px ${CHALK_FONT_STACK}`;c.textBaseline='alphabetic';c.setLineDash([]);return {c,w,h};
 }
 function axes({xmin=0,xmax=1,ymin=0,ymax=1,xlabel='',ylabel='',xticks=5,yticks=3}={}){
   const p=plotCanvas(),{c,w,h}=p,l=45,r=w-21,t=23,b=h-30;
@@ -344,11 +353,12 @@ function plotTwoBody(){
   $('plotTitle').textContent='Центр масс движется равномерно';$('plotHint').textContent=lab?'лабораторная система':'система центра масс';
 }
 function plotCylinder(){
-  const {c,w,h}=plotCanvas(),x=w<520?78:101,y=h/2-1,r=Math.min(h*.34,52),ph=state.phi*DEG;
+  const {c,w,h}=plotCanvas(),x=w<520?78:101,y=h/2-1,r=Math.min(h*.34,52),ph=state.phi*DEG,t=clamp(state.time,0,1),progress=t*t*(3-2*t),shownB=state.step===1?state.b*progress:state.b;
   c.fillStyle=C.cyan;c.globalAlpha=.05;c.beginPath();c.arc(x,y,r,0,TAU);c.fill();c.globalAlpha=.75;c.strokeStyle=C.cyan;c.lineWidth=1.2;chalkStroke(c);
+  if(state.step===2&&progress>0){c.fillStyle=C.gold;c.globalAlpha=.12;c.beginPath();c.moveTo(x,y);c.arc(x,y,r,-PI/2,-PI/2+TAU*progress);c.closePath();c.fill();c.globalAlpha=.65;c.strokeStyle=C.gold;c.lineWidth=1;c.beginPath();c.moveTo(x,y);c.lineTo(x+r*Math.cos(-PI/2+TAU*progress),y+r*Math.sin(-PI/2+TAU*progress));chalkStroke(c);}
   c.strokeStyle=C.line;c.lineWidth=1;c.setLineDash([3,4]);c.beginPath();c.moveTo(x-r*1.3,y);c.lineTo(x+r*1.5,y);c.moveTo(x,y-r*1.3);c.lineTo(x,y+r*1.3);chalkStroke(c);c.setLineDash([]);c.globalAlpha=1;
-  const px=x+r*state.b*Math.sin(ph),py=y-r*state.b*Math.cos(ph);c.strokeStyle=C.gold;c.lineWidth=2;c.beginPath();c.moveTo(x,y);c.lineTo(px,py);chalkStroke(c);c.fillStyle=state.b<1?C.gold:C.red;c.beginPath();c.arc(px,py,4.2,0,TAU);c.fill();c.font='italic 17px "Neucha", "Shantell Sans", sans-serif';c.fillText('b',x+(px-x)*.5+6,y+(py-y)*.5);c.font='10px "Neucha", "Shantell Sans", sans-serif';c.fillStyle=C.muted;c.textAlign='center';c.fillText(binaryCopy(document.documentElement.lang === "en" ? "en" : "ru", "viewAlongG"),x,h-8);c.textAlign='left';
-  const tx=w<520?168:220;c.font='19px "Neucha", "Shantell Sans", sans-serif';c.fillStyle=state.b<1?C.gold:C.red;c.fillText(state.b<1?binaryCopy(document.documentElement.lang === "en" ? "en" : "ru", "centerInside"):'Центр вне цилиндра',tx,49);c.font='12px "Neucha", "Shantell Sans", sans-serif';c.fillStyle=C.dim;c.fillText(`b / d = ${fmt(state.b,3)} ${state.b<1?'<':'≥'} 1`,tx,74);c.font='13px "Neucha", "Shantell Sans", sans-serif';c.fillText('σT = πd²',tx,101);c.font='10px "Neucha", "Shantell Sans", sans-serif';c.fillStyle=C.muted;if(w>520)c.fillText(binaryCopy(document.documentElement.lang === "en" ? "en" : "ru", "circleArea"),tx,121);
+  const px=x+r*shownB*Math.sin(ph),py=y-r*shownB*Math.cos(ph);c.strokeStyle=C.gold;c.lineWidth=2;c.beginPath();c.moveTo(x,y);c.lineTo(px,py);chalkStroke(c);c.fillStyle=shownB<1?C.gold:C.red;c.beginPath();c.arc(px,py,4.2,0,TAU);c.fill();c.font=`italic 17px ${CHALK_FONT_STACK}`;c.fillText('b',x+(px-x)*.5+6,y+(py-y)*.5);c.font=`10px ${CHALK_FONT_STACK}`;c.fillStyle=C.muted;c.textAlign='center';c.fillText(binaryCopy(document.documentElement.lang === "en" ? "en" : "ru", "viewAlongG"),x,h-8);c.textAlign='left';
+  const tx=w<520?168:220;c.font=`19px ${CHALK_FONT_STACK}`;c.fillStyle=shownB<1?C.gold:C.red;c.fillText(shownB<1?binaryCopy(document.documentElement.lang === "en" ? "en" : "ru", "centerInside"):'Центр вне цилиндра',tx,49);c.font=`12px ${CHALK_FONT_STACK}`;c.fillStyle=C.dim;c.fillText(`b / d = ${fmt(shownB,3)} ${shownB<1?'<':'≥'} 1`,tx,74);c.font=`13px ${CHALK_FONT_STACK}`;c.fillText('σT = πd²',tx,101);c.font=`10px ${CHALK_FONT_STACK}`;c.fillStyle=C.muted;if(w>520)c.fillText(binaryCopy(document.documentElement.lang === "en" ? "en" : "ru", "circleArea"),tx,121);
   plotGeometry={type:'disk',x,y,r,w,h};$('plotTitle').textContent='Поперечное сечение';$('plotHint').textContent='щелчок по кругу меняет b и φ';
 }
 function plotHardSphere(){
@@ -356,7 +366,7 @@ function plotHardSphere(){
   $('plotTitle').textContent='χ(b) для твёрдых сфер';$('plotHint').textContent='выберите прицельный параметр на графике';
 }
 function plotSolidAngle(){
-  const g=axes({xmin:0,xmax:180,ymin:0,ymax:1.1,xlabel:'χ, °',ylabel:'sin χ',xticks:6,yticks:2});plotLine(g,Array.from({length:140},(_,i)=>{const x=180*i/139;return [x,Math.sin(x*DEG)];}),C.gold);const chi=hsAngle(state.b);plotMarker(g,chi/DEG,Math.sin(chi));
+  const g=axes({xmin:0,xmax:180,ymin:0,ymax:1.1,xlabel:'χ, °',ylabel:'sin χ',xticks:6,yticks:2});plotLine(g,Array.from({length:140},(_,i)=>{const x=180*i/139;return [x,Math.sin(x*DEG)];}),C.gold);const {chi}=angularState();plotMarker(g,chi/DEG,Math.sin(chi));
   $('plotTitle').textContent='Площадь угловой ячейки зависит от χ';$('plotHint').textContent='dΩ / (dχ dφ) = sin χ';
 }
 function plotMapping(){
@@ -403,19 +413,34 @@ function measuredHistogram(){
   const omega=4*PI/bins,scale=N?PI*d*d/(N*omega):0;
   return {N,bins,hist,dcs:hist.map(h=>h*scale),err:hist.map(h=>Math.sqrt(h)*scale),omega,d};
 }
+function plotSampling(){
+  const N=Math.floor(state.count*state.time),d=dsmcDiameter(),values=ensemble.hits.slice(0,N).map(h=>clamp(h.b/d,0,1)).sort((a,b)=>a-b),g=axes({xmin:0,xmax:1,ymin:0,ymax:1.05,xlabel:'b / d',ylabel:'F(b)',xticks:4,yticks:4}),en=document.documentElement.lang==='en';
+  plotLine(g,Array.from({length:101},(_,i)=>{const x=i/100;return [x,x*x];}),C.gold,1.8);
+  if(values.length){const empirical=[[0,0],...values.map((x,i)=>[x,(i+1)/values.length]),[1,1]];plotLine(g,empirical,state.wrongSampling?C.red:C.cyan,1.6);}
+  if(state.wrongSampling)plotLine(g,[[0,0],[1,1]],C.red,1,[4,4],.55);
+  legend(g,[[en?'area law':'по площади',C.gold],[en?'sample':'выборка',state.wrongSampling?C.red:C.cyan]]);
+  $('plotTitle').textContent=en?'Impact-parameter sampling':'Выборка прицельного параметра';$('plotHint').textContent=`N = ${N} · b / d = √U`;
+}
 function plotEnsemble(){
-  const hist=measuredHistogram(),alpha=dsmcAlpha(),max=Math.max(.3*hist.d*hist.d,...hist.dcs.map((v,i)=>v+hist.err[i]),vssDcs(0,hist.d,alpha))*1.16;
-  const g=axes({xmin:-1,xmax:1,ymin:0,ymax:max,xlabel:'cos χ  (назад ← → вперёд)',ylabel:state.chapter===8?'(dσ/dΩ) / dref²':'(dσ/dΩ) / d²',xticks:4,yticks:3});
+  const hist=measuredHistogram(),alpha=dsmcAlpha(),max=Math.max(.3*hist.d*hist.d,...hist.dcs.map((v,i)=>v+hist.err[i]),vssDcs(0,hist.d,alpha))*1.16,en=document.documentElement.lang==='en';
+  const g=axes({xmin:-1,xmax:1,ymin:0,ymax:max,xlabel:en?'cos χ  (back ← → forward)':'cos χ  (назад ← → вперёд)',ylabel:state.chapter===8?'(dσ/dΩ) / dref²':'(dσ/dΩ) / d²',xticks:4,yticks:3});
   for(let i=0;i<hist.bins;i++){
     const a=-1+2*i/hist.bins,b=-1+2*(i+1)/hist.bins,mid=(a+b)/2,value=hist.dcs[i],color=state.wrongSampling?C.red:C.cyan;
     g.c.fillStyle=color;g.c.globalAlpha=.23;g.c.fillRect(g.X(a)+1,g.Y(value),g.X(b)-g.X(a)-2,g.b-g.Y(value));g.c.globalAlpha=.82;g.c.strokeStyle=color;g.c.lineWidth=1;g.c.strokeRect(g.X(a)+1,g.Y(value),g.X(b)-g.X(a)-2,g.b-g.Y(value));
     const lo=g.Y(Math.max(0,value-hist.err[i])),hi=g.Y(value+hist.err[i]),x=g.X(mid);g.c.beginPath();g.c.moveTo(x,lo);g.c.lineTo(x,hi);g.c.moveTo(x-2.5,lo);g.c.lineTo(x+2.5,lo);g.c.moveTo(x-2.5,hi);g.c.lineTo(x+2.5,hi);chalkStroke(g.c);g.c.globalAlpha=1;
   }
   plotLine(g,Array.from({length:160},(_,i)=>{const mu=-1+2*i/159;return [mu,vssDcs(Math.acos(mu),hist.d,alpha)];}),C.gold,1.8);
-  legend(g,[['выборка',state.wrongSampling?C.red:C.cyan],['аналитика',C.gold]]);
-  $('plotTitle').textContent=state.wrongSampling?'Неоднородный пучок: статистика искажена':'Распределение по равным телесным углам';$('plotHint').textContent=`N = ${hist.N} · ΔΩ = 4π/${hist.bins}`;
+  legend(g,[[en?'sample':'выборка',state.wrongSampling?C.red:C.cyan],[en?'analytic':'аналитика',C.gold]]);
+  $('plotTitle').textContent=state.wrongSampling?(en?'Nonuniform beam: biased estimate':'Неоднородный пучок: статистика искажена'):(en?'Equal-solid-angle bins':'Распределение по равным телесным углам');$('plotHint').textContent=`N = ${hist.N} · ΔΩ = 4π/${hist.bins}`;
 }
-function drawPlot(){const c=state.chapter;if(c===0)plotTwoBody();else if(c===1)plotCylinder();else if(c===2)plotHardSphere();else if(c===3)plotSolidAngle();else if(c===4)plotMapping();else if(c===5)plotPotential();else if(c===6)plotDeflection();else plotEnsemble();}
+function plotNormalization(){
+  const hist=measuredHistogram(),target=PI*hist.d*hist.d,en=document.documentElement.lang==='en';let sum=0;
+  const points=[[-1,0],...hist.dcs.map((value,i)=>{sum+=value*hist.omega;return [-1+2*(i+1)/hist.bins,target?sum/target:0];})],max=Math.max(1.12,...points.map(point=>point[1]*1.06)),g=axes({xmin:-1,xmax:1,ymin:0,ymax:max,xlabel:'cos χ',ylabel:'Σσk / σT',xticks:4,yticks:4});
+  plotLine(g,[[-1,1],[1,1]],C.dim,1,[5,4],.75);plotLine(g,points,state.wrongSampling?C.red:C.gold,2);if(points.length>1)plotMarker(g,1,points.at(-1)[1],state.wrongSampling?C.red:C.gold);
+  legend(g,[[en?'cumulative estimate':'накопленная оценка',state.wrongSampling?C.red:C.gold],[en?'target σT':'уровень σT',C.dim,[5,4]]]);
+  $('plotTitle').textContent=en?'Cross-section normalization':'Нормировка полного сечения';$('plotHint').textContent=`N = ${hist.N} · Σσk / σT = ${fmt(target?sum/target:0,4)}`;
+}
+function drawPlot(){const c=state.chapter;if(c===0)plotTwoBody();else if(c===1)plotCylinder();else if(c===2)plotHardSphere();else if(c===3)plotSolidAngle();else if(c===4)plotMapping();else if(c===5)plotPotential();else if(c===6)plotDeflection();else if(c===7&&state.step===0)plotSampling();else if(c===7&&state.step===2)plotNormalization();else plotEnsemble();}
 function updateDiagnostics(){
   const c=state.chapter;
   if(c===5||c===6){$('diagnosticLeft').textContent=result.model==='hs'?'HS: аналитическое отражение':`ΔE/E ≤ ${scientific(result.errorE)} · ΔL/max(1,|L|) ≤ ${scientific(result.errorL)}`;$('diagnosticRight').innerHTML=result.status==='ok'?`rmin / ℓ₀ = ${fmt(result.rmin,4)} · ${result.model==='hs'?'точная геометрия':result.accepted+' шагов RK5(4)'}`:`<span class="warn">Расчёт не завершён: ${result.status}</span>`;}
@@ -518,182 +543,3 @@ function bind(){
 // A small read-only test/debug interface; it contains no private or remote data.
 window.collisionLab={getState:()=>({...state,playing}),getDiagnostics:()=>({status:result?.status,errorE:result?.errorE,errorL:result?.errorL,chi:result?.chi,theta:result?.theta,rmin:result?.rmin}),go:(c,s=0)=>applyLesson(c,s),set:(key,value)=>setParameter(key,value),redraw:()=>{dirty=true;}};
 bind();const restored=safeHash();applyLesson(restored?.c||0,restored?.s||0,restored?.restore||null);frameId=requestAnimationFrame(tick);
-
-// Chapter 2 keeps the collision-cylinder explanation visible while the lesson timeline runs.
-const cylinderMotion = {
-  canvas: null,
-  context: null,
-  source: null,
-  host: null,
-  width: 0,
-  height: 0,
-  time: 0,
-  last: 0
-};
-
-function cylinderChapterActive() {
-  const chapter = CHAPTERS[state.chapter];
-  return Boolean(chapter && /^02(?:\s|$)/.test(String(chapter.tab)));
-}
-
-function ensureCylinderMotion() {
-  if (cylinderMotion.canvas) return true;
-
-  const host = document.querySelector('.board');
-  const source = host && host.querySelector('canvas:not(.cylinder-motion-layer)');
-  if (!host || !source) return false;
-
-  const canvas = document.createElement('canvas');
-  canvas.className = 'cylinder-motion-layer';
-  canvas.setAttribute('aria-hidden', 'true');
-  canvas.style.position = 'absolute';
-  canvas.style.pointerEvents = 'none';
-  canvas.style.zIndex = '2';
-  host.append(canvas);
-
-  cylinderMotion.canvas = canvas;
-  cylinderMotion.context = canvas.getContext('2d');
-  cylinderMotion.source = source;
-  cylinderMotion.host = host;
-  return true;
-}
-
-function resizeCylinderMotion() {
-  const { canvas, source, host, context } = cylinderMotion;
-  if (!canvas || !source || !host || !context) return false;
-
-  const sourceRect = source.getBoundingClientRect();
-  const hostRect = host.getBoundingClientRect();
-  const width = Math.round(sourceRect.width);
-  const height = Math.round(sourceRect.height);
-  if (width < 1 || height < 1) return false;
-
-  canvas.style.left = `${sourceRect.left - hostRect.left}px`;
-  canvas.style.top = `${sourceRect.top - hostRect.top}px`;
-  canvas.style.width = `${width}px`;
-  canvas.style.height = `${height}px`;
-
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  if (canvas.width !== Math.round(width * dpr) || canvas.height !== Math.round(height * dpr)) {
-    canvas.width = Math.round(width * dpr);
-    canvas.height = Math.round(height * dpr);
-    context.setTransform(dpr, 0, 0, dpr, 0, 0);
-    cylinderMotion.width = width;
-    cylinderMotion.height = height;
-  }
-  return true;
-}
-
-function cylinderMotionStroke(context, points, color, width, dash = []) {
-  const draw = (offsetX, offsetY, alpha, lineWidth, lineDash) => {
-    context.save();
-    context.translate(offsetX, offsetY);
-    context.globalAlpha = alpha;
-    context.strokeStyle = color;
-    context.lineWidth = lineWidth;
-    context.lineCap = 'round';
-    context.lineJoin = 'round';
-    context.setLineDash(lineDash);
-    context.beginPath();
-    context.moveTo(points[0][0], points[0][1]);
-    for (let index = 1; index < points.length; index += 1) {
-      context.lineTo(points[index][0], points[index][1]);
-    }
-    context.stroke();
-    context.restore();
-  };
-
-  draw(0, 0, 0.7, width, dash);
-  draw(0.7, -0.45, 0.32, Math.max(0.5, width * 0.7), [Math.max(2, width * 3), Math.max(1, width * 1.4)]);
-  draw(-0.45, 0.35, 0.22, Math.max(0.45, width * 0.5), [Math.max(1, width), Math.max(2, width * 2.4)]);
-}
-
-function drawCylinderMotion() {
-  const { context, width, height } = cylinderMotion;
-  if (!context || !width || !height) return;
-
-  context.clearRect(0, 0, width, height);
-  const centerX = width * 0.51;
-  const centerY = height * 0.51;
-  const radius = Math.min(width, height) * 0.105;
-  const phase = ((cylinderMotion.time % 1) + 1) % 1;
-  const contact = 0.56;
-  const incomingY = centerY + radius * 0.62;
-
-  cylinderMotionStroke(context, [
-    [width * 0.12, incomingY],
-    [centerX, incomingY]
-  ], '#f1d774', 1.4, [8, 6]);
-
-  cylinderMotionStroke(context, [
-    [centerX, centerY],
-    [width * 0.78, centerY - radius * 1.65]
-  ], '#70dce3', 1.25, [8, 6]);
-
-  context.save();
-  context.globalAlpha = 0.42;
-  context.strokeStyle = '#f1d774';
-  context.lineWidth = 1;
-  context.setLineDash([5, 7]);
-  context.beginPath();
-  context.arc(centerX, centerY, radius, 0, Math.PI * 2);
-  context.stroke();
-  context.restore();
-
-  let particleX;
-  let particleY;
-  if (phase < contact) {
-    const approach = phase / contact;
-    particleX = width * 0.12 + (centerX - width * 0.12) * approach;
-    particleY = incomingY;
-  } else {
-    const departure = (phase - contact) / (1 - contact);
-    particleX = centerX + (width * 0.78 - centerX) * departure;
-    particleY = incomingY + (centerY - radius * 1.65 - incomingY) * departure;
-  }
-
-  context.save();
-  context.fillStyle = '#f4f0df';
-  context.globalAlpha = 0.9;
-  context.beginPath();
-  context.arc(particleX, particleY, Math.max(3, radius * 0.16), 0, Math.PI * 2);
-  context.fill();
-  context.restore();
-
-  cylinderMotionStroke(context, [
-    [particleX - radius * 0.24, particleY],
-    [particleX + radius * 0.24, particleY]
-  ], '#f4f0df', 1.1, [3, 2]);
-
-  if (Math.abs(phase - contact) < 0.08) {
-    const flash = 1 - Math.abs(phase - contact) / 0.08;
-    context.save();
-    context.globalAlpha = flash * 0.45;
-    context.strokeStyle = '#f1d774';
-    context.lineWidth = 1.2;
-    context.beginPath();
-    context.arc(centerX, centerY, radius * (1.2 + flash * 0.8), 0, Math.PI * 2);
-    context.stroke();
-    context.restore();
-  }
-}
-
-function cylinderMotionFrame(timestamp) {
-  if (ensureCylinderMotion() && resizeCylinderMotion()) {
-    if (cylinderChapterActive()) {
-      const elapsed = cylinderMotion.last ? Math.min(80, timestamp - cylinderMotion.last) : 0;
-      if (playing) {
-        cylinderMotion.time = (cylinderMotion.time + elapsed * 0.00022) % 1;
-      } else if (Number.isFinite(Number(state.time))) {
-        cylinderMotion.time = Number(state.time);
-      }
-      drawCylinderMotion();
-    } else {
-      cylinderMotion.context.clearRect(0, 0, cylinderMotion.width, cylinderMotion.height);
-    }
-  }
-  cylinderMotion.last = timestamp;
-  requestAnimationFrame(cylinderMotionFrame);
-}
-
-requestAnimationFrame(cylinderMotionFrame);
