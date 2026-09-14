@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Физико-химическая газодинамика
-nav_label: "ФХГД"
+nav_label: "🐖 ФХГД"
 math: true
 ---
 

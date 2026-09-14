@@ -1,7 +1,7 @@
 <nav class="nav-inline">
   <p>
     <a href="{{ '/index.html' | relative_url }}">🏠 Главная</a>
-    {% assign menu_paths = "pages/resources.md,pages/eucken.md,pages/paper-reviews.md,pages/physico-chemical-gas-dynamics-2026.md,pages/ml2025.md,pages/dsmc-demo.md,pages/fvm-demo.md" | split: "," %}
+    {% assign menu_paths = "pages/resources.md,pages/eucken.md,pages/paper-reviews.md,pages/cfd2026.md,pages/physico-chemical-gas-dynamics-2026.md,pages/ml2025.md" | split: "," %}
     {% for menu_path in menu_paths %}
       {% assign p = site.pages | where: "path", menu_path | first %}
       {% if p %}
