@@ -653,6 +653,22 @@ button.pde-tool {
   text-transform: uppercase;
 }
 
+@media (min-width: 2400px) {
+  html {
+    font-size: 150%;
+  }
+
+  .lecture-header,
+  main {
+    width: min(100%, 132rem);
+  }
+
+  .catalogue-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 1rem;
+  }
+}
+
 @media (max-width: 1100px) {
   .catalogue-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));

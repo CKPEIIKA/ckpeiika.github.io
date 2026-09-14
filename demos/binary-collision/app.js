@@ -102,6 +102,7 @@ function updateText(){
   $('prevButton').disabled=state.chapter===0&&state.step===0;$('nextButton').disabled=state.chapter===8&&state.step===2;
   $('prevButton').textContent='‹';$('nextButton').textContent='›';
   document.querySelectorAll('.chapter-button').forEach((el,i)=>{el.classList.toggle('active',i===state.chapter);el.setAttribute('aria-current',i===state.chapter?'step':'false');});
+  if(matchMedia('(max-width:800px)').matches){const active=$('chapters').querySelector('.chapter-button.active');requestAnimationFrame(()=>active?.scrollIntoView({block:'nearest',inline:'center'}));}
   $('steps').innerHTML=chapter().steps.map((s,i)=>`<button data-step="${i}" class="${i===state.step?'active':i<state.step?'complete':''}" aria-label="Шаг ${i+1}: ${s.title}" title="${s.title}" ${i===state.step?'aria-current="step"':''}></button>`).join('');
   $('plotSwitch').hidden=state.chapter!==6;
 }

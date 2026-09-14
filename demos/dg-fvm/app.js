@@ -468,9 +468,9 @@ function renderAnalysis() {
   nodes.toggleAnalysis.setAttribute('title', action);
   const label = analysisExpanded ? i18n.t(`analysis.${mode}`) : `‹ ${i18n.t('plot.show')}`;
   const legend = i18n.t(`analysis.${mode}Legend`);
-  if (nodes.analysisTabLabel.textContent !== label) rewriteChalkText(nodes.analysisTabLabel, label);
+  if (nodes.analysisTabLabel.textContent !== label) nodes.analysisTabLabel.textContent = label;
   if (nodes.analysisTabLegend.textContent !== legend) {
-    rewriteChalkText(nodes.analysisTabLegend, legend);
+    nodes.analysisTabLegend.textContent = legend;
   }
   analysisPrimary.setVisible(analysisExpanded && mode !== 'spaceTime');
   analysisSecondary.setVisible(analysisExpanded && mode !== 'spaceTime' && mode !== 'spectrum');

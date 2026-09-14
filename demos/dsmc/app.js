@@ -418,10 +418,10 @@ function renderPlot() {
     : `‹ ${i18n.t('plot.show')}`;
   const legend = i18n.t(`plot.${mode}Legend`);
   if (nodes.distributionTabLabel.textContent !== label) {
-    rewriteChalkText(nodes.distributionTabLabel, label);
+    nodes.distributionTabLabel.textContent = label;
   }
   if (nodes.distributionTabLegend.textContent !== legend) {
-    rewriteChalkText(nodes.distributionTabLegend, legend);
+    nodes.distributionTabLegend.textContent = legend;
   }
   if (!plotExpanded) {
     layers.distribution.setVisible(false);

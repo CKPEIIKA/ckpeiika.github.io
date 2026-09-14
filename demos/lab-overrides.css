@@ -63,11 +63,6 @@ body::after,
   display: none;
 }
 
-.lab-header,
-.lab-layout {
-  width: min(100%, 112rem);
-}
-
 .lab-header {
   grid-template-columns: max-content minmax(0, 1fr) max-content;
   gap: 1rem;
@@ -437,15 +432,19 @@ html.theme-dark .lab-controls input:not([type="range"]) {
 }
 
 .distribution-tab {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  width: 100%;
   min-width: 0;
   gap: 0.35rem;
   align-items: center;
-  justify-content: center;
+  justify-content: stretch;
+  color: var(--chalk-white);
   font-size: 0.62rem;
 }
 
 .distribution-tab small {
+  min-width: 0;
   overflow: hidden;
   color: var(--chalk-dim);
   font-family: var(--font-chalk);
@@ -456,7 +455,11 @@ html.theme-dark .lab-controls input:not([type="range"]) {
 }
 
 .distribution-tab > span {
-  flex: 0 0 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--chalk-white);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .distribution-tabbar button:last-child {
@@ -760,7 +763,35 @@ html.theme-dark .lab-controls input:not([type="range"]) {
   }
 
   .distribution-tabs {
-    width: min(78%, 22rem);
+    width: min(74%, 18rem);
+    height: min(38%, 10rem);
+    min-height: 6.5rem;
+  }
+
+  .stage-controls {
+    flex: 1 1 auto;
+    max-width: none;
+  }
+
+  .stage-footer {
+    margin-inline: 0.2rem;
+  }
+
+  .stage-controls button,
+  .stage-controls select,
+  .stage-speed {
+    min-width: 1.9rem;
+    padding-inline: 0.35rem;
+  }
+
+  .stage-controls-toggle {
+    flex-basis: 2rem;
+    width: 2rem;
+    padding-inline: 0.35rem;
+  }
+
+  #diagnostics {
+    display: none;
   }
 
   .control-row {

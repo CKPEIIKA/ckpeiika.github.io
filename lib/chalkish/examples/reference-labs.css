@@ -262,6 +262,22 @@ body {
   font-size: 0.56rem;
 }
 
+@media (min-width: 2400px) {
+  html {
+    font-size: 150%;
+  }
+
+  .lab-header,
+  .lab-layout,
+  .lab-footer {
+    width: min(100%, 132rem);
+  }
+
+  .lab-layout {
+    height: clamp(48rem, calc(100vh - 5rem), 82rem);
+  }
+}
+
 @media (max-width: 1050px) {
   .lab-layout {
     grid-template-columns: clamp(12.5rem, 24vw, 15rem) minmax(0, 1fr);
