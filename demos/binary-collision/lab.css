@@ -84,9 +84,10 @@ body,button,input,select,output,textarea,select option{font-family:var(--font-ch
 .chapters .chapter-button,.chapters .chapter-button *{font-size:13px!important;line-height:1.1!important;letter-spacing:0!important}
 .chapters .chapter-button .num{font-size:25px!important;line-height:1!important}
 main :has(> .board){padding-top:0!important}
+.board .cylinder-motion-layer{display:block!important}
+.board .camera-controls,.board .stage-controls,.board .transport{z-index:4!important}
 
 .board,.plot-panel,.lesson{position:relative!important;isolation:isolate}
-.board::after,.plot-panel::after,.lesson::after{content:"";position:absolute;inset:0;z-index:20;pointer-events:none;opacity:.3;background-image:radial-gradient(circle at 20% 30%,#f4f0df55 0 .7px,transparent 1.15px),radial-gradient(circle at 70% 62%,#f4f0df3d 0 .65px,transparent 1.1px),var(--board-texture);background-size:7px 9px,11px 13px,180px 180px;background-blend-mode:screen,screen,screen;mix-blend-mode:screen}
 .board:first-child{margin-top:0!important}
 
 /* Board edges and dividers use a broken, grain-backed chalk mark instead of the red site rule. */

@@ -518,3 +518,182 @@ function bind(){
 // A small read-only test/debug interface; it contains no private or remote data.
 window.collisionLab={getState:()=>({...state,playing}),getDiagnostics:()=>({status:result?.status,errorE:result?.errorE,errorL:result?.errorL,chi:result?.chi,theta:result?.theta,rmin:result?.rmin}),go:(c,s=0)=>applyLesson(c,s),set:(key,value)=>setParameter(key,value),redraw:()=>{dirty=true;}};
 bind();const restored=safeHash();applyLesson(restored?.c||0,restored?.s||0,restored?.restore||null);frameId=requestAnimationFrame(tick);
+
+// Chapter 2 keeps the collision-cylinder explanation visible while the lesson timeline runs.
+const cylinderMotion = {
+  canvas: null,
+  context: null,
+  source: null,
+  host: null,
+  width: 0,
+  height: 0,
+  time: 0,
+  last: 0
+};
+
+function cylinderChapterActive() {
+  const chapter = CHAPTERS[state.chapter];
+  return Boolean(chapter && /^02(?:\s|$)/.test(String(chapter.tab)));
+}
+
+function ensureCylinderMotion() {
+  if (cylinderMotion.canvas) return true;
+
+  const host = document.querySelector('.board');
+  const source = host && host.querySelector('canvas:not(.cylinder-motion-layer)');
+  if (!host || !source) return false;
+
+  const canvas = document.createElement('canvas');
+  canvas.className = 'cylinder-motion-layer';
+  canvas.setAttribute('aria-hidden', 'true');
+  canvas.style.position = 'absolute';
+  canvas.style.pointerEvents = 'none';
+  canvas.style.zIndex = '2';
+  host.append(canvas);
+
+  cylinderMotion.canvas = canvas;
+  cylinderMotion.context = canvas.getContext('2d');
+  cylinderMotion.source = source;
+  cylinderMotion.host = host;
+  return true;
+}
+
+function resizeCylinderMotion() {
+  const { canvas, source, host, context } = cylinderMotion;
+  if (!canvas || !source || !host || !context) return false;
+
+  const sourceRect = source.getBoundingClientRect();
+  const hostRect = host.getBoundingClientRect();
+  const width = Math.round(sourceRect.width);
+  const height = Math.round(sourceRect.height);
+  if (width < 1 || height < 1) return false;
+
+  canvas.style.left = `${sourceRect.left - hostRect.left}px`;
+  canvas.style.top = `${sourceRect.top - hostRect.top}px`;
+  canvas.style.width = `${width}px`;
+  canvas.style.height = `${height}px`;
+
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  if (canvas.width !== Math.round(width * dpr) || canvas.height !== Math.round(height * dpr)) {
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    context.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cylinderMotion.width = width;
+    cylinderMotion.height = height;
+  }
+  return true;
+}
+
+function cylinderMotionStroke(context, points, color, width, dash = []) {
+  const draw = (offsetX, offsetY, alpha, lineWidth, lineDash) => {
+    context.save();
+    context.translate(offsetX, offsetY);
+    context.globalAlpha = alpha;
+    context.strokeStyle = color;
+    context.lineWidth = lineWidth;
+    context.lineCap = 'round';
+    context.lineJoin = 'round';
+    context.setLineDash(lineDash);
+    context.beginPath();
+    context.moveTo(points[0][0], points[0][1]);
+    for (let index = 1; index < points.length; index += 1) {
+      context.lineTo(points[index][0], points[index][1]);
+    }
+    context.stroke();
+    context.restore();
+  };
+
+  draw(0, 0, 0.7, width, dash);
+  draw(0.7, -0.45, 0.32, Math.max(0.5, width * 0.7), [Math.max(2, width * 3), Math.max(1, width * 1.4)]);
+  draw(-0.45, 0.35, 0.22, Math.max(0.45, width * 0.5), [Math.max(1, width), Math.max(2, width * 2.4)]);
+}
+
+function drawCylinderMotion() {
+  const { context, width, height } = cylinderMotion;
+  if (!context || !width || !height) return;
+
+  context.clearRect(0, 0, width, height);
+  const centerX = width * 0.51;
+  const centerY = height * 0.51;
+  const radius = Math.min(width, height) * 0.105;
+  const phase = ((cylinderMotion.time % 1) + 1) % 1;
+  const contact = 0.56;
+  const incomingY = centerY + radius * 0.62;
+
+  cylinderMotionStroke(context, [
+    [width * 0.12, incomingY],
+    [centerX, incomingY]
+  ], '#f1d774', 1.4, [8, 6]);
+
+  cylinderMotionStroke(context, [
+    [centerX, centerY],
+    [width * 0.78, centerY - radius * 1.65]
+  ], '#70dce3', 1.25, [8, 6]);
+
+  context.save();
+  context.globalAlpha = 0.42;
+  context.strokeStyle = '#f1d774';
+  context.lineWidth = 1;
+  context.setLineDash([5, 7]);
+  context.beginPath();
+  context.arc(centerX, centerY, radius, 0, Math.PI * 2);
+  context.stroke();
+  context.restore();
+
+  let particleX;
+  let particleY;
+  if (phase < contact) {
+    const approach = phase / contact;
+    particleX = width * 0.12 + (centerX - width * 0.12) * approach;
+    particleY = incomingY;
+  } else {
+    const departure = (phase - contact) / (1 - contact);
+    particleX = centerX + (width * 0.78 - centerX) * departure;
+    particleY = incomingY + (centerY - radius * 1.65 - incomingY) * departure;
+  }
+
+  context.save();
+  context.fillStyle = '#f4f0df';
+  context.globalAlpha = 0.9;
+  context.beginPath();
+  context.arc(particleX, particleY, Math.max(3, radius * 0.16), 0, Math.PI * 2);
+  context.fill();
+  context.restore();
+
+  cylinderMotionStroke(context, [
+    [particleX - radius * 0.24, particleY],
+    [particleX + radius * 0.24, particleY]
+  ], '#f4f0df', 1.1, [3, 2]);
+
+  if (Math.abs(phase - contact) < 0.08) {
+    const flash = 1 - Math.abs(phase - contact) / 0.08;
+    context.save();
+    context.globalAlpha = flash * 0.45;
+    context.strokeStyle = '#f1d774';
+    context.lineWidth = 1.2;
+    context.beginPath();
+    context.arc(centerX, centerY, radius * (1.2 + flash * 0.8), 0, Math.PI * 2);
+    context.stroke();
+    context.restore();
+  }
+}
+
+function cylinderMotionFrame(timestamp) {
+  if (ensureCylinderMotion() && resizeCylinderMotion()) {
+    if (cylinderChapterActive()) {
+      const elapsed = cylinderMotion.last ? Math.min(80, timestamp - cylinderMotion.last) : 0;
+      if (playing) {
+        cylinderMotion.time = (cylinderMotion.time + elapsed * 0.00022) % 1;
+      } else if (Number.isFinite(Number(state.time))) {
+        cylinderMotion.time = Number(state.time);
+      }
+      drawCylinderMotion();
+    } else {
+      cylinderMotion.context.clearRect(0, 0, cylinderMotion.width, cylinderMotion.height);
+    }
+  }
+  cylinderMotion.last = timestamp;
+  requestAnimationFrame(cylinderMotionFrame);
+}
+
+requestAnimationFrame(cylinderMotionFrame);
