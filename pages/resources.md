@@ -5,6 +5,7 @@ nav_label: "🔗 Полезные ссылки"
 ---
 
 Коллекция полезных ссылок по CFD, OpenFOAM и ML.
+Сохраняйте пока есть Интернет!
 
 ---
 
@@ -30,9 +31,7 @@ nav_label: "🔗 Полезные ссылки"
 > Сейчас фактически существуют две официально поддерживаемые ветки экосистемы:  
 > **OpenFOAM Foundation / CFD Direct**: [openfoam.org](https://openfoam.org/), [cfd.direct/openfoam/about](https://cfd.direct/openfoam/about/)  
 > **OpenCFD / OpenFOAM Ltd**: [openfoam.com](https://www.openfoam.com/), [openfoam.com/news/history](https://www.openfoam.com/news/history)  
-> Если нужна историческая справка, лучше ссылаться на эти официальные страницы, а не на форумные обсуждения.
->
-> Но форумный тред все равно жалко выбрасывать: [легендарная ветка на CFD Online](https://www.cfd-online.com/Forums/openfoam/197150-openfoam-com-versus-openfoam-org-version-use.html). Как источник это слабее, как культурный артефакт сообщества вполне годится.
+> [Почему так?](https://www.cfd-online.com/Forums/openfoam/197150-openfoam-com-versus-openfoam-org-version-use.html).
 
 
 ---
