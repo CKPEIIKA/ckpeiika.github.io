@@ -120,7 +120,7 @@ test('lecture page routes every card to an interactive module without server pat
     readFile(new URL('../demos/pde-lecture-2/preview.js', import.meta.url), 'utf8'),
     readFile(new URL('../pages/cfd2025.md', import.meta.url), 'utf8'),
   ]);
-  assert.match(html, /\.\.\/\.\.\/pages\/cfd2025\.html/);
+  assert.match(html, /\.\.\/\.\.\/pages\/cfd2026\.html/);
   assert.match(html, /name="robots" content="noindex, nofollow"/);
   assert.doesNotMatch(html, /(?:src|href)="\//);
   assert.match(app, /mountLessonDemo\(shell, entry, language, savedLesson\)/);

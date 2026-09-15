@@ -1,0 +1,1242 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="Лекция 3: интерактивные опыты по сеточным методам, конечным и компактным разностям, разностным схемам и консервативности.">
+  <title>Лекция 3 · Сеточные методы и разностные схемы</title>
+  <!-- Shared site resources are loaded when the Chalkish board engine starts. -->
+  <style>
+:root{--bg:#d8dde3;--paper:#e8ecef;--panel:#e1e6e9;--ink:#29342f;--muted:#59665f;--line:#bac2c5;--accent:#9f2d20;--active:#ede5dd;--board:#0d1712;--chalk:#f4f1e7;--yellow:#f0d477;--ui:"Open Sans",system-ui,-apple-system,"Segoe UI",sans-serif;font-family:var(--ui);color-scheme:light}
+:root[data-theme=dark]{--bg:#181b1a;--paper:#232826;--panel:#202522;--ink:#f1e9df;--muted:#acb7b0;--line:#3f4842;--accent:#f1d8c0;--active:#393329;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.48 var(--ui)}button,input,select{font:inherit}button,a,input,select,summary{-webkit-tap-highlight-color:transparent}button{color:inherit;border:1px solid var(--line);background:var(--paper);border-radius:3px;cursor:pointer;min-height:34px;padding:6px 12px}button:hover{border-color:var(--accent);background:var(--active)}button:disabled{opacity:.45;cursor:default}button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #41758a;outline-offset:3px}a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}h1,h2,h3,p{margin:0}button.primary{background:var(--accent);color:var(--bg);border-color:var(--accent)}[hidden]{display:none!important}
+.site-header{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:22px 3.2vw 19px;border-bottom:1px dashed var(--line)}.course-link{font-size:10px;letter-spacing:.11em;font-weight:650}.heading-group h1{font-size:25px;font-weight:650;color:var(--accent);line-height:1.25;margin-top:8px}.heading-group h1 span{font-weight:430;color:var(--ink);font-size:22px;margin-left:17px}.header-actions{display:flex;gap:7px;flex-shrink:0}.header-actions button{width:39px;padding:3px 4px;font-size:14px}
+#catalogue{max-width:1600px;padding:29px 3.2vw 34px;margin:auto}.catalogue-intro{display:flex;justify-content:space-between;gap:40px;padding:0 0 25px}.eyebrow{font-size:11px;color:var(--accent);font-weight:700;letter-spacing:.16em;margin-bottom:9px}.catalogue-intro h2{font-size:31px;letter-spacing:-.025em;font-weight:550;margin-bottom:8px}.catalogue-intro p:last-child{font-size:14px;color:var(--muted);max-width:830px}.catalogue-count{display:flex;align-items:center;gap:13px;flex-shrink:0;color:var(--accent);border-left:1px solid var(--line);padding-left:25px}.catalogue-count strong{font-size:56px;font-weight:400;line-height:1}.catalogue-count span{font-size:11px;line-height:1.55;letter-spacing:.04em;text-transform:uppercase}
+.filters{display:flex;flex-wrap:wrap;gap:7px;padding:15px 0 22px;border-top:1px dashed var(--line)}.filters button{font-size:11px;min-height:30px;border-radius:2px;padding:5px 10px;color:var(--muted)}.filters button.active{border-color:var(--accent);color:var(--accent);background:var(--active)}.catalogue-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px 21px}.demo-card{display:block;text-align:left;padding:0;background:transparent;border:none;min-width:0;border-radius:0}.demo-card:hover{background:transparent}.thumbnail{position:relative;aspect-ratio:12/7;overflow:hidden;border:1px solid var(--line);background:#e7ede6;transition:border-color .15s}.demo-card:hover .thumbnail{border-color:var(--accent)}.thumbnail:after{content:'↗';position:absolute;right:9px;bottom:6px;color:#617b6b;font-size:21px}.card-text{padding:12px 0 0;display:grid;grid-template-columns:26px 1fr;gap:8px}.card-num{font-size:13px;color:var(--accent);font-weight:650;padding-top:2px}.card-title{font-size:14px;line-height:1.35;font-weight:650;margin-bottom:5px}.card-short{font-size:11px;line-height:1.55;color:var(--muted);font-weight:400}.card-group{display:block;margin-top:8px;font-size:9px;text-transform:uppercase;letter-spacing:.075em;color:var(--accent)}.catalogue-footer{display:flex;justify-content:space-between;gap:30px;margin-top:35px;padding-top:17px;border-top:1px dashed var(--line);font-size:11px;color:var(--muted)}
+body.lab-active{height:100dvh;overflow:hidden;display:flex;flex-direction:column}.lab-active .site-header{padding-top:10px;padding-bottom:10px;flex:none}.lab-active .heading-group h1{font-size:20px;margin-top:2px}.lab-active .heading-group h1 span{font-size:17px}.lab-active .course-link{font-size:9px}#demo-view{display:flex;flex-direction:column;min-height:0;flex:1;padding:0 2.1vw 13px}.demo-toolbar{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:12px 0;flex:none}.demo-heading{display:flex;align-items:center;gap:13px;min-width:0}.demo-number{background:var(--accent);color:var(--bg);padding:3px 7px;font-size:20px;line-height:1.35;font-variant-numeric:tabular-nums}.demo-section{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:2px}.demo-heading h2{font-size:19px;line-height:1.3;font-weight:550}.demo-navigation{display:flex;gap:6px;flex:none}.demo-navigation button{width:35px;height:35px;font-size:24px;line-height:1;padding:0}
+.lab-layout{display:grid;grid-template-columns:clamp(250px,25vw,345px) minmax(0,1fr);gap:15px;min-height:0;flex:1}.controls-panel{background:var(--panel);border:1px solid var(--line);overflow-y:auto;padding:17px 17px 22px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}.panel-label{font-size:10px;letter-spacing:.11em;color:var(--accent);font-weight:700;margin:0 0 13px}.control{margin-bottom:16px}.control label{font-size:12px;display:block;line-height:1.35;margin-bottom:7px}.control-row{display:flex;align-items:center;gap:10px}.control input[type=range]{width:100%;min-width:40px;accent-color:var(--accent);cursor:pointer}.control input[type=number]{width:75px;min-width:65px;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:2px;padding:3px 5px;font:12px var(--ui);font-variant-numeric:tabular-nums}.control select{width:100%;padding:7px 6px;font-size:12px;border:1px solid var(--line);border-radius:2px;background:var(--paper);color:var(--ink)}.preset-label{margin-top:20px;margin-bottom:10px}.presets{display:flex;flex-wrap:wrap;gap:6px}.presets button{font-size:11px;min-height:29px;text-align:left;padding:5px 8px}.defaults-button{font-size:10px;padding:2px 0;margin-top:8px;border:0;background:transparent;color:var(--muted);min-height:24px}.defaults-button:hover{background:transparent;text-decoration:underline}.inquiry{margin-top:18px;padding:14px 0;border-top:1px dashed var(--line);border-bottom:1px dashed var(--line)}.inquiry h3{font-size:13px;color:var(--accent);margin-bottom:7px;font-weight:650}.inquiry p{font-size:12px;line-height:1.65}details{border-bottom:1px dashed var(--line);padding:11px 0}summary{font-size:12px;font-weight:550;cursor:pointer}details p{font-size:11px;line-height:1.7;margin-top:9px;color:var(--muted)}#demo-sources a{display:block;font-size:10px;line-height:1.6;margin-top:9px}
+.lab-main{display:flex;flex-direction:column;min-height:0;min-width:0;background:var(--board);border:1px solid #33473a;overflow:hidden}.equation{flex:none;background:#152019;color:var(--chalk);font:18px/1.6 Georgia,"Times New Roman",serif;min-height:59px;padding:11px 20px;border-bottom:1px dashed #425043;overflow-wrap:anywhere;text-align:center}.equation sup,.equation sub{font-size:.7em}.stage{position:relative;min-height:240px;flex:1;overflow:hidden;background:var(--board);outline-offset:-3px;touch-action:manipulation}.board-canvas,.board-labels{position:absolute;inset:0;width:100%;height:100%;display:block}.board-labels{pointer-events:none}.thumbnail .board-canvas,.thumbnail .board-labels{position:absolute}.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));flex:none;border-top:1px dashed #364d3f;background:#111e17;min-height:61px}.metric{padding:10px 13px;border-right:1px dashed #33483b;min-width:0}.metric:last-child{border-right:0}.metric-label{display:block;font:10px/1.4 var(--ui);color:#a6b8ad;margin-bottom:5px;overflow-wrap:anywhere}.metric-value{display:block;font:17px/1.2 var(--ui);font-variant-numeric:tabular-nums;color:var(--yellow);white-space:normal;overflow-wrap:anywhere}
+.playback{display:flex;align-items:center;justify-content:space-between;gap:10px;flex:none;padding:10px 12px;background:var(--panel);border-top:1px solid var(--line)}.playback-left,.playback-right{display:flex;align-items:center;gap:6px}.playback button{min-height:31px;font-size:11px;padding:5px 9px;white-space:nowrap}.speed-label{display:flex;align-items:center;gap:5px;font-size:9px;color:var(--muted);padding-left:7px}.speed-label input{width:65px;accent-color:var(--accent)}.speed-label output{font-size:10px;font-variant-numeric:tabular-nums;min-width:20px}.status-line{display:flex;justify-content:space-between;gap:13px;background:var(--panel);color:var(--muted);padding:0 12px 7px;font-size:9px;flex:none;min-height:20px}.status-line .warning{color:#d07961}#engine-status{white-space:nowrap;font-size:8px;opacity:.8}.share-url{width:100%;flex:none;font-size:11px;padding:8px;background:var(--paper);color:var(--ink);border:0}.stage:fullscreen{width:100vw;height:100vh}#demo-view:fullscreen{background:var(--bg);padding:0 20px 20px;height:100vh}
+@media(min-width:1700px){.catalogue-grid{gap:30px}.card-title{font-size:16px}.card-short{font-size:12px}.lab-layout{grid-template-columns:350px minmax(0,1fr)}}
+@media(max-width:1150px){.catalogue-grid{gap:21px 16px}.heading-group h1 span{font-size:18px}.lab-layout{gap:10px;grid-template-columns:250px minmax(0,1fr)}.controls-panel{padding:13px}.equation{font-size:16px;padding:8px 13px;min-height:48px}.playback{padding:7px;gap:5px}.speed-label input{width:42px}.metric{padding:8px}.metric-value{font-size:14px}.playback button{font-size:10px;padding:5px 7px}.speed-label{padding-left:0}.lab-active .heading-group h1 span{font-size:14px}.demo-heading h2{font-size:17px}}
+@media(max-width:800px){.catalogue-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.catalogue-count{display:none}.heading-group h1 span{display:block;margin:6px 0 0;font-size:16px}.catalogue-intro h2{font-size:27px}.catalogue-footer{flex-direction:column;gap:10px}.lab-active .heading-group h1 span{display:none}.site-header{padding:15px 4vw}.lab-layout{display:flex;flex-direction:column;min-height:auto}.lab-main{order:0;min-height:auto;flex:none}.controls-panel{order:1;overflow:visible;flex:none;display:block}.stage{aspect-ratio:1000/610;min-height:0;flex:none;width:100%}body.lab-active{height:auto;min-height:100dvh;overflow:visible;display:block}#demo-view{padding:0 3vw 20px}.demo-toolbar{position:relative}.demo-section{font-size:8px}.demo-heading h2{font-size:15px}.demo-number{font-size:16px}.demo-navigation{gap:3px}.demo-navigation button{width:29px;height:31px}.metrics{min-height:58px}.metric-label{font-size:8px}.metric-value{font-size:12px}.playback{flex-wrap:wrap}.speed-label input{width:50px}.equation{font-size:15px}.controls-panel #controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 18px}.panel-label{font-size:11px}.inquiry p,details p{font-size:12px}.status-line{font-size:9px}.catalogue-intro p:last-child{font-size:13px}}
+@media(max-width:480px){.site-header{gap:10px}.course-link{font-size:8px}.heading-group h1{font-size:21px}.heading-group h1 span{font-size:14px}.header-actions button{width:32px}.filters{gap:5px}.filters button{font-size:10px;padding:5px 7px}.catalogue-intro h2{font-size:24px}.catalogue-grid{gap:22px 12px}.card-title{font-size:12px}.card-short{font-size:10px}.card-text{grid-template-columns:20px 1fr;gap:4px}.card-group{font-size:8px}.equation{font-size:13px;padding:7px}.speed-label{display:none}.metric{padding:7px 5px}.metric-value{font-size:10px}.metrics{min-height:54px}.status-line{flex-wrap:wrap;gap:3px}.demo-toolbar{gap:8px}.demo-heading{gap:7px}.lab-active .heading-group h1{font-size:18px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+@media print{.header-actions,.controls-panel,.playback,.status-line,.demo-navigation{display:none}.lab-active{height:auto!important;overflow:visible!important}.lab-layout{display:block}.stage{height:115mm}.lab-main{break-inside:avoid}.catalogue-grid{grid-template-columns:repeat(3,1fr)}}
+
+dialog{max-width:760px;width:92vw;max-height:88vh;overflow:auto;border:1px solid var(--line);background:var(--paper);color:var(--ink);padding:25px}dialog::backdrop{background:#0008}dialog>button{float:right}dialog h2{margin-bottom:15px}dialog p{margin:12px 0;font-size:13px;line-height:1.6}
+
+  </style>
+  <link rel="stylesheet" href="../../assets/fonts/open-sans/open-sans.css">
+  <link rel="stylesheet" href="../../lib/chalkish/examples/chalkboard-theme.css">
+  <style id="lecture-3-chalkish-sync">
+    @font-face {
+      font-family: "Neucha";
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url("../../lib/chalkish/examples/assets/fonts/neucha-regular.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Shantell Sans";
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url("../../lib/chalkish/examples/assets/fonts/shantell-sans-regular.ttf") format("truetype");
+    }
+
+    :root {
+      --font-chalk: "Neucha", "Shantell Sans", sans-serif;
+      --font-chalk-clean: "Shantell Sans", sans-serif;
+      --font-chalk-label: var(--font-chalk-clean);
+      --font-board-ui: "Open Sans", Arial, sans-serif;
+      --bg: #d8dde3;
+      --paper: #e5e9ed;
+      --panel: #e5e9ed;
+      --ink: #24282c;
+      --muted: #4d5358;
+      --line: #9f2d20;
+      --accent: #9f2d20;
+      --active: #d7dde2;
+    }
+
+    :root[data-theme="dark"],
+    :root.theme-dark {
+      --bg: #181818;
+      --paper: #232323;
+      --panel: #232323;
+      --ink: #f1d8c0;
+      --muted: #c6b9ad;
+      --line: #f1d8c0;
+      --accent: #f1d8c0;
+      --active: #393329;
+    }
+
+    body {
+      min-width: 18rem;
+      min-height: 100vh;
+      padding: 0.55rem 1rem 1rem;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-board-ui);
+    }
+
+    body::after { display: none; }
+    button, input, select { font-family: inherit; }
+
+    .site-header,
+    #catalogue,
+    #demo-view {
+      width: min(100%, 112rem);
+      margin-inline: auto;
+    }
+
+    .site-header {
+      display: grid;
+      grid-template-columns: max-content minmax(0, 1fr) max-content;
+      gap: 1rem;
+      align-items: center;
+      padding: 0 0 0.3rem;
+      border-bottom: 1px dashed var(--accent);
+    }
+
+    .heading-group { display: none; }
+
+    .heading-group .eyebrow { display: none; }
+
+    .heading-group h1 {
+      margin: 0;
+      color: var(--accent);
+      font: 700 1rem/1.2 var(--font-board-ui);
+      letter-spacing: 0;
+      text-shadow: 1px 1px 0 #000;
+      text-transform: uppercase;
+    }
+
+    .heading-group h1 span {
+      margin: 0;
+      color: inherit;
+      font: inherit;
+    }
+
+    .course-link,
+    .header-actions button,
+    #language-button {
+      color: var(--accent);
+      font-family: var(--font-board-ui);
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .course-link {
+      display: grid;
+      width: 2rem;
+      height: 1.9rem;
+      place-items: center;
+      border: 1px dotted currentColor;
+      font-size: 1.15rem;
+      line-height: 1;
+      text-decoration: none;
+    }
+
+    .site-header {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .header-actions {
+      display: inline-flex;
+      gap: 0.65rem;
+      align-items: center;
+    }
+
+    .header-actions button {
+      display: grid;
+      width: 1.6rem;
+      height: 1.6rem;
+      min-height: 1.6rem;
+      padding: 0;
+      place-items: center;
+      border: 1px dotted var(--accent);
+      border-radius: 0;
+      background: transparent;
+    }
+
+    #language-button { width: auto; min-width: 4.8rem; border: 0; border-bottom: 1px dotted currentColor; }
+    #theme-button { font-family: Arial, sans-serif; font-size: 1.1rem; line-height: 1; }
+
+    .demo-section,
+    .card-group { display: none; }
+
+    .catalogue-intro h2,
+    .demo-heading h2 {
+      color: var(--accent);
+      font-family: var(--font-board-ui);
+      text-shadow: 1px 1px 0 #000;
+      text-transform: uppercase;
+    }
+
+    .demo-toolbar {
+      border-bottom: 2px dashed var(--accent);
+    }
+
+    .controls-panel {
+      border: 1px dashed var(--accent);
+      border-radius: 0;
+      background: var(--panel);
+    }
+
+    .lab-main,
+    .stage,
+    .equation,
+    .metrics,
+    .playback,
+    .status-line {
+      background-color: var(--board-green-deep);
+      background-image:
+        var(--board-texture),
+        radial-gradient(ellipse at 29% 42%, #eef0e010 0 0.35rem, transparent 14rem),
+        radial-gradient(ellipse at 78% 67%, transparent 0 7rem, #eef0e00b 11rem, transparent 18rem),
+        linear-gradient(118deg, #14271e, #0b1511 78%);
+      background-size: 300px 300px, auto, auto, auto;
+      background-blend-mode: soft-light, screen, screen, normal;
+    }
+
+    .lab-main {
+      border: 2px dashed var(--accent);
+    }
+
+    .lab-main .equation {
+      color: var(--chalk-white);
+      font-family: var(--font-chalk);
+      text-shadow: 0.03em 0 #fff2, -0.02em 0.01em #fff1;
+    }
+
+    .lab-main .metric-label,
+    .lab-main .metric-value,
+    .lab-main .playback,
+    .lab-main .status-line {
+      font-family: var(--font-chalk-label);
+    }
+
+    .lab-main .metrics,
+    .lab-main .playback,
+    .lab-main .status-line {
+      color: var(--chalk-dim);
+    }
+
+    .lab-main .playback { border-top: 0; }
+    .lab-main .status-line { background-color: transparent; }
+
+    .lab-main button,
+    .lab-main select {
+      background-color: #101411;
+      color: var(--chalk-white);
+      border-color: #e9eed575;
+      font-family: var(--font-chalk-label);
+    }
+
+    .lab-main button:hover,
+    .lab-main button:focus-visible,
+    .lab-main select:focus-visible {
+      background-color: #152c21;
+      color: var(--chalk-yellow);
+      border-color: var(--chalk-yellow);
+    }
+
+    .lab-active .site-header { padding-block: 0.2rem; }
+    #demo-view { padding: 0 0.5rem; }
+    .demo-toolbar { padding-block: 0.35rem; }
+    .demo-heading h2 { line-height: 1.15; }
+    .lab-layout { gap: 0.5rem; }
+    .controls-panel { padding: 0.65rem 0.75rem 0.9rem; }
+    .equation { min-height: 2.75rem; padding-block: 0.35rem; }
+    .metrics { min-height: 3rem; }
+    .metric { padding: 0.35rem 0.55rem; }
+    .metric-value { font-size: 0.95rem; }
+    .playback { padding-block: 0.35rem; }
+    .status-line { min-height: 1rem; padding-bottom: 0.2rem; }
+    .playback { justify-content: flex-end; }
+    .playback-actions { display: flex; align-items: center; justify-content: flex-end; gap: 0.4rem; flex-wrap: wrap; margin-left: auto; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+    .stage > .playback { position: absolute; z-index: 4; right: 0.55rem; bottom: 0.55rem; width: max-content; max-width: calc(100% - 1.1rem); padding: 0.35rem; border: 1px dashed #e9eed575; background: #101411d9; box-shadow: 0 0.2rem 1rem #0008; }
+    .stage > .playback .playback-actions { margin-left: 0; }
+    .stage { --playback-safe-space: 4.8rem; }
+    .stage > .board-canvas,
+    .stage > .board-labels {
+      inset: 0 0 var(--playback-safe-space);
+      width: auto;
+      height: auto;
+    }
+
+    @media (max-width: 800px) {
+      body { padding-inline: 0.55rem; }
+      .site-header { grid-template-columns: max-content minmax(0, 1fr) max-content; gap: 0.5rem; }
+      .heading-group h1 { font-size: 0.78rem; }
+      .course-link { font-size: 0.56rem; }
+      .stage { --playback-safe-space: 8rem; }
+    }
+  </style>
+<style id="lecture-3-tight-layout">
+#catalogue-help,#source-link{display:none!important;}
+@media (min-width:760px){
+  body{padding-inline:clamp(12px,1.2vw,24px)!important;}
+  .layout,.lab-layout,.demo-layout,.workspace,.content-grid{grid-template-columns:minmax(240px,20%) minmax(0,1fr)!important;gap:clamp(10px,1vw,16px)!important;}
+  main:has(>aside),#demo-view:has(> #controls-panel){grid-template-columns:minmax(240px,20%) minmax(0,1fr)!important;gap:clamp(10px,1vw,16px)!important;}
+  #demo-view > :has(> #controls-panel),#demo-view > :has(#controls-panel){display:grid!important;grid-template-columns:minmax(240px,20%) minmax(0,1fr)!important;gap:clamp(10px,1vw,16px)!important;}
+  .controls,.control-panel,#controls,main>aside,#controls-panel{min-width:0!important;width:auto!important;max-width:none!important;}
+}
+</style>
+</head>
+<body>
+  <header class="site-header">
+    <a class="course-link" href="../../pages/cfd2026.html" id="course-link" title="Вернуться к странице курса" aria-label="Вернуться к странице курса">←</a>
+    <div class="heading-group">
+      <h1 id="page-title">Лекция 3 <span>Сеточные методы и разностные схемы</span></h1>
+    </div>
+    <div class="header-actions">
+      <button id="theme-button" type="button" aria-label="Переключить тему" title="Theme">◐</button>
+      <button id="language-button" type="button" aria-label="English">EN</button>
+    </div>
+  </header>
+  <main id="catalogue">
+    <section class="catalogue-intro">
+      <div><p class="eyebrow" id="catalogue-label">ИНТЕРАКТИВНЫЙ КАТАЛОГ</p><h2 id="catalogue-title">Что делает разностная схема с данными</h2><p id="catalogue-description">Смотрим на сеточные данные, работу операторов и сохранение величин.</p></div>
+      <div class="catalogue-count"><strong>14</strong><span id="catalogue-count-label">опытов<br>с объяснениями</span></div>
+    </section>
+    <nav id="filters" class="filters" aria-label="Разделы лекции"></nav>
+    <div id="catalogue-grid" class="catalogue-grid"></div>
+    <footer class="catalogue-footer">
+      <span id="catalogue-help">Нажмите на карточку. Опыт откроется здесь же. Esc — вернуться в каталог.</span>
+      <a href="./SOURCES.md" id="source-link">Источники и математические соглашения ↗</a>
+    </footer>
+  </main>
+  <section id="demo-view" hidden aria-label="Интерактивный опыт">
+    <div class="demo-toolbar">
+      <div class="demo-heading"><span class="demo-number" id="demo-number"></span><div><span class="demo-section" id="demo-section"></span><h2 id="demo-title"></h2></div></div>
+      <div class="demo-navigation">
+        <button type="button" id="previous" aria-label="Предыдущий опыт">‹</button>
+        <button type="button" id="next" aria-label="Следующий опыт">›</button>
+        <button type="button" id="close-demo" aria-label="Каталог">×</button>
+      </div>
+    </div>
+    <div class="lab-layout">
+      <aside class="controls-panel" id="controls-panel">
+        <div class="panel-label" id="control-heading">УСЛОВИЯ ОПЫТА</div>
+        <div id="controls"></div>
+        <div class="panel-label preset-label" id="preset-heading">ПОПРОБУЙТЕ</div>
+        <div id="presets" class="presets"></div>
+        <button type="button" id="defaults" class="defaults-button">Параметры по умолчанию</button>
+        <section class="inquiry"><h3 id="question-heading">Что проверить?</h3><p id="question"></p></section>
+        <details id="math-details" open><summary id="math-heading">Математика опыта</summary><p id="explanation"></p></details>
+        <details><summary id="assumptions-heading">Соглашения и ограничения</summary><p id="caveat"></p></details>
+        <details><summary id="sources-heading">Источники и идеи</summary><div id="demo-sources"></div></details>
+      </aside>
+      <div class="lab-main">
+        <div class="equation" id="equation" aria-label="Уравнение"></div>
+        <div id="stage" class="stage" tabindex="0">
+          <noscript>Для интерактивных опытов нужен JavaScript.</noscript>
+          <div class="playback">
+            <div class="playback-actions">
+              <button type="button" id="play" class="primary">▶ Пуск</button>
+              <button type="button" id="step">Шаг</button>
+              <button type="button" id="reset">↺ Сброс</button>
+              <label class="speed-label" id="speed-wrapper"><span id="speed-label">шаг/с</span><input id="speed" type="range" min="2" max="120" step="2" value="24" aria-label="Шагов в секунду"><output id="speed-value">24</output></label>
+              <button type="button" id="fullscreen" title="Полный экран">⛶</button>
+            </div>
+          </div>
+        </div>
+        <div id="metrics" class="metrics" aria-label="Измеренные величины"></div>
+        <div class="sr-only" aria-live="polite"><span id="status" role="status"></span><span id="engine-status"></span></div>
+      </div>
+    </div>
+  </section>
+  <script>
+globalThis.PDE3_OFFLINE = true;
+const __modules = Object.create(null);
+__modules['kernels.js'] = (() => {
+/** Numerical kernels. No DOM, plotting code or external dependencies.
+ * All spatial/time quantities in these teaching problems are nondimensional.
+ * No hidden clipping, smoothing, adaptive timesteps or viscosity are used.
+ */
+const TAU = 2 * Math.PI;
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+const wrap = (i, n) => ((i % n) + n) % n;
+const sum = a => a.reduce((s, x) => s + x, 0);
+const factorial = n => { let f=1; for(let i=2;i<=n;i++) f*=i; return f; };
+const normInf = a => a.reduce((s,x)=>Math.max(s,Math.abs(x)),0);
+const l2Error = (a,b) => Math.sqrt(sum(a.map((v,i)=>(v-b[i])**2))/a.length);
+const l1Error = (a,b) => sum(a.map((v,i)=>Math.abs(v-b[i])))/a.length;
+function solveDense(A, rhs) {
+  const n=rhs.length, a=A.map((r,i)=>[...r,rhs[i]]);
+  if(!n || a.some(r=>r.length!==n+1)) throw new RangeError('Square system required');
+  for(let k=0;k<n;k++) {
+    let p=k; for(let i=k+1;i<n;i++) if(Math.abs(a[i][k])>Math.abs(a[p][k])) p=i;
+    if(Math.abs(a[p][k])<1e-14) throw new RangeError('Singular or nearly singular system');
+    [a[k],a[p]]=[a[p],a[k]];
+    for(let i=k+1;i<n;i++) {const f=a[i][k]/a[k][k]; a[i][k]=0;
+      for(let j=k+1;j<=n;j++) a[i][j]-=f*a[k][j];}
+  }
+  const x=new Array(n).fill(0);
+  for(let i=n-1;i>=0;i--) {let s=a[i][n];for(let j=i+1;j<n;j++)s-=a[i][j]*x[j];x[i]=s/a[i][i];}
+  return x;
+}
+/** a[0] and c[n-1] are unused. The input arrays are not modified. */
+function thomas(a,b,c,rhs) {
+  const n=b.length, d=[...b], r=[...rhs], out=new Array(n);
+  for(let i=1;i<n;i++) {if(Math.abs(d[i-1])<1e-14)throw new RangeError('Zero Thomas pivot');
+    const m=a[i]/d[i-1];d[i]-=m*c[i-1];r[i]-=m*r[i-1];}
+  if(Math.abs(d[n-1])<1e-14)throw new RangeError('Zero Thomas pivot');
+  out[n-1]=r[n-1]/d[n-1];
+  for(let i=n-2;i>=0;i--)out[i]=(r[i]-c[i]*out[i+1])/d[i];
+  return out;
+}
+/** Constant symmetric cyclic tridiagonal solve by Sherman-Morrison. n>=3. */
+function cyclicSolve(rhs, diagonal=1, off=.25) {
+  const n=rhs.length;
+  if(n<3)throw new RangeError('At least three points required');
+  if(!off)return rhs.map(v=>v/diagonal);
+  const gamma=-diagonal, a=new Array(n).fill(off),c=[...a],b=new Array(n).fill(diagonal);
+  b[0]-=gamma; b[n-1]-=off*off/gamma;
+  const u=new Array(n).fill(0);u[0]=gamma;u[n-1]=off;
+  const x=thomas(a,b,c,rhs), z=thomas(a,b,c,u);
+  const f=(x[0]+off*x[n-1]/gamma)/(1+z[0]+off*z[n-1]/gamma);
+  return x.map((v,i)=>v-f*z[i]);
+}
+/** Coefficients w for sum_j w_j f(x+s_j*h) / h^m. */
+function fdWeights(offsets,m=1) {
+  const n=offsets.length;
+  if(!Number.isInteger(m)||m<0||m>=n)throw new RangeError('Need more nodes than derivative order');
+  if(new Set(offsets).size!==n)throw new RangeError('Stencil nodes must be distinct');
+  const A=Array.from({length:n},(_,k)=>offsets.map(s=>s**k/factorial(k)));
+  return solveDense(A,Array.from({length:n},(_,k)=>k===m?1:0));
+}
+function moments(offsets,weights,count=9) {
+  return Array.from({length:count},(_,k)=>sum(offsets.map((s,j)=>weights[j]*s**k))/factorial(k));
+}
+function formalOrder(offsets, weights, m=1) {
+  const M=moments(offsets,weights,14);
+  for(let k=0;k<=m;k++)if(Math.abs(M[k]-(k===m?1:0))>1e-8)return 0;
+  for(let k=m+1;k<M.length;k++)if(Math.abs(M[k])>1e-9)return k-m;
+  return 14-m;
+}
+const STENCILS={forward:[0,1],backward:[-1,0],central:[-1,0,1],fourth:[-2,-1,0,1,2],onesided:[0,1,2],asymmetric:[-1,0,2]};
+const FUNCTIONS={
+  sin:{f:x=>Math.sin(x),d:x=>Math.cos(x),dd:x=>-Math.sin(x)},
+  exp:{f:x=>Math.exp(x),d:x=>Math.exp(x),dd:x=>Math.exp(x)},
+  gaussian:{f:x=>Math.exp(-x*x),d:x=>-2*x*Math.exp(-x*x),dd:x=>(4*x*x-2)*Math.exp(-x*x)},
+  cubic:{f:x=>x*x*x,d:x=>3*x*x,dd:x=>6*x}
+};
+function derivative(f,x,h,offsets,m=1) {
+  const w=fdWeights(offsets,m);return sum(w.map((v,j)=>v*f(x+offsets[j]*h)))/h**m;
+}
+/** Actual rounded arithmetic, not a fabricated U-shaped error curve.
+ * f32 uses Math.fround for arguments, function values, subtraction and division.
+ * It is a binary32 arithmetic demonstration; Math.exp itself is the JS library.
+ */
+function roundedDerivative(x,h,method='central',precision='f64') {
+  const R=precision==='f32'?Math.fround:v=>v, H=R(h),X=R(x);
+  const F=z=>R(Math.exp(z));
+  if(method==='forward')return R(R(F(R(X+H))-F(X))/H);
+  return R(R(F(R(X+H))-F(R(X-H)))/R(2*H));
+}
+function sampleGrid(n,stretch=0) {
+  return Array.from({length:n+1},(_,i)=>{const s=i/n;return Math.abs(stretch)<1e-9?s:Math.expm1(stretch*s)/Math.expm1(stretch);});
+}
+function profile(kind,x,frequency=2,phase=0) {
+  const z=wrap(x-phase,1);
+  if(kind==='sine')return .5+.4*Math.sin(TAU*frequency*z);
+  if(kind==='step')return z>.2&&z<.45?1:0;
+  if(kind==='triangle')return Math.max(0,1-Math.abs(z-.35)/.15);
+  return Math.exp(-(((z-.35)/.075)**2));
+}
+function cellAverage(fn,a,b) {
+  // Composite Simpson quadrature, fixed 32 subintervals; adequate for bounded presets.
+  const m=32,h=(b-a)/m;let q=fn(a)+fn(b);
+  for(let i=1;i<m;i++)q+=(i%2?4:2)*fn(a+i*h);
+  return q/(3*m);
+}
+function advectionWeights(scheme,C) {
+  if(scheme==='upwind')return C>=0?[C,1-C,0]:[0,1+C,-C];
+  if(scheme==='lf')return [.5*(1+C),0,.5*(1-C)];
+  if(scheme==='ftcs')return [.5*C,1,-.5*C];
+  if(scheme==='downwind')return C>=0?[0,1+C,-C]:[C,1-C,0];
+  // Lax-Wendroff; for constant linear advection MacCormack is algebraically equal.
+  return [.5*(C+C*C),1-C*C,.5*(C*C-C)];
+}
+function advectionStep(u,C,scheme) {
+  const n=u.length;
+  if(scheme==='maccormack') {
+    const p=u.map((v,i)=>v-C*(u[wrap(i+1,n)]-v));
+    return u.map((v,i)=>.5*(v+p[i]-C*(p[i]-p[wrap(i-1,n)])));
+  }
+  const [l,c,r]=advectionWeights(scheme,C);
+  return u.map((v,i)=>l*u[wrap(i-1,n)]+c*v+r*u[wrap(i+1,n)]);
+}
+function amplification(scheme,C,xi) {
+  const [l,c,r]=advectionWeights(scheme,C);
+  return {re:c+(l+r)*Math.cos(xi),im:(r-l)*Math.sin(xi)};
+}
+function maxAmplification(scheme,C) {
+  let v=0;for(let j=0;j<=256;j++){const z=amplification(scheme,C,Math.PI*j/256);v=Math.max(v,Math.hypot(z.re,z.im));}return v;
+}
+function compactDerivative(u,h,kind='compact4') {
+  const n=u.length;
+  if(kind==='central')return u.map((_,i)=>(u[wrap(i+1,n)]-u[wrap(i-1,n)])/(2*h));
+  if(kind==='fourth')return u.map((_,i)=>(u[wrap(i-2,n)]-8*u[wrap(i-1,n)]+8*u[wrap(i+1,n)]-u[wrap(i+2,n)])/(12*h));
+  const alpha=kind==='compact6'?1/3:1/4,a=kind==='compact6'?14/9:3/2,b=kind==='compact6'?1/9:0;
+  const rhs=u.map((_,i)=>a*(u[wrap(i+1,n)]-u[wrap(i-1,n)])/(2*h)+b*(u[wrap(i+2,n)]-u[wrap(i-2,n)])/(4*h));
+  return cyclicSolve(rhs,1,alpha);
+}
+function modifiedWave(kind,xi) {
+  if(kind==='central')return Math.sin(xi);
+  if(kind==='fourth')return (8*Math.sin(xi)-Math.sin(2*xi))/6;
+  if(kind==='compact6')return ((14/9)*Math.sin(xi)+(1/18)*Math.sin(2*xi))/(1+(2/3)*Math.cos(xi));
+  return 1.5*Math.sin(xi)/(1+.5*Math.cos(xi));
+}
+/** theta method, homogeneous Dirichlet boundaries; endpoints included. */
+function heatStep(u,r,theta=0) {
+  const m=u.length-2;
+  const rhs=Array.from({length:m},(_,j)=>{const i=j+1;return u[i]+(1-theta)*r*(u[i-1]-2*u[i]+u[i+1]);});
+  const v=theta===0?rhs:thomas(new Array(m).fill(-theta*r),new Array(m).fill(1+2*theta*r),new Array(m).fill(-theta*r),rhs);
+  return [0,...v,0];
+}
+function heatAmplification(r,theta,xi) {const z=4*r*Math.sin(xi/2)**2;return (1-(1-theta)*z)/(1+theta*z);}
+function laplaceMatrix(n) {
+  const N=n*n,A=Array.from({length:N},()=>new Array(N).fill(0));
+  for(let j=0;j<n;j++)for(let i=0;i<n;i++) {const k=j*n+i;A[k][k]=4;
+    if(i>0)A[k][k-1]=-1;if(i<n-1)A[k][k+1]=-1;if(j>0)A[k][k-n]=-1;if(j<n-1)A[k][k+n]=-1;}
+  return A;
+}
+function laplaceSolve(n,left=1,right=0) {
+  const A=laplaceMatrix(n),b=new Array(n*n).fill(0);
+  // Vertical sides fixed; top/bottom zero. Corner values are unused by interior stencil.
+  for(let j=0;j<n;j++){b[j*n]+=left;b[j*n+n-1]+=right;}return {A,b,u:solveDense(A,b)};
+}
+function balanceStep(u,F,dt,h,defect=0,face=3) {
+  // defect: amount added to the inflow seen only by the cell to the right of face.
+  return u.map((v,i)=>v+dt/h*(F[i]+(i===face?defect:0)-F[i+1]));
+}
+function burgersFlux(a,b) {return .25*(a*a+b*b)-.5*Math.max(Math.abs(a),Math.abs(b))*(b-a);}
+function burgersStep(u,dt,h,left,right,conservative=true) {
+  const n=u.length,v=new Array(n);
+  if(conservative){const F=Array.from({length:n+1},(_,i)=>burgersFlux(i?u[i-1]:left,i<n?u[i]:right));
+    for(let i=0;i<n;i++)v[i]=u[i]-dt/h*(F[i+1]-F[i]);
+  }else{for(let i=0;i<n;i++)v[i]=u[i]-dt/h*u[i]*(u[i]-(i?u[i-1]:left));}
+  return v;
+}
+function shockPosition(u,left,right,length=2) {
+  // Mass-equivalent position: equals the front location for an exact single step.
+  return length*(sum(u)/u.length-right)/(left-right);
+}
+function costEstimate({n=32,dim=2,mode='advection',variables=5,buffers=3,iterations=1,work=12}) {
+  const dof=variables*n**dim,steps=mode==='diffusion'?2*dim*n*n:2*n;
+  return {dof,steps,operations:dof*steps*iterations*work,memory:8*dof*buffers,exponent:dim+(mode==='diffusion'?2:1)};
+}
+function convolve(a,b) {const out={};for(const [i,x] of Object.entries(a))for(const [j,y] of Object.entries(b))out[+i+(+j)]=(out[+i+(+j)]||0)+x*y;return out;}
+function applyShiftOperator(u,coeffs) {return u.map((_,i)=>sum(Object.entries(coeffs).map(([k,v])=>v*u[wrap(i+(+k),u.length)])));}
+
+return { TAU, clamp, wrap, sum, factorial, normInf, l2Error, l1Error, solveDense, thomas, cyclicSolve, fdWeights, moments, formalOrder, STENCILS, FUNCTIONS, derivative, roundedDerivative, sampleGrid, profile, cellAverage, advectionWeights, advectionStep, amplification, maxAmplification, compactDerivative, modifiedWave, heatStep, heatAmplification, laplaceMatrix, laplaceSolve, balanceStep, burgersFlux, burgersStep, shockPosition, costEstimate, convolve, applyShiftOperator };
+})();
+__modules['board.js'] = (() => {
+/** Drawing adapter. The deployed gallery uses the site's genuine Chalkish engine.
+ * Standalone preview: an independent Canvas 2D renderer, explicitly identified in UI.
+ * Design coordinates are 1000 x 610; labels share the exact same viewport transform.
+ */
+const C={white:'#f4f1e7',muted:'#a6b8ad',grid:'#2a3a31',yellow:'#f0d477',blue:'#8ac8db',red:'#ef9685',green:'#b6d3a0',bg:'#0d1712',dim:'#506358'};
+const W=1000,H=610;
+let libraryPromise;
+function getLibrary(){
+  if(globalThis.PDE3_OFFLINE || new URLSearchParams(location.search).get('engine')==='canvas')return Promise.resolve(null);
+  return libraryPromise??=import('../../lib/chalkish/src/index.js').catch(()=>null);
+}
+class Ink {
+  constructor(){this.cmd=[];}
+  line(x1,y1,x2,y2,color=C.white,width=1.5,dash=false){this.cmd.push({type:'line',x1,y1,x2,y2,color,width,dash});return this;}
+  arrow(x1,y1,x2,y2,color=C.yellow,width=1.8){this.cmd.push({type:'arrow',x1,y1,x2,y2,color,width});return this;}
+  rect(x,y,w,h,fill=null,color=C.grid,width=1){if(w<0){x+=w;w=-w;}if(h<0){y+=h;h=-h;}if(w<1e-12||h<1e-12){if(color)this.line(x,y,x+w,y+h,color,width);return this;}this.cmd.push({type:'rect',x,y,w,h,fill,color,width});return this;}
+  dot(x,y,r=4,color=C.yellow,fill=color){this.cmd.push({type:'dot',x,y,r,color,fill,width:1.5});return this;}
+  path(points,color=C.white,width=2,dash=false){this.cmd.push({type:'path',points,color,width,dash});return this;}
+  text(x,y,text,size=16,color=C.white,align='left'){this.cmd.push({type:'text',x,y,text:String(text),size,color,align});return this;}
+  title(text,sub=''){this.text(42,31,text,21,C.white);if(sub)this.text(42,57,sub,14,C.muted);return this;}
+  badge(x,y,text,color=C.yellow){this.text(x,y,text,15,color);return this;}
+}
+function graph(ink,{x=72,y=115,w=858,h=295,xmin=0,xmax=1,ymin=-1,ymax=1,xticks=4,yticks=4,xlabel='x',ylabel='u',labels=true}={}){
+  const X=v=>x+(v-xmin)/(xmax-xmin)*w,Y=v=>y+h-(v-ymin)/(ymax-ymin)*h;
+  for(let i=0;i<=xticks;i++){const v=xmin+(xmax-xmin)*i/xticks,px=X(v);ink.line(px,y,px,y+h,C.grid,1);if(labels)ink.text(px,y+h+20,fmt(v,3),12,C.muted,'center');}
+  for(let i=0;i<=yticks;i++){const v=ymin+(ymax-ymin)*i/yticks,py=Y(v);ink.line(x,py,x+w,py,C.grid,1);if(labels)ink.text(x-12,py+4,fmt(v,3),12,C.muted,'right');}
+  ink.line(x,y+h,x+w+9,y+h,C.muted,1.2);ink.line(x,y,x,y+h,C.muted,1.2);
+  if(xmin<0&&xmax>0)ink.line(X(0),y,X(0),y+h,C.dim,1.3);
+  if(ymin<0&&ymax>0)ink.line(x,Y(0),x+w,Y(0),C.dim,1.3);
+  ink.text(x+w+14,y+h+5,xlabel,14,C.muted);ink.text(x-4,y-16,ylabel,15,C.muted);
+  const clipped=(pts,color,width=2,dash=false)=>{
+    // Segment clipping prevents a deliberately unstable curve from hiding its axes.
+    let group=[]; const flush=()=>{if(group.length>1)ink.path(group,color,width,dash);group=[];};
+    for(const p of pts){if(Number.isFinite(p[0])&&Number.isFinite(p[1])&&p[0]>=xmin-1e-10&&p[0]<=xmax+1e-10&&p[1]>=ymin&&p[1]<=ymax){group.push([X(p[0]),Y(p[1])]);}else flush();}flush();
+  };
+  return {X,Y,x,y,w,h,xmin,xmax,ymin,ymax,contains:(px,py)=>px>=x&&px<=x+w&&py>=y&&py<=y+h,
+    inverse:(px,py)=>[xmin+(px-x)/w*(xmax-xmin),ymax-(py-y)/h*(ymax-ymin)],
+    curve:(fn,color=C.white,width=2,n=400,dash=false)=>clipped(Array.from({length:n+1},(_,i)=>{const v=xmin+(xmax-xmin)*i/n;return [v,fn(v)];}),color,width,dash),
+    series:(xs,ys,color=C.yellow,width=2,dots=false)=>{clipped(xs.map((v,i)=>[v,ys[i]]),color,width);if(dots)xs.forEach((v,i)=>{if(ys[i]>=ymin&&ys[i]<=ymax)ink.dot(X(v),Y(ys[i]),3.2,color);});},
+    dot:(a,b,r=4,col=C.yellow)=>{if(b>=ymin&&b<=ymax)ink.dot(X(a),Y(b),r,col);}
+  };
+}
+function fmt(x,d=4){if(!Number.isFinite(x))return String(x);if(x===0)return '0';return Math.abs(x)>=1e4||Math.abs(x)<1e-3?x.toExponential(2):Number(x.toPrecision(d)).toString();}
+function legend(ink,items,y=492,x=72,step=260){items.forEach(([s,c],i)=>{ink.line(x+i*step,y-5,x+27+i*step,y-5,c,2.5);ink.text(x+37+i*step,y,s,15,c);});}
+function drawShape(ctx,p){
+  ctx.strokeStyle=p.color||C.white;ctx.fillStyle=p.fill||'transparent';ctx.lineWidth=p.width||1.5;ctx.setLineDash(p.dash?[7,6]:[]);ctx.beginPath();
+  if(p.type==='line'||p.type==='arrow'){ctx.moveTo(p.x1,p.y1);ctx.lineTo(p.x2,p.y2);}
+  if(p.type==='rect')ctx.rect(p.x,p.y,p.w,p.h);
+  if(p.type==='dot')ctx.arc(p.x,p.y,p.r,0,2*Math.PI);
+  if(p.type==='path'){p.points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));}
+  if(p.fill)ctx.fill();if(p.color)ctx.stroke();
+  if(p.type==='arrow'){const a=Math.atan2(p.y2-p.y1,p.x2-p.x1),r=8;ctx.beginPath();ctx.moveTo(p.x2-r*Math.cos(a-.4),p.y2-r*Math.sin(a-.4));ctx.lineTo(p.x2,p.y2);ctx.lineTo(p.x2-r*Math.cos(a+.4),p.y2-r*Math.sin(a+.4));ctx.stroke();}
+}
+class Board {
+  constructor(host,{preview=false,onEngine=()=>{}}={}){
+    this.host=host;this.preview=preview;this.commands=[];this.dead=false;this.engine='canvas';this.onEngine=onEngine;
+    this.canvas=document.createElement('canvas');this.labels=document.createElement('canvas');
+    this.canvas.className='board-canvas';this.labels.className='board-labels';this.labels.setAttribute('aria-hidden','true');
+    this.canvas.setAttribute('aria-label','Интерактивная математическая диаграмма');this.host.append(this.canvas,this.labels);
+    this.ro=new ResizeObserver(()=>this.paint());this.ro.observe(host);
+    this.ready=(preview?Promise.resolve(null):getLibrary()).then(lib=>{
+      if(this.dead)return;
+      if(lib){try{
+        if(!document.querySelector('[data-chalkish-fonts]')){for(const href of ['../../assets/fonts/open-sans/open-sans.css','../../lib/chalkish/examples/chalkboard-theme.css']){const link=document.createElement('link');link.rel='stylesheet';link.href=href;link.dataset.chalkishFonts='';link.onload=()=>this.paint();document.head.append(link);}}
+        this.lib=lib;this.scene=new lib.Scene({background:C.bg});
+        this.camera=new lib.Camera2D({centerX:W/2,centerY:H/2,height:H,flipY:false});
+        this.app=lib.mount(this.canvas,{scene:this.scene,camera:this.camera,fixedStep:null,adaptiveQuality:false,dprMax:2});
+        this.engine='chalkish';
+      }catch(e){console.warn('Chalkish initialization failed; using standalone renderer.',e);this.app?.destroy();this.app=null;this.engine='canvas';}}
+      this.onEngine(this.engine);this.paint();
+    });
+  }
+  render(ink){this.commands=ink.cmd||ink;this.paint();}
+  view(){const r=this.host.getBoundingClientRect(),w=Math.max(1,r.width),h=Math.max(1,r.height),s=Math.min(w/W,h/H);return {w,h,s,ox:(w-W*s)/2,oy:(h-H*s)/2};}
+  point(ev){const r=this.host.getBoundingClientRect(),v=this.view();return [(ev.clientX-r.left-v.ox)/v.s,(ev.clientY-r.top-v.oy)/v.s];}
+  paint(){
+    if(this.dead||!this.host.isConnected)return;
+    const {w,h,s,ox,oy}=this.view();if(w<2||h<2)return;
+    const dpr=Math.min(devicePixelRatio||1,2),overlay=this.labels.getContext('2d');
+    this.labels.width=Math.round(w*dpr);this.labels.height=Math.round(h*dpr);
+    overlay.setTransform(dpr,0,0,dpr,0,0);overlay.clearRect(0,0,w,h);overlay.translate(ox,oy);overlay.scale(s,s);
+    if(this.engine==='chalkish'){
+      const L=this.lib;this.scene.clear();
+      for(const p of this.commands){if(p.type==='text')continue;
+        const style=L.chalkStyle('dusty',{stroke:p.color,fill:p.fill||null,width:p.width||1.5,passes:2,roughness:this.preview ? .15 : .24,dash:p.dash?[7,6]:null});
+        if(p.type==='line')this.scene.add(new L.Line(p.x1,p.y1,p.x2,p.y2,{style}));
+        if(p.type==='arrow')this.scene.add(new L.Arrow(p.x1,p.y1,p.x2,p.y2,{headLength:8,style}));
+        if(p.type==='dot')this.scene.add(new L.Circle(p.r,{x:p.x,y:p.y,style}));
+        if(p.type==='rect')this.scene.add(new L.Rectangle(p.w,p.h,{x:p.x+p.w/2,y:p.y+p.h/2,style}));
+        if(p.type==='path'&&p.points.length>1)this.scene.add(new L.CurveLayer({x:Float32Array.from(p.points,p=>p[0]),y:Float32Array.from(p.points,p=>p[1]),count:p.points.length,style}));
+      }
+      this.camera.setCenter(W/2,H/2);this.camera.setHeight(h/s);this.app.resize();this.app.render();
+    }else{
+      this.canvas.width=Math.round(w*dpr);this.canvas.height=Math.round(h*dpr);
+      const ctx=this.canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle=this.preview?'#e7ede6':C.bg;ctx.fillRect(0,0,w,h);ctx.translate(ox,oy);ctx.scale(s,s);
+      ctx.lineCap='round';ctx.lineJoin='round';for(const p of this.commands)if(p.type!=='text')drawShape(ctx,p);
+    }
+    for(const p of this.commands)if(p.type==='text'){
+      overlay.font=`${p.size}px "Neucha", "Open Sans", system-ui, sans-serif`;
+      overlay.fillStyle=p.color;overlay.textAlign=p.align;overlay.textBaseline='alphabetic';
+      overlay.fillText(p.text,p.x,p.y);
+    }
+  }
+  destroy(){this.dead=true;this.ro.disconnect();this.app?.destroy();this.canvas.remove();this.labels.remove();}
+}
+
+return { C, W, Ink, graph, fmt, legend, Board, H };
+})();
+__modules['catalog.js'] = (() => {
+/** Course map: the supplied Lecture 3 outline, not guessed slide numbers. */
+const R=(key,label,value,min,max,step=1)=>({key,label,type:'range',value,min,max,step});
+const S=(key,label,value,options)=>({key,label,type:'select',value,options});
+const O=(value,ru,en)=>({value,label:[ru,en]});
+const P=(label,values)=>({label,values});
+const groups=[['Сетка','Grid'],['Производные','Derivatives'],['Операторы','Operators'],['Компактные схемы','Compact schemes'],['Разностные схемы','Difference schemes'],['Сохранение и стоимость','Conservation and cost']];
+const fnOptions=[O('sin','sin x','sin x'),O('exp','exp x','exp x'),O('gaussian','exp(−x²)','exp(−x²)'),O('cubic','x³','x³')];
+const diffOptions=[O('forward','Правая · O(h)','Forward · O(h)'),O('backward','Левая · O(h)','Backward · O(h)'),O('central','Центральная · O(h²)','Centered · O(h²)'),O('fourth','Пять узлов · O(h⁴)','Five points · O(h⁴)')];
+const schemeOptions=[O('upwind','Против потока','Upwind'),O('lf','Лакс — Фридрихс','Lax–Friedrichs'),O('lw','Лакс — Вендрофф','Lax–Wendroff'),O('ftcs','FTCS: центральная явная','FTCS: forward time, centered space'),O('maccormack','Мак-Кормак','MacCormack')];
+const profileOptions=[O('gaussian','Гладкий импульс','Smooth pulse'),O('step','Прямоугольный импульс','Square pulse'),O('sine','Синусоида','Sine wave'),O('triangle','Треугольник','Triangle')];
+const compactOptions=[O('central','Явная 2-го порядка','Explicit, order 2'),O('fourth','Явная 4-го порядка','Explicit, order 4'),O('compact4','Компактная 4-го порядка','Compact, order 4'),O('compact6','Компактная 6-го порядка','Compact, order 6')];
+const sources={
+ site:{label:'Existing Lecture 2 gallery / Chalkish API',url:'https://ckpeiika.github.io/demos/pde-lecture-2/'},
+ taylor:{label:'Cameron Taylor (MIT): Finite Difference Coefficients Calculator',url:'https://web.media.mit.edu/~crtaylor/calculator.html'},
+ scijs:{label:'scijs/finite-difference-stencil: explicit and implicit stencil construction',url:'https://github.com/scijs/finite-difference-stencil'},
+ heathFD:{label:'Michael Heath (UIUC): Finite Difference Approximations [legacy Java]',url:'https://heath.cs.illinois.edu/iem/integration/fda/'},
+ heathRound:{label:'Michael Heath (UIUC): Rounding and Truncation Errors [legacy Java]',url:'https://heath.cs.illinois.edu/iem/floating_point/rounding_truncation/'},
+ heathAdv:{label:'Michael Heath (UIUC): Discretization of the Advection Equation [legacy Java]',url:'https://heath.cs.illinois.edu/iem/pde/discadvc/'},
+ heathHeat:{label:'Michael Heath (UIUC): Discretization of the Heat Equation [legacy Java]',url:'https://heath.cs.illinois.edu/iem/pde/discheat/'},
+ heathCFL:{label:'Michael Heath (UIUC): CFL Condition [legacy Java]',url:'https://heath.cs.illinois.edu/iem/pde/wavecfl/'},
+ lele:{label:'S. K. Lele (1992): Compact finite difference schemes with spectral-like resolution',url:'https://doi.org/10.1016/0021-9991(92)90324-R'},
+ leveque:{label:'R. J. LeVeque: Accuracy, consistency, stability and CFL (lecture notes)',url:'https://faculty.washington.edu/rjl/slides/fvmhp/fvmhp08_fvm2.pdf'}
+};
+const demos=[
+{
+ id:'grid',group:0,title:['Функция становится сеточной','A function becomes a grid function'],short:['Что остаётся между узлами?','What is lost between nodes?'],
+ equation:'u(x) → {uᵢ = u(xᵢ)};     ūᵢ = (1/hᵢ) ∫<sub>xᵢ</sub><sup>xᵢ₊₁</sup> u(x) dx',
+ controls:[R('n',['Число интервалов N','Number of intervals N'],16,4,64,2),R('k',['Число волн k','Number of waves k'],3,1,24),R('stretch',['Сгущение сетки β','Grid stretching β'],0,-3,3,.25),S('view',['Сеточное представление','Grid representation'],'nodes',[O('nodes','Узловые значения','Nodal values'),O('averages','Средние по ячейкам','Cell averages')])],
+ presets:[P(['Разрешено','Resolved'],{n:32,k:3,stretch:0}),P(['Алиасинг','Aliasing'],{n:8,k:9,stretch:0}),P(['Сгущение','Stretched grid'],{n:20,k:5,stretch:2,view:'averages'})],
+ question:['Установите N = 8, k = 9. Почему узлы совпадают с волной k = 1? Затем включите средние по ячейкам.','Set N = 8 and k = 9. Why do the nodes match a wave with k = 1? Then switch to cell averages.'],
+ explanation:['Узловое значение и среднее по ячейке — разные неизвестные. На равномерной сетке частоты, различающиеся на целое кратное N, дают одинаковые отсчёты комплексной волны. На сгущённой сетке единого шага h нет.','A nodal value and a cell average are different unknowns. On a uniform grid, frequencies differing by an integer multiple of N produce identical complex-wave samples. A stretched grid has no single spacing h.'],
+ caveat:['Непрерывная линия известна только потому, что здесь задана тестовая функция. Обычный расчёт не располагает этой скрытой информацией.','The continuous line is available only because this is a prescribed test function. A numerical solution does not normally contain that hidden information.'],sources:['heathFD']
+},
+{
+ id:'differences',group:1,title:['Секущая и производная','Secant and derivative'],short:['Геометрия и фактическая ошибка','Geometry and measured error'],
+ equation:'D<sub>h</sub>f(x) = (1/h) ∑ⱼ wⱼ f(x+sⱼh)',
+ controls:[S('fn',['Функция','Function'],'sin',fnOptions),S('method',['Формула','Formula'],'central',diffOptions),R('x',['Точка x','Evaluation point x'],.6,-1.3,1.3,.05),R('h',['Шаг h','Spacing h'],.45,.025,.8,.025)],
+ presets:[P(['Несимметрия','Asymmetry'],{method:'forward',fn:'exp',x:0,h:.7}),P(['Симметрия','Symmetry'],{method:'central',fn:'sin',x:.5,h:.7}),P(['Высокий порядок','Higher order'],{method:'fourth',fn:'exp',x:0,h:.4})],
+ question:['Сначала предскажите знак ошибки. Уменьшите h вдвое, затем сопоставьте наклоны и отношение ошибок.','Predict the error sign. Halve h, then inspect the slopes and the error ratio.'],
+ explanation:['Правая и левая разности используют несимметричные данные и имеют первый порядок. В центральной разности вклады чётных степеней взаимно сокращаются. Пятипозиционная формула дополнительно сокращает вклад кубического члена.','Forward and backward differences use asymmetric data and have first-order error. In a centered difference, the even-power terms cancel pairwise. A five-point formula also cancels the cubic term.'],
+ caveat:['Порядок — асимптотическое свойство при h → 0 для достаточно гладкой функции. В особой точке ведущий коэффициент ошибки может обратиться в ноль.','Order is an asymptotic property as h → 0 for a sufficiently smooth function. The leading error coefficient can vanish at a particular point.'],sources:['taylor','heathFD']
+},
+{
+ id:'stencil',group:1,title:['Соберите разностный шаблон','Build a finite-difference stencil'],short:['Выберите узлы и подберите веса','Choose nodes and determine the weights'],
+ equation:'∑ⱼ wⱼ sⱼᵏ / k! = δ<sub>km</sub>;     f<sup>(m)</sup> ≈ h<sup>−m</sup> ∑ⱼ wⱼ f(x+sⱼh)',
+ controls:[S('m',['Порядок производной m','Derivative order m'],1,[O(1,'Первая производная','First derivative'),O(2,'Вторая производная','Second derivative')]),R('degree',['Степень полинома n','Polynomial degree n'],7,1,8,1)],
+ presets:[P(['Три узла','Three nodes'],{nodes:[-1,0,1],m:1}),P(['Пять узлов','Five nodes'],{nodes:[-2,-1,0,1,2],m:1}),P(['У границы','At a boundary'],{nodes:[0,1,2,3],m:1}),P(['Лапласиан','Second derivative'],{nodes:[-1,0,1],m:2})],
+ question:['Можно ли удалить центральный узел из симметричной формулы первой производной без потери порядка? А из формулы второй производной?','Can you remove the center point from the symmetric first-derivative stencil without losing order? What about the second derivative?'],
+ explanation:['Коэффициенты вычисляются здесь решением системы условий на моменты. Строка k = m должна дать единицу; остальные младшие строки — ноль. Первый ненулевой старший момент показывает ведущую погрешность.','Weights are calculated here by solving the moment conditions. Row k = m must equal one; all other lower rows must vanish. The first nonzero higher moment determines the leading truncation error.'],
+ caveat:['Используются целые смещения −3, −2, ..., 3. Для определения m-й производной нужны как минимум m + 1 различных узлов.','The offsets are the integers −3, −2, ..., 3. An m-th derivative requires at least m + 1 distinct points.'],sources:['taylor','scijs']
+},
+{
+ id:'roundoff',group:1,title:['Маленький шаг не всегда лучше','A smaller step is not always better'],short:['Аппроксимация против округления','Truncation versus round-off'],
+ equation:'E(h) = |D<sub>h</sub>exp(1) − exp(1)|;     E(h) ≲ C₁hᵖ + C₂ε/h',
+ controls:[S('precision',['Арифметика','Arithmetic'],'f64',[O('f64','IEEE binary64 · JavaScript','IEEE binary64 · JavaScript'),O('f32','binary32 · Math.fround','binary32 · Math.fround')]),S('method',['Разность','Difference'],'central',[O('central','Центральная · p = 2','Centered · p = 2'),O('forward','Правая · p = 1','Forward · p = 1')]),R('logh',['log₁₀ h','log₁₀ h'],-4,-16,-.25,.05)],
+ presets:[P(['Область аппроксимации','Truncation region'],{precision:'f64',logh:-1}),P(['Провал вычитания','Cancellation'],{precision:'f64',logh:-16}),P(['Одинарная точность','Single precision'],{precision:'f32',logh:-4})],
+ question:['Почему график ошибки перестаёт падать? Сравните binary32 и binary64, не меняя саму формулу.','Why does the error stop decreasing? Compare binary32 and binary64 without changing the formula.'],
+ explanation:['Каждая точка графика — результат вычитания близких чисел. В режиме binary32 округляются аргументы, значения функции и промежуточные операции. При малых h округление начинает преобладать, поэтому кривая становится неровной.','Every point is the result of subtracting nearby numbers. In binary32 mode, arguments, function values and intermediate operations are rounded. At small h, round-off dominates and the curve becomes jagged.'],
+ caveat:['Math.exp вычисляется встроенной функцией JavaScript; режим binary32 округляет её результат и не моделирует конкретную библиотеку expf. Нулевые ошибки на графике помечаются отдельно.','Math.exp is the JavaScript implementation; binary32 mode rounds its result rather than emulating a specific expf library. Exactly zero errors are marked separately on the plot.'],sources:['heathRound']
+},
+{
+ id:'shift',group:2,title:['Алгебра операторов сдвига','The algebra of shift operators'],short:['E перемещает данные; полином строит шаблон','E shifts data; a polynomial builds a stencil'],
+ equation:'Euᵢ = uᵢ₊₁;     Δ = E − I;     ∇ = I − E⁻¹;     Δ∇ = E − 2I + E⁻¹',
+ controls:[S('op',['Оператор','Operator'],'laplace',[O('shift','E: сдвиг','E: shift'),O('forward','Δ = E − I','Δ = E − I'),O('central','δ = (E − E⁻¹)/2','δ = (E − E⁻¹)/2'),O('laplace','Δ∇: вторая разность','Δ∇: second difference'),O('compose','Δ²: композиция двух Δ','Δ²: compose two Δ')]),R('node',['Выбранный индекс i','Selected index i'],7,0,15),R('phase',['Фаза исходной волны','Input-wave phase'],0,0,6.28,.05)],
+ presets:[P(['Один сдвиг','One shift'],{op:'shift'}),P(['Симметричная разность','Symmetric difference'],{op:'laplace'}),P(['Композиция','Composition'],{op:'compose'})],
+ question:['Сравните Δ² и Δ∇. Коэффициенты похожи; почему они относятся к разным точкам?','Compare Δ² and Δ∇. The weights look similar; why are the stencils centered at different locations?'],
+ explanation:['Операторы действуют на периодический массив из 16 значений. Композиция соответствует перемножению полиномов по E. Показаны именно безразмерные разности, до деления на h или h².','These operators act on a periodic array of 16 values. Composition is polynomial multiplication in E. The displayed results are dimensionless differences, before division by h or h².'],
+ caveat:['Запись E = exp(hD), D = d/dx, используется формально через ряд Тейлора при достаточной гладкости. Она не означает, что матрицу экспоненты необходимо вычислять в программе.','The relation E = exp(hD), D = d/dx, is a formal Taylor-series identity for sufficiently smooth functions. It does not require a matrix exponential in the implementation.'],sources:['scijs','taylor']
+},
+{
+ id:'compact',group:3,title:['Компактный шаблон, связанная задача','A compact stencil, a coupled solve'],short:['Неизвестные производные тоже входят в уравнение','Neighboring derivatives are unknowns too'],
+ equation:'αdᵢ₋₁ + dᵢ + αdᵢ₊₁ = a(uᵢ₊₁ − uᵢ₋₁)/(2h) + b(uᵢ₊₂ − uᵢ₋₂)/(4h)',
+ controls:[S('kind',['Формула производной','Derivative formula'],'compact4',compactOptions),R('n',['Периодических узлов N','Periodic nodes N'],24,12,80,4),R('k',['Число волн k','Number of waves k'],5,1,10),R('node',['Строка системы (доля N)','System row (fraction of N)'],.4,0,.95,.05)],
+ presets:[P(['Явная и локальная','Explicit and local'],{kind:'fourth',n:24,k:5}),P(['Три неизвестные d','Three unknown d values'],{kind:'compact4',n:24,k:5}),P(['Шестой порядок','Sixth order'],{kind:'compact6',n:24,k:5})],
+ question:['В явной формуле одна производная находится сразу. Что мешает сделать то же самое при α ≠ 0?','An explicit formula gives one derivative immediately. What prevents that when α ≠ 0?'],
+ explanation:['d — полный вектор искомых производных. Для периодической задачи решается циклическая трёхдиагональная система A d = B u. Для 4-го порядка α = 1/4, a = 3/2, b = 0; для 6-го порядка α = 1/3, a = 14/9, b = 1/9.','d is the vector of unknown derivatives. The periodic problem requires a cyclic tridiagonal solve A d = B u. Order 4: α = 1/4, a = 3/2, b = 0. Order 6: α = 1/3, a = 14/9, b = 1/9.'],
+ caveat:['Все формулы здесь периодические. У физических границ нужны отдельные замыкания; внутренний порядок сам по себе не определяет порядок всего решения.','All formulas here are periodic. Physical boundaries require separate closures; interior order alone does not determine the order of the complete solution.'],sources:['lele','scijs']
+},
+{
+ id:'dispersion',group:3,title:['Какие волны различает сетка?','Which waves can the grid resolve?'],short:['Модифицированное волновое число','Modified wavenumber'],
+ equation:'D<sub>h</sub>e<sup>ikx</sup> = i k* e<sup>ikx</sup>;     ξ = kh;     ξ* = k*h',
+ controls:[S('kind',['Формула','Formula'],'compact6',compactOptions),R('xi',['Волновое число ξ/π','Wavenumber ξ/π'],.6,.03,1,.01)],
+ presets:[P(['Длинная волна','Long wave'],{xi:.1}),P(['Всего 4 узла на волну','Only 4 points per wave'],{xi:.5}),P(['Шахматная мода','Checkerboard mode'],{xi:1})],
+ question:['Доведите ξ до π. Почему центральная разность даёт нулевую производную у самой короткой представимой волны?','Move ξ to π. Why does a centered difference return zero for the shortest representable wave?'],
+ explanation:['Ось ξ измеряет частоту относительно шага. Идеальная производная даёт прямую ξ* = ξ. Отклонение означает ошибку амплитуды производной, а при полудискретном переносе — ошибку фазовой скорости.','ξ is a wavenumber measured relative to grid spacing. The exact derivative lies on ξ* = ξ. Deviation means derivative-amplitude error and, for semidiscrete advection, a phase-speed error.'],
+ caveat:['Это анализ пространственного оператора. Ошибка интегрирования по времени здесь не примешивается; компактная формула не делает произвольную временную схему устойчивой.','This isolates the spatial operator. Time-integration error is not included; a compact derivative does not make an arbitrary time scheme stable.'],sources:['lele']
+},
+{
+ id:'spacetime',group:4,title:['Связи схемы в пространстве и времени','A stencil in space and time'],short:['Характеристика и связи схемы','Characteristic and scheme links'],
+ equation:'uᵢⁿ⁺¹ = w₋uᵢ₋₁ⁿ + w₀uᵢⁿ + w₊uᵢ₊₁ⁿ;     C = aΔt/h',
+ controls:[S('scheme',['Схема','Scheme'],'upwind',schemeOptions.filter(o=>o.value!=='maccormack')),R('C',['Число Куранта C','Courant number C'],.7,-1.5,1.5,.05),R('steps',['Число слоёв','Number of time levels'],4,1,6)],
+ presets:[P(['CFL выполнено','CFL satisfied'],{scheme:'upwind',C:.8}),P(['CFL нарушено','CFL violated'],{scheme:'upwind',C:1.3}),P(['CFL выполнено, схема неустойчива','CFL satisfied, scheme unstable'],{scheme:'ftcs',C:.5})],
+ question:['FTCS использует оба соседних узла и охватывает характеристику при |C| < 1. Почему этого всё же недостаточно для устойчивости?','FTCS uses both neighbors and contains the characteristic for |C| < 1. Why is that still insufficient for stability?'],
+ explanation:['Жёлтая линия — характеристика уравнения переноса. Узлы отмечают фактические зависимости схемы. На правой панели показаны веса и максимум |G(ξ)| по модам: рост выше единицы означает усиление некоторых возмущений.','The yellow line is a characteristic of the advection equation. Nodes show the scheme’s actual dependencies. The right panel gives the weights and the maximum |G(ξ)| over modes; values above one amplify some perturbations.'],
+ caveat:['CFL проверяет сходимость в этой постановке. Устойчивость оценивается отдельно. Отрицательный вес может встречаться и в устойчивой схеме.','CFL addresses convergence in this setting. Stability requires a separate analysis. A negative weight can also occur in a stable scheme.'],sources:['heathCFL','leveque']
+},
+{
+ id:'advection',group:4,title:['Сравнение схем при одном переносе','Comparing schemes for one advection problem'],short:['Размазывание, колебания, неустойчивость','Smearing, oscillations, instability'],dynamic:true,
+ equation:'u<sub>t</sub> + u<sub>x</sub> = 0,  x ∈ [0,1), периодичность / periodic;     u(x,t) = u₀(x−t)',
+ controls:[S('A',['Схема A','Scheme A'],'upwind',schemeOptions),S('B',['Схема B','Scheme B'],'lw',schemeOptions),S('profile',['Начальные данные','Initial profile'],'gaussian',profileOptions),R('n',['Узлов N','Nodes N'],80,24,256,8),R('C',['Число Куранта C','Courant number C'],.8,.1,1.3,.05)],
+ presets:[P(['Размывание / колебания','Smearing / ringing'],{A:'upwind',B:'lw',profile:'step',C:.8}),P(['Неустойчивость FTCS','FTCS instability'],{A:'upwind',B:'ftcs',profile:'gaussian',C:.5}),P(['Сдвиг ровно на узел','Exact one-cell shift'],{A:'upwind',B:'lw',profile:'step',C:1})],
+ question:['При C = 1 некоторые схемы переносят узловые данные точно. Сохраняется ли это при C = 0.8?','At C = 1, some schemes shift the grid values exactly. Does this survive at C = 0.8?'],
+ explanation:['Обе схемы выполняют реальные шаги с одинаковыми N, Δt и начальными значениями. Белая линия — точный перенос. Диагностика показывает ошибку в узлах, экстремумы и среднее.','Both methods take actual time steps with identical N, Δt and initial values. The white curve is exact translation. Diagnostics report nodal error, extrema and the mean.'],
+ caveat:['При |u| > 20 расчёт останавливается: дальнейшее продолжение скрыло бы неустойчивость. После изменения параметра расчёт начинается заново.','When |u| > 20, the calculation stops; continuing would hide the instability. Changing a parameter starts a new run.'],sources:['heathAdv','leveque']
+},
+{
+ id:'heat',group:4,title:['Точное и численное затухание','Exact and numerical decay'],short:['Устойчивость не гарантирует точность','Stability does not guarantee accuracy'],dynamic:true,
+ equation:'(uⁿ⁺¹−uⁿ)/Δt = θD<sub>xx</sub>uⁿ⁺¹ + (1−θ)D<sub>xx</sub>uⁿ;     r = Δt/h²',
+ controls:[S('theta',['Вес θ','Weight θ'],0,[O(0,'0 · явный Эйлер','0 · forward Euler'),O(.5,'1/2 · Кранк — Николсон','1/2 · Crank–Nicolson'),O(1,'1 · неявный Эйлер','1 · backward Euler')]),R('n',['Интервалов N','Intervals N'],32,16,96,8),R('r',['Число r = Δt/h²','Number r = Δt/h²'],.4,.05,8,.05),S('mode',['Начальная мода','Initial mode'],'low',[O('low','sin(πx)','sin(πx)'),O('high','Высокочастотная мода','High-frequency mode'),O('mix','Низкая + высокая','Low + high frequency')])],
+ presets:[P(['Явная: устойчиво','Explicit: stable'],{theta:0,r:.4,mode:'mix'}),P(['Явная: неустойчиво','Explicit: unstable'],{theta:0,r:.8,mode:'mix'}),P(['CN: смена знака','CN: sign alternation'],{theta:.5,r:4,mode:'high'}),P(['Неявное затухание','Implicit damping'],{theta:1,r:4,mode:'high'})],
+ question:['Сравните θ = 1/2 и θ = 1 при большом r на короткой волне. Почему устойчивое решение может менять знак?','Compare θ = 1/2 and θ = 1 for a large r and a short wave. Why can a stable solution alternate in sign?'],
+ explanation:['Граничные значения u(0,t) = u(1,t) = 0. Неявные шаги решают трёхдиагональную систему. Точное решение для каждой выбранной синусоидальной моды известно: exp(−k²π²t) sin(kπx).','Boundary values are u(0,t) = u(1,t) = 0. Implicit steps solve a tridiagonal system. Each selected sine mode has the exact solution exp(−k²π²t) sin(kπx).'],
+ caveat:['При θ ≥ 1/2 линейная задача остаётся устойчивой при любом Δt в данном анализе. Точность и монотонность всё равно требуют ограничений.','For θ ≥ 1/2, this linear problem remains stable for any Δt in the present analysis. Accuracy and monotonicity still impose restrictions.'],sources:['heathHeat']
+},
+{
+ id:'balance',group:5,title:['Поток переносит запас по сетке','Flux transports content across the grid'],short:['Динамика потока и сохранение суммы','Flux dynamics and conserved total'],dynamic:true,
+ equation:'Fᵢ₊½ = a uᵢ;     uᵢⁿ⁺¹ = uᵢⁿ + (Δt/h)(Fᵢ₋½ − Fᵢ₊½)',
+ controls:[R('dt',['Шаг времени Δt','Time step Δt'],.04,.01,.08,.01),R('speed',['Скорость переноса a','Transport speed a'],1,.2,1.8,.1),S('profile',['Начальный профиль','Initial profile'],'pulse',[O('pulse','Импульс','Pulse'),O('wave','Волна','Wave'),O('step','Ступенька','Step')])],
+ presets:[P(['Импульс','Pulse'],{profile:'pulse',speed:1,dt:.04}),P(['Гладкая волна','Smooth wave'],{profile:'wave',speed:1,dt:.04}),P(['Ступенька','Step'],{profile:'step',speed:.8,dt:.04})],
+ question:['Запустите перенос. Как профиль проходит через периодическую границу и почему сумма запаса не меняется?','Run the transport. How does the profile cross the periodic boundary, and why does the total content stay constant?'],
+ explanation:['Поток на каждой грани пересчитывается из соседнего значения u. Один и тот же Fᵢ₊½ выходит из одной ячейки и входит в следующую, поэтому внутренние вклады сокращаются.','The flux on every face is recomputed from the neighboring value of u. The same Fᵢ₊½ leaves one cell and enters the next, so interior contributions cancel.'],
+ caveat:['Это линейный перенос с положительной скоростью и периодической границей. Схема первого порядка постепенно размывает профиль, хотя сохраняет его сумму.','This is linear advection with positive speed and a periodic boundary. The first-order scheme gradually smears the profile while preserving its total.'],sources:['leveque']
+},
+{
+ id:'shock',group:5,title:['Скорость разрыва из закона сохранения','Shock speed from conservation'],short:['Консервативная и неконсервативная формы','Conservative and nonconservative forms'],dynamic:true,
+ equation:'u<sub>t</sub> + (u²/2)<sub>x</sub> = 0;     s = [f]/[u] = (u<sub>L</sub>+u<sub>R</sub>)/2',
+ controls:[R('left',['Левое состояние uL','Left state uL'],1,.8,1.6,.1),R('right',['Правое состояние uR','Right state uR'],.2,.1,.6,.05),R('n',['Ячеек N','Cells N'],160,40,320,40)],
+ presets:[P(['Базовый скачок','Reference shock'],{left:1,right:.2,n:160}),P(['Сгущение сетки','Refine the grid'],{left:1,right:.2,n:320}),P(['Другие состояния','Different states'],{left:1.6,right:.1,n:160})],
+ question:['Сравните положения скачка при сгущении сетки. Почему формально эквивалентная для гладкого u запись u·uₓ становится опасной на разрыве?','Compare shock positions under refinement. Why does u·uₓ, equivalent for smooth u, become problematic at a discontinuity?'],
+ explanation:['Сравниваются консервативная схема с потоком Русанова и неконсервативная форма uᵢ(uᵢ−uᵢ₋₁)/h. Точная скорость следует из интегрального закона сохранения. Положение численного скачка оценивается по массе, а не по максимальному градиенту.','A conservative Rusanov flux is compared with the nonconservative form uᵢ(uᵢ−uᵢ₋₁)/h. The exact speed follows from integral conservation. The numerical shock position is measured from mass rather than from the steepest gradient.'],
+ caveat:['Здесь uL > uR > 0, границы заданы постоянными состояниями, C = 0.4. Расчёт останавливается до выхода скачка из области.','Here uL > uR > 0, boundary states are fixed, and C = 0.4. The run stops before the shock reaches the boundary.'],sources:['leveque']
+},
+{
+ id:'poisson',group:4,title:['Разностный шаблон как строка матрицы','A finite-difference stencil as a matrix row'],short:['Посмотрите, как граница меняет правую часть','See how the boundary changes the right-hand side'],
+ equation:'−Δu = 0;     4uᵢⱼ − uᵢ₋₁,ⱼ − uᵢ₊₁,ⱼ − uᵢ,ⱼ₋₁ − uᵢ,ⱼ₊₁ = 0;     A u = b',
+ controls:[R('n',['Внутренних узлов по оси n','Interior nodes per axis n'],6,3,8),R('left',['Значение на левой границе','Left boundary value'],1,0,2,.1),R('right',['Значение на правой границе','Right boundary value'],0,0,2,.1)],
+ presets:[P(['Маленькая система','Small system'],{n:4,left:1,right:0}),P(['Две горячие стороны','Two warm boundaries'],{n:7,left:1,right:1})],
+ question:['Выберите угловой внутренний узел. Куда делись два внедиагональных элемента и как они попали в правую часть?','Select an interior node next to a corner. Where did two off-diagonal entries go, and how did the boundary values reach the right-hand side?'],
+ explanation:['Индексация k = jn + i превращает поле в вектор. Каждая строка матрицы — один локальный шаблон. Известные граничные значения переносятся в b. Верхняя и нижняя границы равны нулю.','The index k = jn + i turns a field into a vector. Each matrix row is one local stencil. Known boundary values move into b. The upper and lower boundaries are zero.'],
+ caveat:['Для этой малой учебной системы используется прямое плотное решение с выбором главного элемента. Разреженность описывает структуру оператора. Быстрый разреженный решатель здесь не реализован.','This small teaching system uses a dense direct solve with pivoting. Sparsity describes the operator structure. No fast sparse solver is implemented here.'],sources:['heathHeat']
+},
+{
+ id:'cost',group:5,title:['Цена одного уточнения сетки','The cost of one grid refinement'],short:['Неизвестные × шаги × работа','Unknowns × time steps × work'],
+ equation:'W ≈ N<sub>dof</sub>N<sub>steps</sub>N<sub>iter</sub>C<sub>op</sub>;     N<sub>dof</sub> = q nᵈ',
+ controls:[R('n',['Узлов по координате n','Nodes per coordinate n'],64,16,256,16),S('dim',['Размерность d','Dimension d'],2,[O(1,'1D','1D'),O(2,'2D','2D'),O(3,'3D','3D')]),S('mode',['Ограничение шага','Time-step scaling'],'advection',[O('advection','Перенос: Δt ∼ h','Advection: Δt ∼ h'),O('diffusion','Явная диффузия: Δt ∼ h²','Explicit diffusion: Δt ∼ h²')]),R('variables',['Неизвестных в узле q','Unknowns per node q'],5,1,20),R('iterations',['Итераций на шаг','Iterations per step'],1,1,30)],
+ presets:[P(['2D перенос','2D advection'],{dim:2,mode:'advection',n:64}),P(['3D перенос','3D advection'],{dim:3,mode:'advection',n:64}),P(['3D явная диффузия','3D explicit diffusion'],{dim:3,mode:'diffusion',n:64})],
+ question:['Уменьшите h вдвое. Почему память выросла в 8 раз, а работа в трёхмерной явной диффузии — в 32 раза?','Halve h. Why does memory grow by 8 while work for three-dimensional explicit diffusion grows by 32?'],
+ explanation:['Сравнивается расчёт до фиксированного времени T = 1 в единичной области. Для переноса взято Δt = h/2; для явной диффузии Δt = h²/(2d). Память: три массива binary64 по q неизвестных в узле.','The comparison reaches a fixed T = 1 on a unit domain. Advection uses Δt = h/2; explicit diffusion uses Δt = h²/(2d). Memory counts three binary64 arrays of q unknowns per node.'],
+ caveat:['Это прозрачная модель числа операций, не измерение времени на компьютере. C_op = 12 условных операций на неизвестную и итерацию. Коммуникации, геометрия и ввод-вывод не учтены.','This is a transparent operation-count model, not a hardware timing measurement. C_op = 12 illustrative operations per unknown per iteration. Communication, geometry and I/O are excluded.'],sources:['leveque']
+}
+];
+demos.sort((a,b)=>a.group-b.group);
+const defaults=demo=>Object.fromEntries(demo.controls.map(c=>[c.key,c.value]));
+function translate(value,lang='ru'){return Array.isArray(value)?value[lang==='en'?1:0]:String(value??'');}
+
+return { groups, sources, demos, defaults, translate };
+})();
+__modules['labs-static.js'] = (() => {
+const K = __modules['kernels.js'];
+const {Ink,C,graph,legend,fmt} = __modules['board.js'];
+const range=(n,fn)=>Array.from({length:n},(_,i)=>fn(i));
+const frac=x=>{for(let d=1;d<=360;d++)if(Math.abs(x*d-Math.round(x*d))<1e-8)return d===1?String(Math.round(x)):Math.round(x*d)+'/'+d;return fmt(x);};
+const lbl=(lang)=>(ru,en)=>lang==='en'?en:ru;
+const out=(ink,stats=[])=>({ink,stats});
+function card(ink,x,y,w,title,value,color=C.yellow){ink.rect(x,y,w,74,'#15251c',C.grid);ink.text(x+16,y+23,title,13,C.muted);ink.text(x+16,y+54,value,22,color);}
+function gridLab(p,lang){const L=lbl(lang);return {render(){
+  const ink=new Ink().title(L('Дискретные данные и среднее по ячейке','Discrete data and the cell average'),L('Нажмите на график, чтобы выделить ближайший интервал.','Click the plot to select the nearest interval.'));
+  const g=graph(ink,{y:113,h:294,ymin:-1.25,ymax:1.25,ylabel:'u'}),xs=K.sampleGrid(p.n,p.stretch),fn=x=>Math.sin(K.TAU*p.k*x+.35);
+  g.curve(fn,C.white,2,900);
+  let selected=p.selected??Math.floor(p.n/2);selected=K.clamp(selected,0,p.n-1);
+  xs.forEach((x,i)=>{ink.line(g.X(x),g.Y(-1.22),g.X(x),g.Y(1.22),i===selected?C.dim:C.grid,1);if(p.view==='nodes')g.dot(x,fn(x),4.5,C.yellow);});
+  let averages=xs.slice(0,-1).map((x,i)=>(Math.cos(K.TAU*p.k*x+.35)-Math.cos(K.TAU*p.k*xs[i+1]+.35))/(K.TAU*p.k*(xs[i+1]-x)));
+  if(p.view==='averages')averages.forEach((v,i)=>{const a=g.X(xs[i]),b=g.X(xs[i+1]),zero=g.Y(0),q=g.Y(v);ink.rect(a,Math.min(zero,q),b-a,Math.abs(zero-q),i===selected?'#76673c':'#334d39',C.green);ink.line(a,q,b,q,C.yellow,2);});
+  if(p.view==='nodes'&&p.stretch===0&&p.k>=p.n/2){const ka=((p.k+p.n/2)%p.n)-p.n/2;g.curve(x=>Math.sin(K.TAU*ka*x+.35),C.blue,2,400,true);ink.text(90,145,L(`Такие же отсчёты: k = ${ka}`,`Identical samples: k = ${ka}`),16,C.blue);}
+  const hs=xs.slice(0,-1).map((x,i)=>xs[i+1]-x);
+  ink.arrow(g.X(xs[selected]),445,g.X(xs[selected+1]),445,C.yellow);ink.text((g.X(xs[selected])+g.X(xs[selected+1]))/2,476,'hᵢ = '+fmt(hs[selected]),15,C.yellow,'center');
+  legend(ink,[[L('Исходная функция','Original function'),C.white],[p.view==='nodes'?L('Узловые значения','Nodal values'):L('Средние по ячейкам','Cell averages'),C.yellow]],524);
+  ink.text(72,566,L('Линия между отсчётами не восстанавливается однозначно.','Samples do not uniquely determine the curve between them.'),17,C.muted);
+  this.g=g;this.xs=xs;
+  return out(ink,[[L('Интервалов','Intervals'),p.n],[L('Минимальный h','Minimum h'),fmt(Math.min(...hs))],[L('Максимальный h','Maximum h'),fmt(Math.max(...hs))],[L('Среднее выбранной ячейки','Selected cell average'),fmt(averages[selected])]]);
+},click(x,y){if(!this.g?.contains(x,y))return false;const v=this.g.inverse(x,y)[0];p.selected=v>=1?this.xs.length-2:Math.max(0,this.xs.findIndex(a=>a>v)-1);return true;}};}
+function differences(p,lang){const L=lbl(lang);return {render(){
+  const f=K.FUNCTIONS[p.fn],st=K.STENCILS[p.method],weights=K.fdWeights(st),approx=K.derivative(f.f,p.x,p.h,st),exact=f.d(p.x),err=Math.abs(approx-exact),half=Math.abs(K.derivative(f.f,p.x,p.h/2,st)-exact);
+  const xmin=p.x-2.3*p.h,xmax=p.x+2.3*p.h,ys=range(201,i=>f.f(xmin+(xmax-xmin)*i/200)),mi=Math.min(...ys),ma=Math.max(...ys),pad=Math.max(.15,(ma-mi)*.17);
+  const terms=[];st.forEach((s,i)=>{const w=weights[i];if(Math.abs(w)<1e-12)return;const shift=s===0?'x':`x ${s>0?'+':'−'} ${Math.abs(s)===1?'':Math.abs(s)}h`;const coefficient=Math.abs(w)===1?'':`${frac(Math.abs(w))} `;const sign=terms.length===0?(w<0?'−':''):(w<0?' − ':' + ');terms.push(`${sign}${coefficient}f(${shift})`);});
+  const formula=`Dₕf(x) = [${terms.join('')}] / h`;
+  const ink=new Ink().title(L('Разностная производная','Finite-difference derivative'),formula);
+  const g=graph(ink,{xmin,xmax,ymin:mi-pad,ymax:ma+pad,y:111,h:284,ylabel:'f'});
+  g.curve(f.f,C.white,2.2);g.curve(x=>f.f(p.x)+exact*(x-p.x),C.blue,2,100,true);g.curve(x=>f.f(p.x)+approx*(x-p.x),C.yellow,2.5,100);
+  st.forEach((s,i)=>{const x=p.x+s*p.h;g.dot(x,f.f(x),5,C.yellow);ink.line(g.X(x),g.Y(f.f(x)),g.X(x),g.y+g.h,C.dim,1,true);ink.text(g.X(x),438,'s = '+s,13,C.muted,'center');ink.text(g.X(x),463,frac(weights[i]),20,C.yellow,'center');});
+  legend(ink,[[L('Функция','Function'),C.white],[L('Точная касательная','Exact tangent'),C.blue],[L('Разностный наклон','Difference slope'),C.yellow]],516,72,288);
+  ink.text(72,565,L(`При h/2 ошибка равна ${fmt(half)}.`,`At h/2 the error is ${fmt(half)}.`),17,C.muted);
+  return out(ink,[["f′(x)",fmt(exact)],["Dₕf(x)",fmt(approx)],[L('Абсолютная ошибка','Absolute error'),fmt(err)],[L('E(h) / E(h/2)','E(h) / E(h/2)'),half>1e-15?fmt(err/half):'—']]);
+}};}
+function stencil(p,lang){const L=lbl(lang);let nodes=[...(p.nodes??[-1,0,1])];return {render(){
+  const ink=new Ink().title(L('Выберите узлы: коэффициенты пересчитаются','Select nodes: the weights will be recalculated'),L('Щёлкните по окружности. Жёлтые узлы включены.','Click a circle. Yellow nodes are included.'));
+  ink.line(145,120,855,120,C.muted,2);this.buttons=[];
+  for(let s=-3;s<=3;s++){const x=200+s*100+300;this.buttons.push({x,y:120,s});const active=nodes.includes(s);ink.dot(x,120,19,active?C.yellow:C.dim,active?'#655931':C.bg);ink.text(x,126,String(s),17,active?C.white:C.muted,'center');}
+  if(nodes.length<=Number(p.m)){ink.text(100,232,L(`Нужно не менее ${Number(p.m)+1} узлов. Сейчас: ${nodes.length}.`,`At least ${Number(p.m)+1} points are required. Selected: ${nodes.length}.`),22,C.red);return out(ink,[[L('Состояние','State'),L('Недостаточно данных','Insufficient data')]]);}
+  const ws=K.fdWeights(nodes,Number(p.m)),mom=K.moments(nodes,ws,9),order=K.formalOrder(nodes,ws,Number(p.m));
+  nodes.forEach((s,i)=>ink.text(500+s*100,170,frac(ws[i]),18,C.yellow,'center'));
+  ink.text(76,205,L('Коэффициент при hᵏ⁻ᵐ f⁽ᵏ⁾','Coefficient of hᵏ⁻ᵐ f⁽ᵏ⁾'),20,C.muted);
+  const base=220,cellw=91;
+  mom.forEach((m,k)=>{const x=76+k*cellw,col=k===Number(p.m)?C.yellow:Math.abs(m)<1e-9?C.green:C.red;
+    ink.rect(x,base,78,80,'#16251d',C.grid);ink.text(x+39,base+21,'k = '+k,13,C.muted,'center');ink.text(x+39,base+48,Math.abs(m)<1e-10?'0':frac(m),16,col,'center');ink.text(x+39,base+68,k===Number(p.m)?'= 1':Math.abs(m)<1e-9?'✓':'≠ 0',14,col,'center');});
+  ink.text(76,330,L(`Момент k = m равен 1. Следующие моменты до k = m + p − 1 равны 0.`,`Moment k = m equals 1. The following moments through k = m + p − 1 equal 0.`),18,C.white);
+  ink.text(76,361,L(`При k = m + p появляется первый остаток. Поэтому ошибка имеет порядок hᵖ, p = ${order}.`,`The first remainder appears at k = m + p. The error therefore has order hᵖ, p = ${order}.`),18,C.yellow);
+  const testDegree=Math.max(1,Math.min(8,Number(p.degree??(Number(p.m)+order)))),testH=.5,testX=.35,testPower=testDegree-Number(p.m),testFactorial=Array.from({length:testDegree},(_,i)=>i+1).reduce((a,b)=>a*b,1),testFactorialPower=Array.from({length:Math.max(0,testPower)},(_,i)=>i+1).reduce((a,b)=>a*b,1),testExact=testPower>=0?Math.pow(testX,testPower)/testFactorialPower:0,testValue=testPower>=0?ws.reduce((sum,w,i)=>sum+w*Math.pow(testX+testH*nodes[i],testDegree)/testFactorial,0)/Math.pow(testH,Number(p.m)):0,plotX=76,plotY=380,plotW=215,plotH=100;
+  ink.rect(plotX,plotY,plotW,plotH,'#15251c',C.grid);ink.rect(305,380,520,128,'#15251c',C.grid);
+  ink.text(320,403,L('Проверка точности на полиноме','Accuracy test with a polynomial'),18,C.white);
+  ink.text(320,425,L(`Pₙ(x) = xⁿ/n!,  n = ${testDegree},  h = 1/2,  x = ${testX}`,`Pₙ(x) = xⁿ/n!,  n = ${testDegree},  h = 1/2,  x = ${testX}`),15,C.muted);
+  ink.text(320,449,L(`точная производная: ${fmt(testExact)}`,`exact derivative: ${fmt(testExact)}`),14,C.blue);
+  ink.text(320,474,L(`разностный результат: ${fmt(testValue)}`,`stencil result: ${fmt(testValue)}`),14,C.yellow);
+  ink.text(320,499,L(`модуль ошибки: ${fmt(Math.abs(testValue-testExact))}`,`absolute error: ${fmt(Math.abs(testValue-testExact))}`),14,C.red);
+  const poly=[];for(let i=0;i<=80;i++){const x=-1+2*i/80,y=Math.pow(x,testDegree)/testFactorial;poly.push([plotX+12+(plotW-24)*i/80,plotY+plotH/2-y/(1/testFactorial)*(plotH*.38)]);}ink.line(plotX+12,plotY+plotH/2,plotX+plotW-12,plotY+plotH/2,C.dim,1);ink.line(plotX+plotW/2,plotY+8,plotX+plotW/2,plotY+plotH-8,C.dim,1);ink.path(poly,C.yellow,2.2);ink.text(plotX+15,plotY+17,`P${testDegree}(x)`,14,C.white);ink.text(plotX+12,plotY+plotH-7,'−1',12,C.muted);ink.text(plotX+plotW/2,plotY+plotH-7,'0',12,C.muted,'center');ink.text(plotX+plotW-12,plotY+plotH-7,'1',12,C.muted,'right');
+  return out(ink,[[L('Смещения','Offsets'),nodes.join(', ')],[L('Производная m','Derivative m'),p.m],[L('Порядок p','Order p'),order],[L('Сумма весов','Sum of weights'),fmt(K.sum(ws))]]);
+},click(x,y){const hit=this.buttons?.find(b=>Math.hypot(x-b.x,y-b.y)<30);if(!hit)return false;nodes=nodes.includes(hit.s)?nodes.filter(s=>s!==hit.s):[...nodes,hit.s].sort((a,b)=>a-b);p.nodes=[...nodes];return true;}};}
+function roundoff(p,lang){const L=lbl(lang);return {render(){
+  const ink=new Ink();
+  ink.text(480,28,L('Погрешность фактического вычисления','Error from the actual calculation'),22,C.white,'center');
+  ink.text(480,55,L('Считаем численную производную f′(0) для f(x) = eˣ.','We approximate f′(0) for f(x) = eˣ.'),15,C.muted,'center');
+  ink.text(480,82,L('h — шаг сетки: расстояние между соседними узлами x.','h is the grid step: the distance between neighboring x-nodes.'),18,C.white,'center');
+  ink.text(480,105,L('E(h) = |Dₕ f(0) − e|. Ищем значение h, где ошибка минимальна.','E(h) = |Dₕ f(0) − e|. We seek h where the error is minimal.'),17,C.white,'center');
+  const xs=range(321,i=>-16+i*15.75/320),errs=xs.map(q=>Math.abs(K.roundedDerivative(1,10**q,p.method,p.precision)-Math.E));
+  const minIndex=errs.reduce((best,e,i)=>e<errs[best]?i:best,0),g=graph(ink,{xmin:-16,xmax:0,ymin:-17,ymax:2,y:126,h:268,xlabel:'log₁₀ h',ylabel:'log₁₀ E',xticks:8,yticks:5});
+  g.series(xs,errs.map(e=>Math.log10(Math.max(1e-17,e))),C.yellow,2);
+  g.dot(xs[minIndex],Math.log10(Math.max(1e-17,errs[minIndex])),5,C.blue);
+  ink.text(32,426,L(`Решаем задачу выбора шага: минимум при h ≈ 10^${xs[minIndex].toFixed(2)}.`,`The task is to choose h: the minimum is at h ≈ 10^${xs[minIndex].toFixed(2)}.`),17,C.white);
+  xs.forEach((x,i)=>{if(errs[i]===0)g.dot(x,-16.8,3,C.blue);});
+  const h=10**p.logh,d=K.roundedDerivative(1,h,p.method,p.precision),e=Math.abs(d-Math.E),R=p.precision==='f32'?Math.fround:x=>x,xx=R(1),hh=R(h),fp=R(Math.exp(R(xx+hh))),fm=R(Math.exp(p.method==='central'?R(xx-hh):xx));
+  ink.line(g.X(p.logh),g.y,g.X(p.logh),g.y+g.h,C.blue,1.8,true);g.dot(p.logh,Math.log10(Math.max(1e-17,e)),5,C.blue);
+  ink.text(76,458,'f(x+h)   '+fp.toPrecision(p.precision==='f32'?9:17),17,C.white);
+  ink.text(76,491,(p.method==='central'?'f(x−h)   ':'f(x)       ')+fm.toPrecision(p.precision==='f32'?9:17),17,C.white);
+  ink.text(535,458,L('Разность значений','Subtracted values')+'   '+fmt(R(fp-fm)),17,C.yellow);
+  ink.text(535,491,'Dₕf       '+fmt(d,9),17,C.yellow);
+  ink.text(76,557,L('Одинаковые округлённые значения → нулевой числитель.','Identical rounded values → a zero numerator.'),18,C.muted);
+  return out(ink,[['h',fmt(h)],['Dₕ exp(1)',fmt(d,8)],[L('Ошибка','Error'),fmt(e)],[L('Точность','Precision'),p.precision==='f32'?'binary32':'binary64']]);
+}};}
+const OPS={shift:{1:1},forward:{0:-1,1:1},central:{'-1':-.5,1:.5},laplace:{'-1':1,0:-2,1:1},compose:{0:1,1:-2,2:1}};
+function shift(p,lang){const L=lbl(lang);return {render(){
+  const u=range(16,i=>Math.sin(K.TAU*i/16+p.phase)),coeffs=OPS[p.op],v=K.applyShiftOperator(u,coeffs),i=p.node;
+  const ink=new Ink().title(L('Каждая строка результата — линейная комбинация входа','Each output entry is a linear combination of the input'),L('Периодическое продолжение: после индекса 15 следует 0.','Periodic continuation: index 15 is followed by index 0.'));
+  const x=j=>91+j*54,dy=70,inputY=143;
+  ink.text(44,84,L('Исходная функция: u(x) = sin(2πx + φ)','Input function: u(x) = sin(2πx + φ)'),18,C.white);
+  const curve=Array.from({length:161},(_,q)=>{const z=q/160;return [x(0)+(x(15)-x(0))*z,112-19*Math.sin(K.TAU*z+p.phase)];});
+  ink.line(x(0),112,x(15),112,C.dim,1);ink.path(curve,C.blue,2);ink.text(44,116,'u(x)',14,C.muted);
+  ink.text(44,125,'u',18,C.white);
+  for(let j=0;j<16;j++){
+    const involved=Object.entries(coeffs).some(([s,w])=>w&&K.wrap(i+Number(s),16)===j);
+    ink.rect(x(j)-22,inputY,46,58,involved?'#3d4c32':'#15251c',involved?C.green:C.grid);ink.text(x(j),inputY+34,fmt(u[j],2),14,C.white,'center');ink.text(x(j),inputY-18,String(j),14,C.muted,'center');
+    ink.rect(x(j)-22,dy+255,46,58,j===i?'#665a32':'#15251c',j===i?C.yellow:C.grid);ink.text(x(j),dy+289,fmt(v[j],2),14,C.yellow,'center');
+  }
+  Object.entries(coeffs).forEach(([s,w])=>{const j=K.wrap(i+Number(s),16);ink.arrow(x(j),inputY+66,x(i),dy+244,C.yellow,2);ink.text((x(j)+x(i))/2+(Number(s)*8),260+Number(s)*14,(w>0?'+':'')+frac(w),14,C.yellow,'center');});
+  const outBase=475,outScale=26/Math.max(1e-6,...v.map(q=>Math.abs(q))),outPoints=v.map((q,j)=>[x(j),outBase-q*outScale]);
+  ink.text(44,420,p.op==='compose'?'vᵢ = Δ²uᵢ':'vᵢ = P(E)uᵢ',16,C.yellow);ink.line(x(0),outBase,x(15),outBase,C.dim,1);ink.path(outPoints,C.yellow,2);outPoints.forEach((pt,j)=>ink.dot(pt[0],pt[1],j===i?5:3,j===i?C.blue:C.yellow));
+  ink.text(75,545,p.op==='compose'?'(E−I)(E−I) = E²−2E+I':p.op==='laplace'?'(E−I)(I−E⁻¹) = E−2I+E⁻¹':'Eˢuᵢ = uᵢ₊ₛ',18,C.yellow);
+  ink.text(75,580,L('Здесь h = 1/N; для производной разность делят на hᵐ.','Here h = 1/N; divide an m-th difference by hᵐ for a derivative.'),14,C.muted);
+  return out(ink,[[L('Индекс i','Index i'),i],[L('Вход uᵢ','Input uᵢ'),fmt(u[i])],[L('Результат','Output'),fmt(v[i])],[L('Сумма весов','Sum of weights'),fmt(K.sum(Object.values(coeffs)))]]);
+}};}
+function compact(p,lang){const L=lbl(lang);return {render(){
+  const n=p.n,h=1/n,xs=range(n,i=>i*h),u=xs.map(x=>Math.sin(K.TAU*p.k*x)),exact=xs.map(x=>K.TAU*p.k*Math.cos(K.TAU*p.k*x)),d=K.compactDerivative(u,h,p.kind),i=Math.min(n-1,Math.floor(p.node*n)),alpha=p.kind==='compact4'?.25:p.kind==='compact6'?1/3:0;
+  const ink=new Ink().title(L('Один шаблон на каждую строку; решается весь вектор d','One stencil per row; the entire vector d is solved'),L('Верхний график: производные в узлах. Нижняя полоса: ненулевые элементы выбранной строки A.','Top: nodal derivatives. Bottom: nonzero entries in the selected row of A.'));
+  ink.text(691,94,L('— точная   • разностная','— exact   • numerical'),14,C.muted);
+  const lim=K.TAU*p.k*1.25,g=graph(ink,{y:112,h:265,ymin:-lim,ymax:lim,ylabel:'du/dx'});
+  g.curve(x=>K.TAU*p.k*Math.cos(K.TAU*p.k*x),C.white,2,700);g.series(xs,d,C.yellow,1.7,true);ink.line(g.X(xs[i]),g.y,g.X(xs[i]),g.y+g.h,C.blue,1.4,true);
+  const visible=Math.min(n,40),bw=840/visible,start=Math.max(0,Math.min(i-Math.floor(visible/2),n-visible));
+  for(let j=start;j<start+visible;j++){const a=j===i?1:((j===K.wrap(i-1,n)||j===K.wrap(i+1,n))?alpha:0),x=77+(j-start)*bw;
+    ink.rect(x,436,bw-2,49,a?'#514e2d':'#142019',a?C.yellow:C.grid);if(a)ink.text(x+bw/2,466,frac(a),Math.min(16,bw/1.7),C.yellow,'center');}
+  ink.text(77,419,`A[${i}, :]`,15,C.muted);ink.text(77,524,alpha?L('Соседние d неизвестны → циклическая трёхдиагональная система.','Neighboring d values are unknown → a cyclic tridiagonal system.'):L('A = I: производные вычисляются независимо.','A = I: each derivative is evaluated independently.'),18,C.white);
+  ink.text(77,562,p.kind==='compact6'?'α = 1/3, a = 14/9, b = 1/9':p.kind==='compact4'?'α = 1/4, a = 3/2, b = 0':L('Явная формула: α = 0.','Explicit formula: α = 0.'),17,C.muted);
+  return out(ink,[[L('СКО производной','Derivative RMS error'),fmt(K.l2Error(d,exact))],[L('Узлов на волну','Points per wave'),fmt(n/p.k)],[L('Строка i','Row i'),i],['dᵢ',fmt(d[i])]]);
+}};}
+function dispersion(p,lang){const L=lbl(lang);return {render(){
+  const xi=p.xi*Math.PI,ks=K.modifiedWave(p.kind,xi),ink=new Ink().title(L('Как сетка искажает производную волны','How the grid distorts a wave derivative'),L('Для u(x) = sin(kx) проверяем, как сетка меняет волновое число k.','For u(x) = sin(kx), we check how the grid changes the wavenumber k.'));
+  const g=graph(ink,{x:70,y:126,w:460,h:294,xmin:0,xmax:Math.PI,ymin:0,ymax:Math.PI,xticks:4,xlabel:'ξ',ylabel:'ξ*'});
+  g.curve(x=>x,C.white,1.8);const kinds=['central','fourth','compact4','compact6'],cols=[C.red,C.blue,C.green,C.yellow];
+  kinds.forEach((kind,j)=>g.curve(x=>K.modifiedWave(kind,x),cols[j],p.kind===kind?3:1.2));
+  ink.line(g.X(xi),g.y,g.X(xi),g.y+g.h,C.muted,1,true);g.dot(xi,ks,5,C.yellow);
+  const q=graph(ink,{x:631,y:160,w:292,h:220,xmin:0,xmax:2,ymin:-1.2,ymax:1.2,xlabel:'x/λ',ylabel:'uₓ/k',xticks:2,yticks:2});
+  q.curve(x=>Math.cos(K.TAU*x),C.white,2);q.curve(x=>ks/xi*Math.cos(K.TAU*x),C.yellow,2.5);
+  ink.text(643,428,L('Отношение амплитуд: k*/k = ','Amplitude ratio: k*/k = ')+fmt(ks/xi),16,C.yellow);
+  kinds.forEach((kind,j)=>{const names=lang==='en'?['explicit 2','explicit 4','compact 4','compact 6']:['явная 2','явная 4','компактная 4','компактная 6'];ink.line(77+j*217,483,100+j*217,483,cols[j],3);ink.text(110+j*217,489,names[j],14,C.muted);});
+  ink.text(77,548,p.xi>.97?L('При ξ ≈ π центральная разность теряет короткую волну: k*/k → 0.','Near ξ ≈ π, the centered difference loses the shortest wave: k*/k → 0.'):L('При малом ξ длинные волны передаются почти без искажения: k*/k ≈ 1.','For small ξ, long waves pass with little distortion: k*/k ≈ 1.'),15,C.muted);
+  return out(ink,[['ξ = kh',fmt(xi)],[L('Узлов на волну','Points per wave'),fmt(2*Math.PI/xi)],['k*/k',fmt(ks/xi)],[L('Относительная ошибка','Relative error'),fmt(Math.abs(1-ks/xi)*100)+'%']]);
+}};}
+function spacetime(p,lang){const L=lbl(lang);return {render(){
+  const ink=new Ink().title(L('Откуда берётся значение в верхнем узле?','Where does the value at the top node come from?'),L('Веса определяют численные связи. aΔt = Ch — физическое смещение.','Weights define numerical links. aΔt = Ch is the physical displacement.'));
+  const weights=K.advectionWeights(p.scheme,p.C),active=weights.map((v,j)=>({s:j-1,w:v})).filter(q=>Math.abs(q.w)>1e-12),sx=49,sy=58,origin={x:355,y:146},steps=p.steps;
+  const bottom=origin.y+steps*sy;
+  for(let r=0;r<=steps;r++){ink.line(76,origin.y+r*sy,654,origin.y+r*sy,C.grid);ink.text(59,origin.y+r*sy+5,r===0?'n+1':`n${r>1?'−'+(r-1):''}`,13,C.muted,'right');for(let j=-5;j<=5;j++)ink.dot(origin.x+j*sx,origin.y+r*sy,2.3,C.dim);}
+  let current=new Set([0]);
+  for(let r=0;r<steps;r++){const next=new Set();for(const j of current){for(const q of active){const k=j+q.s;next.add(k);if(Math.abs(j)<=5&&Math.abs(k)<=5)ink.line(origin.x+j*sx,origin.y+r*sy,origin.x+k*sx,origin.y+(r+1)*sy,q.w<0?'#795249':'#3d6157',1.2);}}current=next;for(const k of next)if(Math.abs(k)<=5)ink.dot(origin.x+k*sx,origin.y+(r+1)*sy,3.6,C.blue);}
+  const foot=origin.x-steps*p.C*sx;ink.arrow(foot,bottom,origin.x,origin.y,C.yellow,3);ink.dot(origin.x,origin.y,8,C.yellow);ink.text(origin.x+17,origin.y-16,L('искомое uᵢⁿ⁺¹','target uᵢⁿ⁺¹'),16,C.yellow);
+  ink.text(708,144,L('Веса одного шага','One-step weights'),18,C.white);
+  weights.forEach((v,j)=>{ink.text(708,191+j*47,['w₋','w₀','w₊'][j]+' = '+fmt(v),21,v<0?C.red:C.green);});
+  const gmax=K.maxAmplification(p.scheme,p.C),stable=gmax<=1+1e-10;
+  ink.text(708,365,'max |G| = '+fmt(gmax),19,stable?C.green:C.red);
+  ink.text(708,400,stable?L('нет роста мод','no modal growth'):L('есть растущие моды','growing modes exist'),16,stable?C.green:C.red);
+  ink.text(77,545,Math.abs(p.C)>1?L('Характеристика уходит за пределы области численной зависимости.','The characteristic lies outside the numerical domain of dependence.'):p.scheme==='ftcs'?L('CFL выполнено, но FTCS неустойчива: |G| > 1 при C ≠ 0.','CFL is satisfied, but FTCS is unstable: |G| > 1 when C ≠ 0.'):L('Попадание характеристики в численную область — только необходимая проверка.','Containing the characteristic is only a necessary check.'),17,stable?C.muted:C.red);
+  return out(ink,[['C',fmt(p.C)],[L('Сумма весов','Sum of weights'),fmt(K.sum(weights))],['max |G|',fmt(gmax)],[L('Отрицательные веса','Negative weights'),weights.filter(v=>v<0).length]]);
+}};}
+function balance(p,lang){const L=lbl(lang),n=8,h=1/n,a=Number(p.speed??1),dt=Number(p.dt??.04);
+  const initial=()=>Array.from({length:n},(_,i)=>p.profile==='step'?(i<n/2?1:.2):p.profile==='wave' ? .8+.22*Math.sin(K.TAU*i/n):.65+.4*Math.exp(-(((i-2)/1.25)**2)));
+  const fluxes=state=>{const F=new Array(n+1);F[0]=a*state[n-1];for(let j=1;j<n;j++)F[j]=a*state[j-1];F[n]=F[0];return F;};
+  const advance=(state,F)=>state.map((value,i)=>value+dt/h*(F[i]-F[i+1]));
+  let u=initial(),t=0,count=0,stop='';
+  return {get time(){return t;},get count(){return count;},get stop(){return stop;},step(){u=advance(u,fluxes(u));t+=dt;count++;return true;},render(){
+  const F=fluxes(u),v=advance(u,F),M=K.sum(u)*h,Mn=K.sum(v)*h;
+  const ink=new Ink().title(L('Поток переносит запас по сетке','Flux transports content across the grid'),L('Стрелки Fᵢ меняются вместе с профилем uᵢ. Контур: состояние после одного шага.','Arrows Fᵢ move with the profile uᵢ. Outline: state after one step.'));
+  const x0=115,w=94,base=330,dy=136;
+  for(let i=0;i<n;i++){const x=x0+i*w;ink.rect(x,base-u[i]*125,w-6,u[i]*125,'#334c3c',C.green);ink.rect(x+4,base-v[i]*125,w-14,v[i]*125,null,C.yellow,2);ink.text(x+w/2-3,base+29,'i = '+i,14,C.muted,'center');ink.text(x+w/2-3,base+59,fmt(v[i]-u[i],3),16,C.yellow,'center');}
+  for(let j=0;j<=n;j++){const x=x0+j*w-3,dx=F[j]*50;ink.arrow(x-dx/2,dy,x+dx/2,dy,C.blue,2.3);ink.text(x,dy-22,fmt(F[j],2),14,C.blue,'center');}
+  ink.text(75,420,L('Один шаг переноса:','One transport step:'),18,C.white);
+  ink.text(75,463,'uᵢⁿ⁺¹ = uᵢⁿ + (aΔt/h)(uᵢ₋₁ⁿ − uᵢⁿ)',21,C.yellow);
+  ink.text(75,506,`t = ${fmt(t,3)};   ${L('сумма до','total before')} = ${fmt(M)};   ${L('после','after')} = ${fmt(Mn)}`,17,C.white);
+  ink.text(75,560,L('Периодическая граница возвращает поток справа налево. Внутренние потоки меняют распределение, сумма запаса сохраняется.','The periodic boundary returns the right flux to the left. Interior fluxes change the distribution while conserving the total.'),16,C.muted);
+  return out(ink,[['t',fmt(t)],['Mⁿ',fmt(M)],['Mⁿ⁺¹',fmt(Mn)],[L('Изменение суммы','Change in total'),fmt(Mn-M)]]);
+  }};}
+function poisson(p,lang){const L=lbl(lang);const {A,b,u}=K.laplaceSolve(p.n,p.left,p.right);let selected=Math.floor(p.n*p.n/2);return {render(){
+  const n=p.n,N=n*n,ink=new Ink().title(L('Локальные связи превращаются в разреженный оператор','Local connections become a sparse operator'),L('Щёлкните по узлу слева или строке справа. Углы границы не участвуют в шаблоне.','Click a node on the left or a row on the right. Boundary corners do not enter the stencil.'));
+  const x0=94,y0=126,side=320,h=side/(n+1),i=selected%n,j=Math.floor(selected/n),max=Math.max(p.left,p.right,1e-8);
+  ink.rect(x0,y0,side,side,null,C.muted,2);
+  for(let jj=0;jj<n;jj++)for(let ii=0;ii<n;ii++){const k=jj*n+ii,x=x0+(ii+1)*h,y=y0+(jj+1)*h,v=u[k]/max,fill=`rgb(${Math.round(29+v*113)},${Math.round(48+v*108)},${Math.round(36+v*61)})`;
+    ink.rect(x-h*.4,y-h*.4,h*.8,h*.8,fill,k===selected?C.yellow:C.grid,k===selected?3:1);if(n<=6)ink.text(x,y+4,fmt(u[k],2),12,C.white,'center');
+    if(A[selected][k]!==0&&k!==selected)ink.line(x0+(i+1)*h,y0+(j+1)*h,x,y,C.yellow,2);}
+  ink.text(x0-17,y0+side/2,fmt(p.left),17,C.green,'right');ink.text(x0+side+17,y0+side/2,fmt(p.right),17,C.green);ink.text(x0+side/2,y0-14,'0',17,C.green,'center');ink.text(x0+side/2,y0+side+24,'0',17,C.green,'center');
+  const mx=535,my=126,ms=320,cell=ms/N;
+  ink.rect(mx,my,ms,ms,'#111e17',C.muted);ink.rect(mx,my+selected*cell,ms,cell,'#555035',null);
+  for(let r=0;r<N;r++)for(let k=0;k<N;k++)if(A[r][k])ink.rect(mx+k*cell+.2,my+r*cell+.2,Math.max(.8,cell-.4),Math.max(.8,cell-.4),r===selected?C.yellow:A[r][k]===4?C.white:C.blue,null);
+  ink.text(mx-12,my+selected*cell+cell/2+4,String(selected),13,C.yellow,'right');ink.text(mx+ms+14,my+selected*cell+cell/2+4,'b = '+fmt(b[selected]),14,C.yellow);
+  ink.text(78,505,`(i,j) = (${i},${j})  →  k = jn+i = ${selected}`,20,C.yellow);
+  const terms=A[selected].map((v,k)=>v?`${v>0?'+':''}${v}u${k}`:'').filter(Boolean).join(' ');
+  ink.text(78,545,terms+' = '+fmt(b[selected]),18,C.white);
+  this.geo={x0,y0,side,h,mx,my,ms,cell};
+  let residual=0;for(let r=0;r<N;r++)residual=Math.max(residual,Math.abs(K.sum(A[r].map((v,k)=>v*u[k]))-b[r]));
+  return out(ink,[[L('Неизвестных','Unknowns'),N],[L('Ненулевых элементов','Nonzero entries'),A.flat().filter(v=>v).length],['uₖ',fmt(u[selected])],[L('Невязка ∞','Residual ∞'),fmt(residual)]]);
+},click(x,y){const g=this.geo;if(!g)return false;if(x>=g.mx&&x<=g.mx+g.ms&&y>=g.my&&y<g.my+g.ms){selected=K.clamp(Math.floor((y-g.my)/g.cell),0,p.n*p.n-1);return true;}if(x>=g.x0&&x<=g.x0+g.side&&y>=g.y0&&y<=g.y0+g.side){const i=K.clamp(Math.round((x-g.x0)/g.h)-1,0,p.n-1),j=K.clamp(Math.round((y-g.y0)/g.h)-1,0,p.n-1);selected=j*p.n+i;return true;}return false;}};}
+function cost(p,lang){const L=lbl(lang);return {render(){
+  const a=K.costEstimate(p),b=K.costEstimate({...p,n:p.n*2}),ratio=b.operations/a.operations,ink=new Ink().title(L('Уточнение сетки увеличивает и число узлов, и число шагов','Refinement increases both grid size and the number of time steps'),L('Расчёт до одного и того же физического времени T = 1.','Both calculations reach the same physical time T = 1.'));
+  const base=350,barmax=200,barw=85,xs=[145,435,725],vals=[[a.dof,b.dof],[a.steps,b.steps],[a.operations,b.operations]],names=[L('Неизвестные','Unknowns'),L('Временные шаги','Time steps'),L('Работа','Work')];
+  for(let j=0;j<3;j++){const max=vals[j][1],h1=barmax*vals[j][0]/max,h2=barmax;ink.rect(xs[j],base-h1,barw,h1,'#375344',C.green);ink.rect(xs[j]+barw+14,base-h2,barw,h2,'#76673d',C.yellow);ink.text(xs[j]+barw,392,names[j],19,C.white,'center');ink.text(xs[j]+barw,436,'× '+fmt(vals[j][1]/vals[j][0]),27,C.yellow,'center');ink.text(xs[j]+barw/2,base+22,'n',15,C.green,'center');ink.text(xs[j]+barw*1.5+14,base+22,'2n',15,C.yellow,'center');}
+  ink.text(82,510,`W(2n) / W(n) = 2${p.dim===1?'¹':p.dim===2?'²':'³'} × ${p.mode==='diffusion'?'2²':'2'} = ${ratio}`,25,C.white);
+  ink.text(82,557,L(`Память: ${fmt(a.memory/2**20)} → ${fmt(b.memory/2**20)} MiB; три массива binary64.`,`Memory: ${fmt(a.memory/2**20)} → ${fmt(b.memory/2**20)} MiB; three binary64 arrays.`),17,C.muted);
+  return out(ink,[['N_dof',fmt(a.dof)],['N_steps',fmt(a.steps)],[L('Условных операций','Illustrative operations'),fmt(a.operations)],[L('Показатель n','Power of n'),a.exponent]]);
+}};}
+function createStatic(id,p,lang){const factories={grid:gridLab,differences,stencil,roundoff,shift,compact,dispersion,spacetime,balance,poisson,cost};if(!factories[id])return null;return factories[id](p,lang);}
+
+return { createStatic };
+})();
+__modules['labs-evolve.js'] = (() => {
+const K = __modules['kernels.js'];
+const {Ink,C,graph,legend,fmt} = __modules['board.js'];
+const arr=(n,fn)=>Array.from({length:n},(_,i)=>fn(i));
+const text=lang=>(ru,en)=>lang==='en'?en:ru;
+const name=(s,lang)=>({upwind:lang==='en'?'Upwind':'Против потока',lf:lang==='en'?'Lax–Friedrichs':'Лакс — Фридрихс',lw:lang==='en'?'Lax–Wendroff':'Лакс — Вендрофф',ftcs:'FTCS',maccormack:lang==='en'?'MacCormack':'Мак-Кормак'})[s];
+function advection(p,lang){
+  const L=text(lang),h=1/p.n,dt=p.C*h,x=arr(p.n,i=>i*h),initial=x.map(x=>K.profile(p.profile,x));
+  let a=[...initial],b=[...initial],t=0,steps=0,history=[],stop='';
+  return {get stop(){return stop;},get time(){return t;},get count(){return steps;},
+    step(){if(stop)return false;a=K.advectionStep(a,p.C,p.A);b=K.advectionStep(b,p.C,p.B);steps++;t=steps*dt;
+      const exact=x.map(x=>K.profile(p.profile,x,2,t));history.push([t,K.l1Error(a,exact),K.l1Error(b,exact)]);if(history.length>600)history=history.filter((_,i)=>i%2===0);
+      if(!a.every(Number.isFinite)||!b.every(Number.isFinite)||Math.max(K.normInf(a),K.normInf(b))>20)stop=L('Остановка: |u| > 20. Дальнейший расчёт продолжать нельзя.','Stopped: |u| > 20. The calculation cannot continue.');
+      else if(t>=2)stop=L('Два периода завершены. Измените параметры или сбросьте опыт.','Two periods completed. Change a parameter or reset the experiment.');return true;},
+    render(){const exact=x.map(x=>K.profile(p.profile,x,2,t)),ink=new Ink().title(L('Сравнение схем при одном физическом времени','Comparing schemes at the same physical time'),`t = ${fmt(t)}    Δt = ${fmt(dt)}    n = ${steps}`);
+      const lo=Math.min(-.25,...a,...b),hi=Math.max(1.2,...a,...b),g=graph(ink,{y:112,h:256,ymin:Math.max(-30,lo-.03),ymax:Math.min(30,hi+.03),ylabel:'u'});
+      g.curve(x=>K.profile(p.profile,x,2,t),C.white,2.2,850);g.series(x,a,C.blue,1.8,p.n<=80);g.series(x,b,C.yellow,1.8,p.n<=80);
+      legend(ink,[[L('Точное решение','Exact solution'),C.white],['A: '+name(p.A,lang),C.blue],['B: '+name(p.B,lang),C.yellow]],411,72,283);
+      if(history.length>1){const hg=graph(ink,{x:76,y:467,w:610,h:80,xmin:0,xmax:Math.max(.2,t),ymin:-8,ymax:2,xticks:4,yticks:2,ylabel:'log₁₀ L₁',xlabel:'t'});hg.series(history.map(r=>r[0]),history.map(r=>Math.log10(Math.max(1e-8,r[1]))),C.blue,1.5);hg.series(history.map(r=>r[0]),history.map(r=>Math.log10(Math.max(1e-8,r[2]))),C.yellow,1.5);}
+      else ink.text(76,499,L('Нажмите «Шаг», чтобы увидеть первый разностный слой.','Press “Step” to see the first time level.'),18,C.muted);
+      ink.text(729,483,'Δmean(A) = '+fmt(K.sum(a)/p.n-K.sum(initial)/p.n),14,C.blue);ink.text(729,516,'Δmean(B) = '+fmt(K.sum(b)/p.n-K.sum(initial)/p.n),14,C.yellow);
+      if(p.A==='maccormack'&&p.B==='lw'||p.B==='maccormack'&&p.A==='lw')ink.text(76,592,L('Для линейного переноса Мак-Кормак и Лакс — Вендрофф совпадают.','For linear advection, MacCormack and Lax–Wendroff are equivalent.'),14,C.green);
+      return {ink,stats:[['L₁(A)',fmt(K.l1Error(a,exact))],['L₁(B)',fmt(K.l1Error(b,exact))],['min / max A',fmt(Math.min(...a))+' / '+fmt(Math.max(...a))],['min / max B',fmt(Math.min(...b))+' / '+fmt(Math.max(...b))]],rows:x.map((xx,i)=>({x:xx,exact:exact[i],A:a[i],B:b[i]}))};}
+  };
+}
+function heat(p,lang){
+  const L=text(lang),n=p.n,h=1/n,theta=Number(p.theta),dt=p.r*h*h,k=n-2;
+  const modes=p.mode==='high'?[[k,1]]:p.mode==='mix'?[[1,1],[k,.15]]:[[1,1]],x=arr(n+1,i=>i*h),analytical=(x,t)=>K.sum(modes.map(([m,A])=>A*Math.sin(m*Math.PI*x)*Math.exp(-((m*Math.PI)**2)*t)));
+  let u=x.map(x=>analytical(x,0));u[0]=u[n]=0;let steps=0,t=0,stop='',history=[[0,1]];
+  return {get stop(){return stop;},get time(){return t;},get count(){return steps;},step(){if(stop)return false;u=K.heatStep(u,p.r,theta);steps++;t=steps*dt;history.push([steps,K.sum(u.map((v,i)=>v*Math.sin(k*Math.PI*x[i])))*2/n]);if(history.length>120)history.shift();
+    if(!u.every(Number.isFinite)||K.normInf(u)>20)stop=L('Остановка: |u| > 20. Дальнейший расчёт продолжать нельзя.','Stopped: |u| > 20. The calculation cannot continue.');else if(t>.5)stop=L('Расчёт завершён при t ≥ 0.5.','The calculation ended at t ≥ 0.5.');return true;},
+    render(){const exact=x.map(x=>analytical(x,t)),ink=new Ink().title(L('Точное и численное затухание','Exact and numerical decay'),`θ = ${theta}    r = ${fmt(p.r)}    t = ${fmt(t)}    n = ${steps}`),lim=Math.max(1.2,Math.min(25,K.normInf(u)*1.1));
+      const g=graph(ink,{y:112,h:263,ymin:-lim,ymax:lim,ylabel:'u'});g.curve(x=>analytical(x,t),C.white,2,700);g.series(x,u,C.yellow,1.8,true);
+      legend(ink,[[L('Точное решение','Exact solution'),C.white],[L('Разностное решение','Difference solution'),C.yellow]],419);
+      const G=K.heatAmplification(p.r,theta,k*Math.PI/n),exactDecay=Math.exp(-((k*Math.PI)**2)*dt);
+      ink.text(76,473,L('Высокая мода k = ','High mode k = ')+k,18,C.muted);ink.text(76,511,'G = '+fmt(G)+'    |G| '+(Math.abs(G)>1?'>':'≤')+' 1',22,Math.abs(G)>1?C.red:G<0?C.yellow:C.green);
+      ink.text(540,473,L('Точное затухание за шаг','Exact decay per step'),18,C.muted);ink.text(540,511,'exp(−k²π²Δt) = '+fmt(exactDecay),22,C.white);
+      ink.text(76,566,Math.abs(G)>1?L('Высокочастотное возмущение растёт.','The high-frequency perturbation grows.'):G<0?L('G < 0: мода меняет знак, хотя её модуль не растёт.','G < 0: the mode changes sign even though its magnitude does not grow.'):L('Неявный шаг не отменяет погрешность во времени.','An implicit step still has a time-discretization error.'),17,Math.abs(G)>1?C.red:C.muted);
+      return {ink,stats:[[L('СКО','RMS error'),fmt(K.l2Error(u,exact))],['min / max u',fmt(Math.min(...u))+' / '+fmt(Math.max(...u))],['Δt',fmt(dt)],[L('Энергия hΣu²','Energy hΣu²'),fmt(h*K.sum(u.map(v=>v*v)))]],rows:x.map((xx,i)=>({x:xx,exact:exact[i],numerical:u[i]}))};}
+  };
+}
+function shock(p,lang){
+  const L=text(lang),h=2/p.n,x=arr(p.n,i=>(i+.5)*h),x0=.6,dt=.4*h/p.left,s=(p.left+p.right)/2,initial=x.map(x=>x<x0?p.left:p.right);
+  let a=[...initial],b=[...initial],steps=0,t=0,stop='';
+  return {get stop(){return stop;},get time(){return t;},get count(){return steps;},step(){if(stop)return false;a=K.burgersStep(a,dt,h,p.left,p.right,true);b=K.burgersStep(b,dt,h,p.left,p.right,false);steps++;t=steps*dt;if(t>=Math.min(1,(1.6-x0)/s))stop=L('Сравнение завершено до взаимодействия скачка с выходом.','Comparison completed before the shock interacts with the outlet.');return true;},
+    render(){const exactFront=x0+s*t,xa=K.shockPosition(a,p.left,p.right),xb=K.shockPosition(b,p.left,p.right),ink=new Ink().title(L('Скорость разрыва из закона сохранения','Shock speed from conservation'),`t = ${fmt(t)}    s = (uL+uR)/2 = ${fmt(s)}    C = 0.4`);
+      const g=graph(ink,{y:112,h:268,xmin:0,xmax:2,ymin:0,ymax:Math.max(1.2,p.left*1.18),ylabel:'u'});
+      g.series([0,exactFront,exactFront,2],[p.left,p.left,p.right,p.right],C.white,2.2);g.series(x,a,C.blue,2,p.n<=80);g.series(x,b,C.yellow,2,p.n<=80);
+      for(const [front,col]of [[exactFront,C.white],[xa,C.blue],[xb,C.yellow]])ink.line(g.X(front),g.y,g.X(front),g.y+g.h+5,col,1.5,true);
+      legend(ink,[[L('Точное','Exact'),C.white],[L('Консервативное','Conservative'),C.blue],[L('Неконсервативное','Nonconservative'),C.yellow]],424,72,288);
+      ink.text(76,477,L('Положение по массе:','Mass-equivalent front position:'),18,C.muted);ink.text(76,512,`xₛ = (hΣuᵢ − L uR)/(uL − uR)`,22,C.white);
+      ink.text(76,563,L('Сгущение сетки не исправляет нарушение закона сохранения на разрыве.','Grid refinement does not repair a broken conservation law at a shock.'),17,C.muted);
+      return {ink,stats:[[L('Точное положение','Exact front'),fmt(exactFront)],[L('Консервативное xₛ','Conservative xₛ'),fmt(xa)],[L('Неконсервативное xₛ','Nonconservative xₛ'),fmt(xb)],[L('Ошибка положения (неконс.)','Position error (noncons.)'),fmt(xb-exactFront)]],rows:x.map((xx,i)=>({x:xx,exact:xx<exactFront?p.left:p.right,conservative:a[i],nonconservative:b[i]}))};}
+  };
+}
+function createEvolving(id,p,lang){return ({advection,heat,shock}[id])?.(p,lang)??null;}
+
+return { createEvolving };
+})();
+__modules['app.js'] = (() => {
+const {Board,Ink,C,fmt} = __modules['board.js'];
+const {demos,groups,sources,defaults,translate} = __modules['catalog.js'];
+const {createStatic} = __modules['labs-static.js'];
+const {createEvolving} = __modules['labs-evolve.js'];
+const $=id=>document.getElementById(id),paramsURL=new URLSearchParams(location.search);
+let lang=paramsURL.get('lang')==='en'?'en':'ru',filter=-1,active=null,model=null,board=null,params={},lastView=null,playing=false,accumulator=0,lastFrame=0,raf=0,galleryBoards=[],lastGalleryScroll=0;
+const states=new Map();
+const T=value=>translate(value,lang),L=(ru,en)=>lang==='en'?en:ru;
+const quantize=(v,c)=>Number(Math.max(c.min,Math.min(c.max,c.min+Math.round((Number(v)-c.min)/c.step)*c.step)).toFixed(10));
+const makeModel=(id,p)=>createStatic(id,p,lang)||createEvolving(id,p,lang);
+const ui={
+ 'catalogue-label':['ИНТЕРАКТИВНЫЙ КАТАЛОГ','INTERACTIVE CATALOGUE'],
+ 'catalogue-title':['Что делает разностная схема с данными','What a finite-difference scheme does to data'],
+ 'catalogue-description':['Смотрим на сеточные данные, работу операторов и сохранение величин.','See grid data, operator actions, and conserved quantities.'],
+ 'catalogue-count-label':['опытов<br>с объяснениями','explained<br>experiments'],
+ 'catalogue-help':['Выберите опыт. Он откроется на этой странице. Esc возвращает к списку.','Choose an experiment. It opens on this page. Esc returns to the list.'],
+ 'source-link':['Источники и математические соглашения ↗','Sources and mathematical conventions ↗'],
+ 'control-heading':['УСЛОВИЯ ОПЫТА','EXPERIMENT PARAMETERS'],'preset-heading':['ПОПРОБУЙТЕ','TRY THESE'],
+ 'defaults':['Параметры по умолчанию','Default parameters'],'question-heading':['Что проверить?','What should you investigate?'],
+ 'math-heading':['Как считается','How it is computed'],'assumptions-heading':['Границы применимости','Limits of the model'],
+ 'sources-heading':['Источники','Sources'],'step':['Шаг','Step'],'reset':['↺ Сброс','↺ Reset'],'speed-label':['шаг/с','steps/s']
+};
+function safeStorage(key,value){try{if(value===undefined)return localStorage.getItem(key);localStorage.setItem(key,value);}catch{}return null;}
+function applyTheme(theme){document.documentElement.dataset.theme=theme;document.documentElement.classList.toggle('theme-dark',theme==='dark');safeStorage('site-theme',theme);$('theme-button').textContent=theme==='dark'?'☀':'☾';$('theme-button').setAttribute('aria-label',L('Переключить светлую / тёмную тему','Toggle light / dark theme'));$('theme-button').title=L('Переключить светлую / тёмную тему','Toggle light / dark theme');}
+applyTheme(safeStorage('site-theme')||safeStorage('pde3-theme')||((document.documentElement.dataset.theme==='dark')?'dark':'light'));
+function setLanguage(){document.documentElement.lang=lang;document.title=L('Лекция 3 · Сеточные методы и разностные схемы','Lecture 3 · Grid methods and finite differences');
+  $('page-title').innerHTML=L('Лекция 3 <span>Сеточные методы и разностные схемы</span>','Lecture 3 <span>Grid methods and finite differences</span>');
+  $('course-link').textContent='←';$('course-link').title=L('Вернуться к странице курса','Return to course page');$('course-link').setAttribute('aria-label',L('Вернуться к странице курса','Return to course page'));
+  $('language-button').textContent='EN / RU';$('language-button').setAttribute('aria-label',L('Переключить язык','Switch language'));$('language-button').title=L('Переключить язык','Switch language');
+  for(const[id,s]of Object.entries(ui))$(id).innerHTML=T(s);
+  $('previous').setAttribute('aria-label',L('Предыдущий опыт','Previous experiment'));$('next').setAttribute('aria-label',L('Следующий опыт','Next experiment'));$('close-demo').setAttribute('aria-label',L('Вернуться в каталог','Return to catalogue'));
+  $('fullscreen').title=L('Полный экран','Full screen');
+}
+function palette(p){const colors={
+ [C.white]:'#294137',[C.muted]:'#667d6d',[C.yellow]:'#a04d28',[C.blue]:'#346a86',[C.red]:'#a84e3d',[C.green]:'#627b41',[C.grid]:'#ced8ce',[C.dim]:'#93a896',[C.bg]:'#e7ede6'};
+  const convert=x=>x?colors[x]||(x.startsWith('#')?'#d8e2d3':x):null;
+  return {...p,color:convert(p.color),fill:convert(p.fill),width:Math.max(2,p.width||1)};
+}
+function thumbnail(d){
+  const p={...defaults(d)};
+  if(d.id==='grid')Object.assign(p,{n:12,k:3,view:'averages'});
+  if(d.id==='advection')p.profile='step';
+  if(d.id==='heat')Object.assign(p,{mode:'mix',theta:.5,r:1});
+  const m=makeModel(d.id,p);if(d.dynamic)for(let n=0;n<(d.id==='shock'?50:d.id==='heat'?1:24);n++)m.step();
+  const raw=m.render().ink.cmd,ink=new Ink();
+  // A true snapshot of the same model, cropped to its mathematical picture.
+  for(const cmd of raw){if(cmd.type==='text'&&(cmd.y<75||cmd.y>495))continue;const p=palette(cmd),s=1.06;
+    if(p.x!==undefined)p.x=(p.x-28)*s;if(p.y!==undefined)p.y=(p.y-65)*s+20;
+    for(const key of ['x1','x2'])if(p[key]!==undefined)p[key]=(p[key]-28)*s;
+    for(const key of ['y1','y2'])if(p[key]!==undefined)p[key]=(p[key]-65)*s+20;
+    for(const key of ['w','h','r','size'])if(p[key]!==undefined)p[key]*=s;
+    if(p.points)p.points=p.points.map(([x,y])=>[(x-28)*s,(y-65)*s+20]);
+    if(p.type==='text')p.size=Math.max(p.size,16);ink.cmd.push(p);
+  }
+  return ink;
+}
+function buildGallery(){
+  for(const b of galleryBoards)b.destroy();galleryBoards=[];$('catalogue-grid').replaceChildren();$('filters').replaceChildren();
+  const addFilter=(n,label)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.className=n===filter?'active':'';b.setAttribute('aria-pressed',String(n===filter));b.onclick=()=>{filter=n;buildGallery();};$('filters').append(b);};
+  addFilter(-1,L('Все опыты','All experiments'));groups.forEach((g,i)=>addFilter(i,T(g)));
+  demos.forEach((d,i)=>{if(filter!==-1&&d.group!==filter)return;
+    const card=document.createElement('button');card.className='demo-card';card.type='button';card.dataset.demo=d.id;card.setAttribute('aria-label',`${i+1}. ${T(d.title)}`);
+    const image=document.createElement('div');image.className='thumbnail';image.setAttribute('aria-hidden','true');
+    const text=document.createElement('div');text.className='card-text';
+    const num=document.createElement('span');num.className='card-num';num.textContent=String(i+1).padStart(2,'0');
+    const words=document.createElement('div');const title=document.createElement('h3');title.className='card-title';title.textContent=T(d.title);const short=document.createElement('p');short.className='card-short';short.textContent=T(d.short);const group=document.createElement('span');group.className='card-group';group.textContent=T(groups[d.group]);words.append(title,short,group);text.append(num,words);card.append(image,text);card.onclick=()=>{lastGalleryScroll=scrollY;location.hash=d.id;};$('catalogue-grid').append(card);
+    const b=new Board(image,{preview:true});b.render(thumbnail(d));galleryBoards.push(b);
+  });
+}
+function buildControls(){
+  $('controls').replaceChildren();$('presets').replaceChildren();
+  for(const c of active.controls){const row=document.createElement('div');row.className='control';
+    const label=document.createElement('label');label.htmlFor='control-'+c.key;label.textContent=T(c.label);row.append(label);
+    if(c.type==='range'){
+      const wrap=document.createElement('div');wrap.className='control-row';const slider=document.createElement('input'),number=document.createElement('input');
+      slider.type='range';number.type='number';slider.id='control-'+c.key;number.id='number-'+c.key;
+      for(const el of[slider,number]){el.min=c.min;el.max=c.max;el.step=c.step;el.value=params[c.key];el.dataset.key=c.key;}
+      number.setAttribute('aria-label',T(c.label));
+      const set=(value)=>{if(!Number.isFinite(Number(value)))return;const v=quantize(value,c);params[c.key]=v;slider.value=number.value=v;restart(false);};
+      slider.addEventListener('input',()=>set(slider.value));number.addEventListener('change',()=>set(number.value));wrap.append(slider,number);row.append(wrap);
+    }else{const select=document.createElement('select');select.id='control-'+c.key;select.dataset.key=c.key;
+      for(const o of c.options){const option=document.createElement('option');option.value=o.value;option.textContent=T(o.label);select.append(option);}select.value=params[c.key];
+      select.onchange=()=>{const found=c.options.find(o=>String(o.value)===select.value);params[c.key]=found.value;restart(false);};row.append(select);
+    }$('controls').append(row);
+  }
+  for(const preset of active.presets){const b=document.createElement('button');b.type='button';b.className='preset';b.textContent=T(preset.label);b.onclick=()=>{params={...defaults(active),...structuredClone(preset.values)};buildControls();restart(false);};$('presets').append(b);}
+}
+function setPlayback(){
+  const dynamic=Boolean(active?.dynamic);$('play').hidden=$('step').hidden=$('speed-wrapper').hidden=!dynamic;
+  $('play').textContent=playing?L('❚❚ Пауза','❚❚ Pause'):L('▶ Пуск','▶ Play');$('play').setAttribute('aria-pressed',String(playing));
+  $('step').disabled=Boolean(model?.stop);$('play').disabled=Boolean(model?.stop);
+}
+function draw(){if(!model||!board)return;try{
+  lastView=model.render();board.render(lastView.ink);$('metrics').replaceChildren();
+  for(const [label,value]of lastView.stats){const m=document.createElement('div');m.className='metric';const a=document.createElement('span');a.className='metric-label';a.textContent=label;const b=document.createElement('span');b.className='metric-value';b.textContent=value;m.append(a,b);$('metrics').append(m);}
+  if(model.stop){playing=false;$('status').textContent=model.stop;$('status').className='warning';}
+  setPlayback();
+}catch(e){playing=false;console.error(e);$('status').textContent=L('Ошибка опыта: ','Experiment error: ')+e.message;$('status').className='warning';setPlayback();}}
+function restart(message=true){playing=false;accumulator=0;model=makeModel(active.id,params);states.set(active.id,structuredClone(params));$('status').className='';
+  $('status').textContent=active.dynamic?L('Параметры задают новую задачу. Начальное время t = 0. Пробел запускает расчёт, N выполняет один шаг.','Parameters define a new problem. The initial time is t = 0. Space starts the run; N advances one step.'):
+    ['stencil','grid','poisson'].includes(active.id)?L('Можно взаимодействовать с рисунком: нажмите на узел или ячейку.','Interact with the diagram: click a node or a cell.'):
+    L('Изменяйте параметры и сравнивайте фактические значения.','Change the parameters and compare the computed values.');
+  draw();
+}
+function loadParams(d){
+  let p={...defaults(d),...(states.get(d.id)||{})};
+  const s=new URLSearchParams(location.search).get('state');if(s){try{const data=JSON.parse(s);if(data.id===d.id){
+    for(const c of d.controls){const v=data.p?.[c.key];if(c.type==='range'&&typeof v==='number'&&Number.isFinite(v))p[c.key]=quantize(v,c);else if(c.type==='select'&&c.options.some(o=>o.value===v))p[c.key]=v;}
+    if(Array.isArray(data.p?.nodes))p.nodes=[...new Set(data.p.nodes.filter(v=>Number.isInteger(v)&&Math.abs(v)<=3))].sort((a,b)=>a-b);
+  }}catch{}}
+  return p;
+}
+function dispose(){playing=false;board?.destroy();board=null;model=null;lastView=null;accumulator=0;}
+function route(){
+  let id;try{id=decodeURIComponent(location.hash.slice(1));}catch{id='';}const d=demos.find(d=>d.id===id);
+  dispose();active=d||null;
+  document.body.classList.toggle('lab-active',Boolean(d));$('catalogue').hidden=Boolean(d);$('demo-view').hidden=!d;
+  if(!d){document.title=L('Лекция 3 · Сеточные методы и разностные схемы','Lecture 3 · Grid methods and finite differences');requestAnimationFrame(()=>scrollTo(0,lastGalleryScroll));return;}
+  params=loadParams(d);$('demo-title').textContent=T(d.title);$('demo-section').textContent=T(groups[d.group]);$('demo-number').textContent=String(demos.indexOf(d)+1).padStart(2,'0');
+  document.title=T(d.title)+' · '+L('Лекция 3','Lecture 3');$('equation').innerHTML=d.equation;
+  $('question').textContent=T(d.question);$('explanation').textContent=T(d.explanation);$('caveat').textContent=T(d.caveat);$('demo-sources').replaceChildren();
+  for(const key of d.sources){const s=sources[key],a=document.createElement('a');a.href=s.url;a.textContent=s.label+' ↗';a.target='_blank';a.rel='noopener noreferrer';$('demo-sources').append(a);}
+  board=new Board($('stage'),{onEngine:e=>{$('engine-status').textContent=e==='chalkish'?'Chalkish · site library':L('Canvas · автономный просмотр','Canvas · standalone preview');}});
+  document.fonts?.load('16px "Neucha"').then(()=>{if(board)board.paint();});
+  $('stage').onclick=e=>{if(model?.click){const[x,y]=board.point(e);if(model.click(x,y)){states.set(d.id,structuredClone(params));draw();}}};
+  buildControls();restart();$('controls-panel').scrollTop=0;scrollTo(0,0);
+}
+function changeDemo(delta){if(!active)return;location.hash=demos[(demos.indexOf(active)+delta+demos.length)%demos.length].id;}
+$('previous').onclick=()=>changeDemo(-1);$('next').onclick=()=>changeDemo(1);$('close-demo').onclick=()=>{location.hash='';};
+$('defaults').onclick=()=>{params=defaults(active);buildControls();restart();};$('reset').onclick=()=>restart();
+$('play').onclick=()=>{if(!model?.step||model.stop)return;playing=!playing;accumulator=0;setPlayback();};$('step').onclick=()=>{playing=false;model?.step?.();draw();};
+$('speed').oninput=()=>{$('speed-value').textContent=$('speed').value;};
+$('theme-button').onclick=()=>applyTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
+$('language-button').onclick=()=>{if(active)states.set(active.id,structuredClone(params));lang=lang==='ru'?'en':'ru';const url=new URL(location.href);url.searchParams.set('lang',lang);try{history.replaceState(null,'',url);}catch{/* Opaque-origin previews may prohibit URL rewriting. */}setLanguage();buildGallery();route();};
+$('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await $('demo-view').requestFullscreen();}catch{$('status').textContent=L('Браузер не разрешил полноэкранный режим.','The browser did not allow fullscreen mode.');}};
+function frame(now){
+  const elapsed=Math.min(.15,(now-(lastFrame||now))/1000);lastFrame=now;
+  if(playing&&model?.step){accumulator+=elapsed*Number($('speed').value);let updated=false;while(accumulator>=1&&playing){accumulator--;model.step();updated=true;if(model.stop)playing=false;}if(updated)draw();}
+  raf=requestAnimationFrame(frame);
+}
+document.addEventListener('visibilitychange',()=>{if(document.hidden){playing=false;setPlayback();}});
+window.addEventListener('hashchange',route);
+window.addEventListener('keydown',e=>{if(!active||e.ctrlKey||e.metaKey||e.altKey)return;if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)||e.target.isContentEditable)return;
+  if(e.key==='Escape'||e.key==='q'||e.key==='й'){if(!document.fullscreenElement){e.preventDefault();location.hash='';}}
+  if(e.key==='ArrowLeft'){e.preventDefault();changeDemo(-1);}if(e.key==='ArrowRight'){e.preventDefault();changeDemo(1);}
+  if(e.code==='Space'&&model?.step){e.preventDefault();$('play').click();}if(e.key.toLowerCase()==='n'||e.key==='т'){$('step').click();}if(e.key.toLowerCase()==='r'||e.key==='к')restart();
+});
+window.addEventListener('pagehide',()=>{cancelAnimationFrame(raf);dispose();for(const b of galleryBoards)b.destroy();});
+setLanguage();buildGallery();route();raf=requestAnimationFrame(frame);
+// Read-only diagnostics for reproducibility and automated browser tests.
+Object.defineProperty(window,'PDE3',{value:{get id(){return active?.id??null;},get engine(){return board?.engine??null;},get params(){return structuredClone(params);},get time(){return model?.time??0;},get count(){return model?.count??0;},get stats(){return lastView?.stats??[];},get commands(){return lastView?.ink.cmd??[];},get stop(){return model?.stop??'';},get running(){return playing;}}});
+
+return {  };
+})();
+
+for(const [selector,classes] of [['.lab-main','chalk-surface chalk-rule-both'],['.stage','chalk-surface'],['.equation','chalk-surface chalk-rule-bottom'],['.metrics','chalk-surface chalk-rule-top'],['.playback','chalk-surface chalk-rule-top'],['.status-line','chalk-surface chalk-rule-bottom']]){
+  document.querySelectorAll(selector).forEach(element=>element.classList.add(...classes.split(' ')));
+}
+document.querySelector('.heading-group')?.setAttribute('hidden','');
+
+const sourceLink = document.getElementById('source-link');
+sourceLink.href = '#sources';
+sourceLink.onclick = event => {
+  event.preventDefault();
+  let dialog = document.getElementById('source-dialog');
+  if(!dialog){
+    dialog=document.createElement('dialog');dialog.id='source-dialog';
+    const close=document.createElement('button');close.textContent='×';close.onclick=()=>dialog.close();
+    const title=document.createElement('h2');title.textContent='Sources / Источники';
+    dialog.append(close,title);
+    const note=document.createElement('p');note.textContent='This standalone file uses Canvas 2D. The site package imports your existing Chalkish library. Research examples were independently reimplemented; legacy UIUC modules are Java applets, not embedded dependencies.';dialog.append(note);
+    for(const s of Object.values(__modules['catalog.js'].sources)){const p=document.createElement('p'),a=document.createElement('a');a.href=s.url;a.target='_blank';a.rel='noopener noreferrer';a.textContent=s.label;p.append(a);dialog.append(p);}
+    document.body.append(dialog);
+  }dialog.showModal();
+};
+document.getElementById('course-link').href='../../pages/cfd2026.html';
+
+</script>
+</body>
+</html>
