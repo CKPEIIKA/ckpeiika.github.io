@@ -31,6 +31,19 @@ test('hard-sphere sampled velocity jumps rather than interpolating across the im
   close(before.vx,Math.sqrt(2));close(before.vy,0);
   close(after.vx,Math.sqrt(2)*Math.cos(q.chi));close(after.vy,Math.sqrt(2)*Math.sin(q.chi));
 });
+test('hard-sphere lab reconstruction keeps physical spheres disjoint',()=>{
+  for(const mass of [.1,1,10]){
+    const q=P.hardSphereTrajectory(.65,1),M=mass+1;
+    const radius1=mass**(1/3)/(1+mass**(1/3)),radius2=1-radius1;
+    for(let i=0;i<=2000;i++){
+      const fraction=i/2000,s=P.trajectoryAt(q,fraction);
+      const R=[mass/M*(-5+q.g*s.t),mass/M*.65],cmV=[mass/M*q.g,0];
+      const lab=P.labFromRelative([s.x,s.y],[s.vx,s.vy],mass,1,R,cmV);
+      const distance=Math.hypot(lab.r1[0]-lab.r2[0],lab.r1[1]-lab.r2[1]);
+      assert.ok(distance>=radius1+radius2-1e-9,`${mass} at ${fraction}: ${distance}`);
+    }
+  }
+});
 test('relative-to-lab transformation preserves CM, momentum and kinetic energy split',()=>{
   for(const m1 of [.25,1,4]){
     const m2=1,r=[1.2,-.3],v=[1.5,.7],R=[.8,-.1],V=[.4,.2],M=m1+m2,q=P.labFromRelative(r,v,m1,m2,R,V);

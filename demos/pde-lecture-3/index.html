@@ -60,6 +60,7 @@ dialog{max-width:760px;width:92vw;max-height:88vh;overflow:auto;border:1px solid
       --line: #9f2d20;
       --accent: #9f2d20;
       --active: #d7dde2;
+      --board-texture: url("../../lib/chalkish/examples/assets/board-grain.png");
     }
 
     :root[data-theme="dark"],
@@ -289,6 +290,95 @@ dialog{max-width:760px;width:92vw;max-height:88vh;overflow:auto;border:1px solid
   #demo-view > :has(> #controls-panel),#demo-view > :has(#controls-panel){display:grid!important;grid-template-columns:minmax(240px,20%) minmax(0,1fr)!important;gap:clamp(10px,1vw,16px)!important;}
   .controls,.control-panel,#controls,main>aside,#controls-panel{min-width:0!important;width:auto!important;max-width:none!important;}
 }
+</style>
+<style id="lecture-3-mobile-layout">
+  @media (max-width: 800px) {
+    #demo-view {
+      padding-inline: 0;
+    }
+
+    .demo-toolbar {
+      align-items: flex-start;
+      gap: 0.45rem;
+      padding-block: 0.45rem;
+    }
+
+    .demo-heading {
+      flex: 1 1 auto;
+      align-items: flex-start;
+      min-width: 0;
+    }
+
+    .demo-heading h2 {
+      font-size: clamp(0.95rem, 4.4vw, 1.2rem);
+      overflow-wrap: anywhere;
+    }
+
+    .demo-navigation {
+      flex: 0 0 auto;
+    }
+
+    .demo-navigation button {
+      width: 2rem;
+      height: 2rem;
+    }
+
+    .lab-main,
+    .stage {
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .stage {
+      height: clamp(18rem, 100vw, 32rem);
+      aspect-ratio: auto;
+      --playback-safe-space: 5.5rem;
+    }
+
+    .stage > .playback {
+      left: 0.35rem;
+      right: 0.35rem;
+      width: auto;
+      max-width: none;
+    }
+
+    .stage > .playback .playback-actions {
+      justify-content: flex-start;
+    }
+
+    .metrics {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .metric:nth-child(2) {
+      border-right: 0;
+    }
+
+    .metric:nth-child(-n + 2) {
+      border-bottom: 1px dashed #33483b;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .controls-panel #controls {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .catalogue-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .stage {
+      height: clamp(18rem, 108vw, 28rem);
+      --playback-safe-space: 4.75rem;
+    }
+
+    .metric {
+      padding-inline: 0.4rem;
+    }
+  }
 </style>
 </head>
 <body>

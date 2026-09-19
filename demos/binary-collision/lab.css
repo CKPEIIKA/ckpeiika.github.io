@@ -123,9 +123,24 @@ main :has(> .board){padding-top:0!important}
 }
 
 @media (max-width:800px){
+ .lab-header{display:flex!important;position:relative!important;min-height:2.4rem;padding:0 0 .25rem!important;border-bottom:1px dashed var(--site-rule)}
+ .lab-header .board-home,.lab-header .header-tools{position:static!important;top:auto!important;right:auto!important;left:auto!important}
+ .lab-header .header-tools{margin-left:auto}
  .chapters{display:flex!important;width:calc(100% - 6.75rem)!important;height:54px!important;padding-left:3.25rem!important;padding-right:0!important;overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:none}
  .chapters::-webkit-scrollbar{display:none}
  .chapters .chapter-button{flex:0 0 auto!important;width:auto!important;min-width:8rem!important;padding-inline:.55rem!important;justify-content:flex-start!important;overflow:visible!important}
  .chapters .chapter-button,.chapters .chapter-button *{font-size:11px!important}
  .chapters .chapter-button .num{font-size:20px!important}
 }
+
+@media(max-width:480px){
+ .chapters{width:100%!important;padding-left:.5rem!important;padding-right:.5rem!important}
+ .scene-readout{top:.55rem;left:.7rem;gap:.55rem}
+ .readout-item{font-size:8px;line-height:1.25}
+ .readout-item strong{font-size:16px}
+ .controls{grid-template-columns:minmax(0,1fr);column-gap:0}
+ .lesson h1{font-size:clamp(1.9rem,9vw,2.2rem)}
+ .equations{font-size:clamp(1.15rem,6.4vw,1.5rem);overflow-wrap:anywhere}
+}
+
+:root{--board-texture:url("../../lib/chalkish/examples/assets/board-grain.png")!important}
