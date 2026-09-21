@@ -18,7 +18,8 @@ body.lab-active{height:100dvh;overflow:hidden;display:flex;flex-direction:column
 .lab-layout{display:grid;grid-template-columns:clamp(250px,25vw,345px) minmax(0,1fr);gap:15px;min-height:0;flex:1}.controls-panel{background:var(--panel);border:1px solid var(--line);overflow-y:auto;padding:17px 17px 22px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}.panel-label{font-size:10px;letter-spacing:.11em;color:var(--accent);font-weight:700;margin:0 0 13px}.control{margin-bottom:16px}.control label{font-size:12px;display:block;line-height:1.35;margin-bottom:7px}.control-row{display:flex;align-items:center;gap:10px}.control input[type=range]{width:100%;min-width:40px;accent-color:var(--accent);cursor:pointer}.control input[type=number]{width:75px;min-width:65px;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:2px;padding:3px 5px;font:12px var(--ui);font-variant-numeric:tabular-nums}.control select{width:100%;padding:7px 6px;font-size:12px;border:1px solid var(--line);border-radius:2px;background:var(--paper);color:var(--ink)}.preset-label{margin-top:20px;margin-bottom:10px}.presets{display:flex;flex-wrap:wrap;gap:6px}.presets button{font-size:11px;min-height:29px;text-align:left;padding:5px 8px}.defaults-button{font-size:10px;padding:2px 0;margin-top:8px;border:0;background:transparent;color:var(--muted);min-height:24px}.defaults-button:hover{background:transparent;text-decoration:underline}.inquiry{margin-top:18px;padding:14px 0;border-top:1px dashed var(--line);border-bottom:1px dashed var(--line)}.inquiry h3{font-size:13px;color:var(--accent);margin-bottom:7px;font-weight:650}.inquiry p{font-size:12px;line-height:1.65}details{border-bottom:1px dashed var(--line);padding:11px 0}summary{font-size:12px;font-weight:550;cursor:pointer}details p{font-size:11px;line-height:1.7;margin-top:9px;color:var(--muted)}#demo-sources a{display:block;font-size:10px;line-height:1.6;margin-top:9px}
 .lab-main{display:flex;flex-direction:column;min-height:0;min-width:0;background:var(--board);border:1px solid #33473a;overflow:hidden}.equation{flex:none;background:#152019;color:var(--chalk);font:18px/1.6 Georgia,"Times New Roman",serif;min-height:59px;padding:11px 20px;border-bottom:1px dashed #425043;overflow-wrap:anywhere;text-align:center}.equation sup,.equation sub{font-size:.7em}.stage{position:relative;min-height:240px;flex:1;overflow:hidden;background:var(--board);outline-offset:-3px;touch-action:manipulation}.board-canvas,.board-labels{position:absolute;inset:0;width:100%;height:100%;display:block}.board-labels{pointer-events:none}.thumbnail .board-canvas,.thumbnail .board-labels{position:absolute}.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));flex:none;border-top:1px dashed #364d3f;background:#111e17;min-height:61px}.metric{padding:10px 13px;border-right:1px dashed #33483b;min-width:0}.metric:last-child{border-right:0}.metric-label{display:block;font:10px/1.4 var(--ui);color:#a6b8ad;margin-bottom:5px;overflow-wrap:anywhere}.metric-value{display:block;font:17px/1.2 var(--ui);font-variant-numeric:tabular-nums;color:var(--yellow);white-space:normal;overflow-wrap:anywhere}
 .playback{display:flex;align-items:center;justify-content:space-between;gap:10px;flex:none;padding:10px 12px;background:var(--panel);border-top:1px solid var(--line)}.playback-left,.playback-right{display:flex;align-items:center;gap:6px}.playback button{min-height:31px;font-size:11px;padding:5px 9px;white-space:nowrap}.speed-label{display:flex;align-items:center;gap:5px;font-size:9px;color:var(--muted);padding-left:7px}.speed-label input{width:65px;accent-color:var(--accent)}.speed-label output{font-size:10px;font-variant-numeric:tabular-nums;min-width:20px}.status-line{display:flex;justify-content:space-between;gap:13px;background:var(--panel);color:var(--muted);padding:0 12px 7px;font-size:9px;flex:none;min-height:20px}.status-line .warning{color:#d07961}#engine-status{white-space:nowrap;font-size:8px;opacity:.8}.share-url{width:100%;flex:none;font-size:11px;padding:8px;background:var(--paper);color:var(--ink);border:0}.stage:fullscreen{width:100vw;height:100vh}#demo-view:fullscreen{background:var(--bg);padding:0 20px 20px;height:100vh}
-@media(min-width:1700px){.catalogue-grid{gap:30px}.card-title{font-size:16px}.card-short{font-size:12px}.lab-layout{grid-template-columns:350px minmax(0,1fr)}}
+    .stage-viewport{position:relative;display:flex;flex:1;min-width:0;min-height:0;overflow:hidden}
+    @media(min-width:1700px){.catalogue-grid{gap:30px}.card-title{font-size:16px}.card-short{font-size:12px}.lab-layout{grid-template-columns:350px minmax(0,1fr)}}
 @media(max-width:1150px){.catalogue-grid{gap:21px 16px}.heading-group h1 span{font-size:18px}.lab-layout{gap:10px;grid-template-columns:250px minmax(0,1fr)}.controls-panel{padding:13px}.equation{font-size:16px;padding:8px 13px;min-height:48px}.playback{padding:7px;gap:5px}.speed-label input{width:42px}.metric{padding:8px}.metric-value{font-size:14px}.playback button{font-size:10px;padding:5px 7px}.speed-label{padding-left:0}.lab-active .heading-group h1 span{font-size:14px}.demo-heading h2{font-size:17px}}
 @media(max-width:800px){.catalogue-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.catalogue-count{display:none}.heading-group h1 span{display:block;margin:6px 0 0;font-size:16px}.catalogue-intro h2{font-size:27px}.catalogue-footer{flex-direction:column;gap:10px}.lab-active .heading-group h1 span{display:none}.site-header{padding:15px 4vw}.lab-layout{display:flex;flex-direction:column;min-height:auto}.lab-main{order:0;min-height:auto;flex:none}.controls-panel{order:1;overflow:visible;flex:none;display:block}.stage{aspect-ratio:1000/610;min-height:0;flex:none;width:100%}body.lab-active{height:auto;min-height:100dvh;overflow:visible;display:block}#demo-view{padding:0 3vw 20px}.demo-toolbar{position:relative}.demo-section{font-size:8px}.demo-heading h2{font-size:15px}.demo-number{font-size:16px}.demo-navigation{gap:3px}.demo-navigation button{width:29px;height:31px}.metrics{min-height:58px}.metric-label{font-size:8px}.metric-value{font-size:12px}.playback{flex-wrap:wrap}.speed-label input{width:50px}.equation{font-size:15px}.controls-panel #controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 18px}.panel-label{font-size:11px}.inquiry p,details p{font-size:12px}.status-line{font-size:9px}.catalogue-intro p:last-child{font-size:13px}}
 @media(max-width:480px){.site-header{gap:10px}.course-link{font-size:8px}.heading-group h1{font-size:21px}.heading-group h1 span{font-size:14px}.header-actions button{width:32px}.filters{gap:5px}.filters button{font-size:10px;padding:5px 7px}.catalogue-intro h2{font-size:24px}.catalogue-grid{gap:22px 12px}.card-title{font-size:12px}.card-short{font-size:10px}.card-text{grid-template-columns:20px 1fr;gap:4px}.card-group{font-size:8px}.equation{font-size:13px;padding:7px}.speed-label{display:none}.metric{padding:7px 5px}.metric-value{font-size:10px}.metrics{min-height:54px}.status-line{flex-wrap:wrap;gap:3px}.demo-toolbar{gap:8px}.demo-heading{gap:7px}.lab-active .heading-group h1{font-size:18px}}
@@ -329,10 +330,19 @@ dialog{max-width:760px;width:92vw;max-height:88vh;overflow:auto;border:1px solid
       max-width: 100%;
     }
 
+    .stage-viewport {
+      display: block;
+      height: auto;
+      overflow: hidden;
+    }
+
     .stage {
-      height: clamp(18rem, 100vw, 32rem);
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      height: clamp(13rem, 55vw, 24rem);
       aspect-ratio: auto;
-      --playback-safe-space: 5.5rem;
+      --playback-safe-space: 0;
     }
 
     .stage > .playback {
@@ -344,6 +354,28 @@ dialog{max-width:760px;width:92vw;max-height:88vh;overflow:auto;border:1px solid
 
     .stage > .playback .playback-actions {
       justify-content: flex-start;
+    }
+
+    .stage > .playback {
+      left: 0.35rem;
+      right: auto;
+      width: max-content;
+      max-width: calc(100vw - 1.1rem);
+    }
+
+    .stage > .playback .playback-actions {
+      margin-left: 0;
+    }
+
+    .mobile-board-hint {
+      display: none;
+    }
+
+    .stage > .board-canvas,
+    .stage > .board-labels {
+      inset: 0;
+      width: 100%;
+      height: 100%;
     }
 
     .metrics {
@@ -370,16 +402,75 @@ dialog{max-width:760px;width:92vw;max-height:88vh;overflow:auto;border:1px solid
       grid-template-columns: minmax(0, 1fr);
     }
 
-    .stage {
-      height: clamp(18rem, 108vw, 28rem);
-      --playback-safe-space: 4.75rem;
-    }
+    .stage { height: clamp(12rem, 55vw, 18rem); }
 
     .metric {
       padding-inline: 0.4rem;
     }
   }
 </style>
+  <style id="lecture-3-stage-layout">
+    .mobile-board-hint { display: none; }
+    .stage-viewport { display: flex; min-width: 0; min-height: 0; }
+    .stage {
+      display: grid;
+      grid-template-rows: minmax(0, 1fr) auto;
+      width: 100%;
+      min-width: 0;
+      min-height: 0;
+      --playback-safe-space: 0;
+    }
+    .board-surface {
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+      background: var(--board);
+      touch-action: manipulation;
+    }
+    .board-surface > .board-canvas,
+    .board-surface > .board-labels {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .stage > .playback {
+      position: relative;
+      inset: auto;
+      z-index: 4;
+      grid-row: 2;
+      width: 100%;
+      max-width: none;
+      margin: 0;
+      border: 0;
+      border-top: 1px dashed #e9eed575;
+      box-shadow: none;
+      background: #101411;
+    }
+    @media (max-width: 800px) {
+      .stage-viewport {
+        display: flex;
+        height: auto;
+        overflow: hidden;
+      }
+      .stage {
+        height: clamp(17rem, 72vw, 26rem);
+      }
+      .stage > .playback {
+        inset: auto;
+        width: 100%;
+        max-width: none;
+      }
+      .stage > .playback .playback-actions {
+        width: 100%;
+        justify-content: flex-start;
+      }
+    }
+    @media (max-width: 480px) {
+      .stage { height: clamp(16rem, 78vw, 21rem); }
+    }
+  </style>
 </head>
 <body>
   <header class="site-header">
@@ -427,15 +518,19 @@ dialog{max-width:760px;width:92vw;max-height:88vh;overflow:auto;border:1px solid
       </aside>
       <div class="lab-main">
         <div class="equation" id="equation" aria-label="Уравнение"></div>
-        <div id="stage" class="stage" tabindex="0">
-          <noscript>Для интерактивных опытов нужен JavaScript.</noscript>
-          <div class="playback">
-            <div class="playback-actions">
-              <button type="button" id="play" class="primary">▶ Пуск</button>
-              <button type="button" id="step">Шаг</button>
-              <button type="button" id="reset">↺ Сброс</button>
-              <label class="speed-label" id="speed-wrapper"><span id="speed-label">шаг/с</span><input id="speed" type="range" min="2" max="120" step="2" value="24" aria-label="Шагов в секунду"><output id="speed-value">24</output></label>
-              <button type="button" id="fullscreen" title="Полный экран">⛶</button>
+        <div class="stage-viewport">
+          <div id="stage" class="stage" tabindex="0">
+            <div id="board-surface" class="board-surface">
+              <noscript>Для интерактивных опытов нужен JavaScript.</noscript>
+            </div>
+            <div class="playback">
+              <div class="playback-actions">
+                <button type="button" id="play" class="primary">▶ Пуск</button>
+                <button type="button" id="step">Шаг</button>
+                <button type="button" id="reset">↺ Сброс</button>
+                <label class="speed-label" id="speed-wrapper"><span id="speed-label">шаг/с</span><input id="speed" type="range" min="2" max="120" step="2" value="24" aria-label="Шагов в секунду"><output id="speed-value">24</output></label>
+                <button type="button" id="fullscreen" title="Полный экран">⛶</button>
+              </div>
             </div>
           </div>
         </div>
@@ -729,8 +824,9 @@ class Board {
       const ctx=this.canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle=this.preview?'#e7ede6':C.bg;ctx.fillRect(0,0,w,h);ctx.translate(ox,oy);ctx.scale(s,s);
       ctx.lineCap='round';ctx.lineJoin='round';for(const p of this.commands)if(p.type!=='text')drawShape(ctx,p);
     }
+    const fontScale=matchMedia('(max-width:800px)').matches?1.3:1;
     for(const p of this.commands)if(p.type==='text'){
-      overlay.font=`${p.size}px "Neucha", "Open Sans", system-ui, sans-serif`;
+      overlay.font=`${p.size*fontScale}px "Neucha", "Open Sans", system-ui, sans-serif`;
       overlay.fillStyle=p.color;overlay.textAlign=p.align;overlay.textBaseline='alphabetic';
       overlay.fillText(p.text,p.x,p.y);
     }
@@ -1272,9 +1368,9 @@ function route(){
   document.title=T(d.title)+' · '+L('Лекция 3','Lecture 3');$('equation').innerHTML=d.equation;
   $('question').textContent=T(d.question);$('explanation').textContent=T(d.explanation);$('caveat').textContent=T(d.caveat);$('demo-sources').replaceChildren();
   for(const key of d.sources){const s=sources[key],a=document.createElement('a');a.href=s.url;a.textContent=s.label+' ↗';a.target='_blank';a.rel='noopener noreferrer';$('demo-sources').append(a);}
-  board=new Board($('stage'),{onEngine:e=>{$('engine-status').textContent=e==='chalkish'?'Chalkish · site library':L('Canvas · автономный просмотр','Canvas · standalone preview');}});
+  board=new Board($('board-surface'),{onEngine:e=>{$('engine-status').textContent=e==='chalkish'?'Chalkish · site library':L('Canvas · автономный просмотр','Canvas · standalone preview');}});
   document.fonts?.load('16px "Neucha"').then(()=>{if(board)board.paint();});
-  $('stage').onclick=e=>{if(model?.click){const[x,y]=board.point(e);if(model.click(x,y)){states.set(d.id,structuredClone(params));draw();}}};
+  $('board-surface').onclick=e=>{if(model?.click){const[x,y]=board.point(e);if(model.click(x,y)){states.set(d.id,structuredClone(params));draw();}}};
   buildControls();restart();$('controls-panel').scrollTop=0;scrollTo(0,0);
 }
 function changeDemo(delta){if(!active)return;location.hash=demos[(demos.indexOf(active)+delta+demos.length)%demos.length].id;}

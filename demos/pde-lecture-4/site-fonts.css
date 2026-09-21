@@ -1,0 +1,15 @@
+@font-face {
+  font-family: "Neucha";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../../lib/chalkish/examples/assets/fonts/neucha-regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Shantell Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../../lib/chalkish/examples/assets/fonts/shantell-sans-regular.ttf") format("truetype");
+}

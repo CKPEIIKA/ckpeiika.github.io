@@ -1,0 +1,761 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="Лекция 4: согласованность, сходимость, спектральная и энергетическая устойчивость, границы, дифференциальное приближение, Рунге и MMS.">
+  <title>Лекция 4 · Свойства разностных схем</title>
+  <script src="../theme-init.js"></script>
+  <!-- Optional existing-site resources. No font files are distributed with this package. -->
+  <style>:root{--bg:#d8dde3;--paper:#e8ecef;--panel:#e1e6e9;--ink:#29342f;--muted:#59665f;--line:#bac2c5;--accent:#9f2d20;--active:#ede5dd;--board:#0d1712;--chalk:#f4f1e7;--yellow:#f0d477;--ui:"Open Sans",system-ui,-apple-system,"Segoe UI",sans-serif;font-family:var(--ui);color-scheme:light}
+:root[data-theme=dark]{--bg:#181b1a;--paper:#232826;--panel:#202522;--ink:#f1e9df;--muted:#acb7b0;--line:#3f4842;--accent:#f1d8c0;--active:#393329;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.48 var(--ui)}button,input,select{font:inherit}button,a,input,select,summary{-webkit-tap-highlight-color:transparent}button{color:inherit;border:1px solid var(--line);background:var(--paper);border-radius:3px;cursor:pointer;min-height:34px;padding:6px 12px}button:hover{border-color:var(--accent);background:var(--active)}button:disabled{opacity:.45;cursor:default}button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #41758a;outline-offset:3px}a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}h1,h2,h3,p{margin:0}button.primary{background:var(--accent);color:var(--bg);border-color:var(--accent)}[hidden]{display:none!important}
+.site-header{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:22px 3.2vw 19px;border-bottom:1px dashed var(--line)}.course-link{font-size:10px;letter-spacing:.11em;font-weight:650}.heading-group h1{font-size:25px;font-weight:650;color:var(--accent);line-height:1.25;margin-top:8px}.heading-group h1 span{font-weight:430;color:var(--ink);font-size:22px;margin-left:17px}.header-actions{display:flex;gap:7px;flex-shrink:0}.header-actions button{width:39px;padding:3px 4px;font-size:14px}
+#catalogue{max-width:1600px;padding:29px 3.2vw 34px;margin:auto}.catalogue-intro{display:flex;justify-content:space-between;gap:40px;padding:0 0 25px}.eyebrow{font-size:11px;color:var(--accent);font-weight:700;letter-spacing:.16em;margin-bottom:9px}.catalogue-intro h2{font-size:31px;letter-spacing:-.025em;font-weight:550;margin-bottom:8px}.catalogue-intro p:last-child{font-size:14px;color:var(--muted);max-width:830px}.catalogue-count{display:flex;align-items:center;gap:13px;flex-shrink:0;color:var(--accent);border-left:1px solid var(--line);padding-left:25px}.catalogue-count strong{font-size:56px;font-weight:400;line-height:1}.catalogue-count span{font-size:11px;line-height:1.55;letter-spacing:.04em;text-transform:uppercase}
+.filters{display:flex;flex-wrap:wrap;gap:7px;padding:15px 0 22px;border-top:1px dashed var(--line)}.filters button{font-size:11px;min-height:30px;border-radius:2px;padding:5px 10px;color:var(--muted)}.filters button.active{border-color:var(--accent);color:var(--accent);background:var(--active)}.catalogue-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px 21px}.demo-card{display:block;text-align:left;padding:0;background:transparent;border:none;min-width:0;border-radius:0}.demo-card:hover{background:transparent}.thumbnail{position:relative;aspect-ratio:12/7;overflow:hidden;border:1px solid var(--line);background:#e7ede6;transition:border-color .15s}.demo-card:hover .thumbnail{border-color:var(--accent)}.thumbnail:after{content:'↗';position:absolute;right:9px;bottom:6px;color:#617b6b;font-size:21px}.card-text{padding:12px 0 0;display:grid;grid-template-columns:26px 1fr;gap:8px}.card-num{font-size:13px;color:var(--accent);font-weight:650;padding-top:2px}.card-title{font-size:14px;line-height:1.35;font-weight:650;margin-bottom:5px}.card-short{font-size:11px;line-height:1.55;color:var(--muted);font-weight:400}.card-group{display:block;margin-top:8px;font-size:9px;text-transform:uppercase;letter-spacing:.075em;color:var(--accent)}.catalogue-footer{display:flex;justify-content:space-between;gap:30px;margin-top:35px;padding-top:17px;border-top:1px dashed var(--line);font-size:11px;color:var(--muted)}
+body.lab-active{height:100dvh;overflow:hidden;display:flex;flex-direction:column}.lab-active .site-header{padding-top:10px;padding-bottom:10px;flex:none}.lab-active .heading-group h1{font-size:20px;margin-top:2px}.lab-active .heading-group h1 span{font-size:17px}.lab-active .course-link{font-size:9px}#demo-view{display:flex;flex-direction:column;min-height:0;flex:1;padding:0 2.1vw 13px}.demo-toolbar{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:12px 0;flex:none}.demo-heading{display:flex;align-items:center;gap:13px;min-width:0}.demo-number{background:var(--accent);color:var(--bg);padding:3px 7px;font-size:20px;line-height:1.35;font-variant-numeric:tabular-nums}.demo-section{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:2px}.demo-heading h2{font-size:19px;line-height:1.3;font-weight:550}.demo-navigation{display:flex;gap:6px;flex:none}.demo-navigation button{width:35px;height:35px;font-size:24px;line-height:1;padding:0}
+.lab-layout{display:grid;grid-template-columns:clamp(250px,25vw,345px) minmax(0,1fr);gap:15px;min-height:0;flex:1}.controls-panel{background:var(--panel);border:1px solid var(--line);overflow-y:auto;padding:17px 17px 22px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}.panel-label{font-size:10px;letter-spacing:.11em;color:var(--accent);font-weight:700;margin:0 0 13px}.control{margin-bottom:16px}.control label{font-size:12px;display:block;line-height:1.35;margin-bottom:7px}.control-row{display:flex;align-items:center;gap:10px}.control input[type=range]{width:100%;min-width:40px;accent-color:var(--accent);cursor:pointer}.control input[type=number]{width:75px;min-width:65px;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:2px;padding:3px 5px;font:12px var(--ui);font-variant-numeric:tabular-nums}.control select{width:100%;padding:7px 6px;font-size:12px;border:1px solid var(--line);border-radius:2px;background:var(--paper);color:var(--ink)}.preset-label{margin-top:20px;margin-bottom:10px}.presets{display:flex;flex-wrap:wrap;gap:6px}.presets button{font-size:11px;min-height:29px;text-align:left;padding:5px 8px}.defaults-button{font-size:10px;padding:2px 0;margin-top:8px;border:0;background:transparent;color:var(--muted);min-height:24px}.defaults-button:hover{background:transparent;text-decoration:underline}.inquiry{margin-top:18px;padding:14px 0;border-top:1px dashed var(--line);border-bottom:1px dashed var(--line)}.inquiry h3{font-size:13px;color:var(--accent);margin-bottom:7px;font-weight:650}.inquiry p{font-size:12px;line-height:1.65}details{border-bottom:1px dashed var(--line);padding:11px 0}summary{font-size:12px;font-weight:550;cursor:pointer}details p{font-size:11px;line-height:1.7;margin-top:9px;color:var(--muted)}#demo-sources a{display:block;font-size:10px;line-height:1.6;margin-top:9px}
+.lab-main{display:flex;flex-direction:column;min-height:0;min-width:0;background:var(--board);border:1px solid #33473a;overflow:hidden}.equation{flex:none;background:#152019;color:var(--chalk);font:18px/1.6 Georgia,"Times New Roman",serif;min-height:59px;padding:11px 20px;border-bottom:1px dashed #425043;overflow-wrap:anywhere;text-align:center}.equation sup,.equation sub{font-size:.7em}.stage{position:relative;min-height:240px;flex:1;overflow:hidden;background:var(--board);outline-offset:-3px;touch-action:manipulation}.board-canvas,.board-labels{position:absolute;inset:0;width:100%;height:100%;display:block}.board-labels{pointer-events:none}.thumbnail .board-canvas,.thumbnail .board-labels{position:absolute}.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));flex:none;border-top:1px dashed #364d3f;background:#111e17;min-height:61px}.metric{padding:10px 13px;border-right:1px dashed #33483b;min-width:0}.metric:last-child{border-right:0}.metric-label{display:block;font:10px/1.4 var(--ui);color:#a6b8ad;margin-bottom:5px;overflow-wrap:anywhere}.metric-value{display:block;font:17px/1.2 var(--ui);font-variant-numeric:tabular-nums;color:var(--yellow);white-space:normal;overflow-wrap:anywhere}
+.playback{display:flex;align-items:center;justify-content:space-between;gap:10px;flex:none;padding:10px 12px;background:var(--panel);border-top:1px solid var(--line)}.playback-left,.playback-right{display:flex;align-items:center;gap:6px}.playback button{min-height:31px;font-size:11px;padding:5px 9px;white-space:nowrap}.speed-label{display:flex;align-items:center;gap:5px;font-size:9px;color:var(--muted);padding-left:7px}.speed-label input{width:65px;accent-color:var(--accent)}.speed-label output{font-size:10px;font-variant-numeric:tabular-nums;min-width:20px}.status-line{display:flex;justify-content:space-between;gap:13px;background:var(--panel);color:var(--muted);padding:0 12px 7px;font-size:9px;flex:none;min-height:20px}.status-line .warning{color:#d07961}#engine-status{white-space:nowrap;font-size:8px;opacity:.8}.share-url{width:100%;flex:none;font-size:11px;padding:8px;background:var(--paper);color:var(--ink);border:0}.stage:fullscreen{width:100vw;height:100vh}#demo-view:fullscreen{background:var(--bg);padding:0 20px 20px;height:100vh}
+@media(min-width:1700px){.catalogue-grid{gap:30px}.card-title{font-size:16px}.card-short{font-size:12px}.lab-layout{grid-template-columns:350px minmax(0,1fr)}}
+@media(max-width:1150px){.catalogue-grid{gap:21px 16px}.heading-group h1 span{font-size:18px}.lab-layout{gap:10px;grid-template-columns:250px minmax(0,1fr)}.controls-panel{padding:13px}.equation{font-size:16px;padding:8px 13px;min-height:48px}.playback{padding:7px;gap:5px}.speed-label input{width:42px}.metric{padding:8px}.metric-value{font-size:14px}.playback button{font-size:10px;padding:5px 7px}.speed-label{padding-left:0}.lab-active .heading-group h1 span{font-size:14px}.demo-heading h2{font-size:17px}}
+@media(max-width:800px){.catalogue-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.catalogue-count{display:none}.heading-group h1 span{display:block;margin:6px 0 0;font-size:16px}.catalogue-intro h2{font-size:27px}.catalogue-footer{flex-direction:column;gap:10px}.lab-active .heading-group h1 span{display:none}.site-header{padding:15px 4vw}.lab-layout{display:flex;flex-direction:column;min-height:auto}.lab-main{order:0;min-height:auto;flex:none}.controls-panel{order:1;overflow:visible;flex:none;display:block}.stage{aspect-ratio:1000/610;min-height:0;flex:none;width:100%}body.lab-active{height:auto;min-height:100dvh;overflow:visible;display:block}#demo-view{padding:0 3vw 20px}.demo-toolbar{position:relative}.demo-section{font-size:8px}.demo-heading h2{font-size:15px}.demo-number{font-size:16px}.demo-navigation{gap:3px}.demo-navigation button{width:29px;height:31px}.metrics{min-height:58px}.metric-label{font-size:8px}.metric-value{font-size:12px}.playback{flex-wrap:wrap}.speed-label input{width:50px}.equation{font-size:15px}.controls-panel #controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 18px}.panel-label{font-size:11px}.inquiry p,details p{font-size:12px}.status-line{font-size:9px}.catalogue-intro p:last-child{font-size:13px}}
+@media(max-width:480px){.site-header{gap:10px}.course-link{font-size:8px}.heading-group h1{font-size:21px}.heading-group h1 span{font-size:14px}.header-actions button{width:32px}.filters{gap:5px}.filters button{font-size:10px;padding:5px 7px}.catalogue-intro h2{font-size:24px}.catalogue-grid{gap:22px 12px}.card-title{font-size:12px}.card-short{font-size:10px}.card-text{grid-template-columns:20px 1fr;gap:4px}.card-group{font-size:8px}.equation{font-size:13px;padding:7px}.speed-label{display:none}.metric{padding:7px 5px}.metric-value{font-size:10px}.metrics{min-height:54px}.status-line{flex-wrap:wrap;gap:3px}.demo-toolbar{gap:8px}.demo-heading{gap:7px}.lab-active .heading-group h1{font-size:18px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+@media print{.header-actions,.controls-panel,.playback,.status-line,.demo-navigation{display:none}.lab-active{height:auto!important;overflow:visible!important}.lab-layout{display:block}.stage{height:115mm}.lab-main{break-inside:avoid}.catalogue-grid{grid-template-columns:repeat(3,1fr)}}
+/* Match the currently deployed Lecture 3 shell; no shared files are overwritten. */
+:root{--font-chalk:"Neucha","Shantell Sans","Comic Neue","Open Sans",sans-serif;--font-chalk-label:"Shantell Sans","Open Sans",system-ui,sans-serif;--bg:#d8dde3;--paper:#e5e9ed;--panel:#e5e9ed;--ink:#24282c;--muted:#4d5358;--line:#9f2d20;--accent:#9f2d20;--active:#d7dde2;--board-green-deep:#0d1712}
+:root[data-theme=dark]{--bg:#181818;--paper:#232323;--panel:#232323;--ink:#f1d8c0;--muted:#c6b9ad;--line:#f1d8c0;--accent:#f1d8c0;--active:#393329}
+body{min-width:18rem;min-height:100vh;padding:.55rem 1rem 1rem}body:after{display:none}
+.site-header,#catalogue,#demo-view{width:min(100%,112rem);margin-inline:auto}
+.site-header{padding:0 0 .4rem;border-bottom:1px dashed var(--accent);min-height:36px}
+.heading-group{display:flex;gap:1rem;align-items:center}.heading-group h1{font-size:12px;margin:0;text-transform:uppercase;letter-spacing:.06em}.heading-group h1 span{font-size:12px;margin-left:10px}
+.course-link{display:grid;width:2rem;height:1.9rem;place-items:center;border:1px dotted currentColor;font-size:1.15rem;line-height:1;text-decoration:none}
+.header-actions{gap:.65rem}.header-actions button{display:grid;width:1.6rem;height:1.6rem;min-height:1.6rem;padding:0;place-items:center;border:1px dotted var(--accent);border-radius:0;background:transparent}
+#language-button{min-width:3rem;width:auto;border:0;border-bottom:1px dotted currentColor;font-size:11px;font-weight:700}
+#catalogue{padding:26px 0 30px}.catalogue-intro{padding-bottom:18px}.catalogue-intro h2{font-size:27px;font-weight:600;text-transform:uppercase;color:var(--accent)}.catalogue-count strong{font-size:43px}.catalogue-count{border-left:1px dashed var(--accent)}
+.catalogue-grid{gap:25px 20px}.thumbnail{background:var(--board);border:1px dashed var(--accent)}.thumbnail:after{color:#b4cbb9}.demo-card:hover .thumbnail{outline:1px solid var(--accent);outline-offset:3px}.card-group{display:none}.card-title{font-size:14px;font-weight:650}.card-text{grid-template-columns:24px 1fr;padding-top:10px}.card-num{font-size:12px}
+.filters{border-top:1px dashed var(--accent);padding:13px 0 22px}.filters button{border:1px dotted var(--accent);font-size:11px}.filters button.active{border-style:solid}.catalogue-footer{border-top:1px dashed var(--accent)}
+body.lab-active{padding-bottom:.7rem}.lab-active .site-header{padding:.2rem 0}.lab-active .heading-group h1{font-size:12px;margin:0}.lab-active .heading-group h1 span{font-size:12px}
+#demo-view{padding:0}.demo-toolbar{padding:.45rem 0;border-bottom:1px dashed var(--accent);margin-bottom:.5rem}.demo-section{display:none}.demo-heading h2{text-transform:uppercase;color:var(--accent);font-weight:600;font-size:18px}.demo-number{font-size:17px}.demo-navigation button{border:1px dotted var(--accent);border-radius:0;width:31px;height:31px;font-size:22px}.lab-layout{gap:12px;grid-template-columns:minmax(240px,21%) minmax(0,1fr)}
+.controls-panel{border:1px dashed var(--accent);border-radius:0;padding:.75rem}.control{margin-bottom:15px}.control label{font-size:11px}.control input[type=number]{width:68px;font-size:11px}.control select{font-size:11px}.presets button{font-size:10px;border:1px dotted var(--accent);border-radius:0}.panel-label{font-size:10px}.inquiry{margin-top:14px}.inquiry p{font-size:11px;line-height:1.6}.inquiry h3{font-size:12px}details p{font-size:11px}.lab-main{border:2px dashed var(--accent);background:var(--board)}
+.equation{font-family:var(--font-chalk);font-size:18px;min-height:45px;padding:6px 10px;background:#132219;border-bottom:1px dashed #627762}
+.stage-viewport{position:relative;flex:1;min-height:0;display:flex;overflow:hidden;background:var(--board)}
+.stage{flex:1;min-height:0;width:100%;height:100%;touch-action:pan-y}.board-canvas,.board-labels{inset:0}
+.metrics{min-height:52px;background:#111e17}.metric{padding:7px 9px}.metric-label{font-size:10px}.metric-value{font-size:15px;font-family:var(--font-chalk-label)}
+.playback{background:#111c15;color:var(--chalk);border-top:1px dashed #627762;padding:6px 9px}.playback button{background:#101411;color:var(--chalk);border-color:#e9eed575;border-radius:0}.playback button:hover{background:#193022;color:var(--yellow)}.playback button.primary{background:#273d2b}.speed-label{color:#adbaae}.status-line{background:#111c15;color:#9fb4a7;min-height:24px;padding:4px 9px 7px;font-size:9px}.status-line .warning{color:#efaa85}.share-url{font-size:10px}.equation,.metrics,.stage,.playback{background-image:radial-gradient(ellipse at 29% 42%,#eef0e008,transparent 65%)}
+@media(min-width:1700px){.card-title{font-size:16px}.lab-layout{grid-template-columns:320px minmax(0,1fr)}}
+@media(max-width:1150px){.catalogue-intro h2{font-size:24px}.equation{font-size:16px}.demo-heading h2{font-size:16px}.metric-value{font-size:13px}.lab-layout{grid-template-columns:240px minmax(0,1fr)}}
+@media(max-width:800px){body{padding:.5rem .55rem 1rem}.heading-group h1{font-size:10px}.heading-group h1 span{display:none}.site-header{padding-bottom:.35rem}.catalogue-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 12px}.catalogue-intro h2{font-size:22px}.catalogue-intro p:last-child{font-size:12px}.lab-layout{display:flex;flex-direction:column;min-height:auto}.lab-main{order:0;flex:none}.controls-panel{order:1}.stage-viewport{display:block;flex:none;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;scrollbar-color:#617460 #132219}.stage{min-width:720px;width:100%;height:439px;aspect-ratio:auto;flex:none;touch-action:pan-x pan-y}.lab-active .heading-group h1{font-size:11px}.lab-active .heading-group h1 span{display:none}.equation{font-size:15px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.metric{border-bottom:1px dashed #33483b}.metric-label{font-size:10px}.metric-value{font-size:14px}.status-line{flex-wrap:wrap;font-size:10px}.playback{flex-wrap:wrap}.demo-heading h2{font-size:14px}.demo-number{font-size:16px}.inquiry p,details p{font-size:12px}.controls-panel #controls{grid-template-columns:repeat(2,minmax(0,1fr))}.control label{font-size:12px}.panel-label{font-size:11px}.control select{font-size:12px;min-height:38px}}
+@media(max-width:480px){.heading-group{gap:.65rem}.card-title{font-size:12px}.card-short{font-size:10px}.catalogue-intro h2{font-size:21px}.card-text{grid-template-columns:19px 1fr;gap:4px}.course-link{font-size:1.1rem}.filters button{font-size:10px}.demo-heading h2{font-size:13px}.demo-toolbar{align-items:flex-start}.demo-navigation{gap:3px}.demo-navigation button{width:28px;height:29px}.speed-label{display:none}.equation{font-size:14px}.control input[type=number]{width:58px;min-width:58px}.catalogue-footer{font-size:10px}}
+@media print{.stage-viewport{overflow:visible}.stage{min-width:0;width:100%;height:115mm}.status-line{display:none}}
+
+.mobile-board-hint{display:none;background:#132219;color:#bac9be;font:11px system-ui,sans-serif;padding:6px 9px;border-bottom:1px dashed #627762}
+@media(max-width:800px){.mobile-board-hint{display:block}}
+.docs-dialog{width:min(900px,92vw);max-height:86vh;overflow:auto;padding:20px;background:var(--paper);color:var(--ink);border:1px dashed var(--accent)}
+.docs-dialog::backdrop{background:#0009}.docs-dialog button{float:right;border:1px solid currentColor;background:transparent;color:inherit;padding:4px 10px;font-size:20px}.docs-dialog pre{white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.65 system-ui,sans-serif;margin:20px 0}.docs-dialog h2{font-size:18px;margin:0;padding-right:35px}
+:root{--font-chalk:"Neucha","Shantell Sans",sans-serif;--font-chalk-clean:"Shantell Sans",sans-serif;--font-board-ui:"Open Sans",Arial,sans-serif;--board-texture:url("../../lib/chalkish/examples/assets/board-grain.png");--bg:#d8dde3;--paper:#e5e9ed;--panel:#e5e9ed;--ink:#24282c;--muted:#4d5358;--line:#9f2d20;--accent:#9f2d20;--active:#d7dde2;--board:#0d1712}
+:root[data-theme=dark],:root.theme-dark{--bg:#181818;--paper:#232323;--panel:#232323;--ink:#f1d8c0;--muted:#c6b9ad;--line:#f1d8c0;--accent:#f1d8c0;--active:#393329}
+body{min-width:18rem;padding:.55rem 1rem 1rem;font-family:var(--font-board-ui)}
+.site-header,#catalogue,#demo-view{width:min(100%,112rem);margin-inline:auto}
+.course-link,.header-actions button,#language-button{font-family:var(--font-board-ui)}
+.lab-main,.stage,.equation,.metrics,.playback,.status-line,.thumbnail{background-color:var(--board);background-image:var(--board-texture),linear-gradient(118deg,#14271e,#0b1511 78%);background-size:300px 300px,auto;background-blend-mode:soft-light,normal}
+.equation{font-family:var(--font-chalk);text-shadow:.03em 0 #fff2,-.02em .01em #fff1}
+.metric-value{font-family:var(--font-chalk-clean)}
+@media(max-width:800px){
+  body{padding:.5rem .55rem 1rem}
+  .site-header{padding-bottom:.35rem}
+  .lab-active{height:auto!important;min-height:100dvh;overflow:visible!important;display:block}
+  #demo-view{padding:0 0 1rem}
+  .lab-layout{display:flex;flex-direction:column;min-height:auto}
+  .lab-main{order:0;min-height:auto;flex:none}
+  .controls-panel{order:1;overflow:visible;flex:none}
+  .stage-viewport{display:block;overflow:hidden;flex:none}
+  .stage{min-width:0;width:100%;height:clamp(18rem,100vw,32rem);aspect-ratio:auto;flex:none}
+  .mobile-board-hint{display:none!important}
+  .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .metric{border-bottom:1px dashed #33483b}
+  .playback{flex-wrap:wrap}
+  .demo-toolbar{gap:8px;padding:.45rem 0}
+  .demo-heading h2{font-size:15px}
+  .demo-number{font-size:16px}
+}
+@media(max-width:480px){
+  .site-header{gap:10px}
+  .heading-group h1{font-size:18px}
+  .heading-group h1 span{font-size:14px}
+  .demo-heading h2{font-size:13px}
+  .demo-navigation{gap:3px}
+  .demo-navigation button{width:28px;height:29px}
+  .equation{font-size:14px}
+  .metric{padding:7px 5px}
+  .metric-value{font-size:12px}
+}
+</style>
+  <link rel="stylesheet" href="../../assets/fonts/open-sans/open-sans.css">
+  <link rel="stylesheet" href="./site-fonts.css" data-chalkish-fonts>
+</head>
+<body>
+  <header class="site-header">
+    <div class="heading-group">
+      <a class="course-link" href="../../pages/cfd2026.html" id="course-link">← CFD / ВЫЧИСЛИТЕЛЬНАЯ ГИДРОГАЗОДИНАМИКА</a>
+      <h1 id="page-title">Лекция 4 <span>Свойства разностных схем</span></h1>
+    </div>
+    <div class="header-actions">
+      <button id="theme-button" type="button" aria-label="Переключить тему" title="Theme">◐</button>
+      <button id="language-button" type="button" aria-label="English">EN</button>
+    </div>
+  </header>
+  <main id="catalogue">
+    <section class="catalogue-intro">
+      <div><p class="eyebrow" id="catalogue-label">ИНТЕРАКТИВНЫЙ КАТАЛОГ</p><h2 id="catalogue-title">Почему вычислению можно доверять?</h2><p id="catalogue-description">Пятнадцать опытов: от невязки и усиления ошибок до проверки кода.</p></div>
+      <div class="catalogue-count"><strong>15</strong><span id="catalogue-count-label">опытов<br>с объяснениями</span></div>
+    </section>
+    <nav id="filters" class="filters" aria-label="Разделы лекции"></nav>
+    <div id="catalogue-grid" class="catalogue-grid"></div>
+    <footer class="catalogue-footer">
+      <span id="catalogue-help">Нажмите на карточку. Опыт откроется здесь же. Esc — вернуться в каталог.</span>
+    </footer>
+  </main>
+  <section id="demo-view" hidden aria-label="Интерактивный опыт">
+    <div class="demo-toolbar">
+      <div class="demo-heading"><span class="demo-number" id="demo-number"></span><div><span class="demo-section" id="demo-section"></span><h2 id="demo-title"></h2></div></div>
+      <div class="demo-navigation">
+        <button type="button" id="previous" aria-label="Предыдущий опыт">‹</button>
+        <button type="button" id="next" aria-label="Следующий опыт">›</button>
+        <button type="button" id="close-demo" aria-label="Каталог">×</button>
+      </div>
+    </div>
+    <div class="lab-layout">
+      <aside class="controls-panel" id="controls-panel">
+        <div class="panel-label" id="control-heading">УСЛОВИЯ ОПЫТА</div>
+        <div id="controls"></div>
+        <div class="panel-label preset-label" id="preset-heading">ПОПРОБУЙТЕ</div>
+        <div id="presets" class="presets"></div>
+        <button type="button" id="defaults" class="defaults-button">Параметры по умолчанию</button>
+        <section class="inquiry"><h3 id="question-heading">Что проверить?</h3><p id="question"></p></section>
+        <details id="math-details" open><summary id="math-heading">Математика опыта</summary><p id="explanation"></p></details>
+        <details><summary id="assumptions-heading">Соглашения и ограничения</summary><p id="caveat"></p></details>
+        <details><summary id="sources-heading">Источники и идеи</summary><div id="demo-sources"></div></details>
+      </aside>
+      <div class="lab-main">
+        <div class="equation" id="equation" aria-label="Уравнение"></div>
+        <div class="mobile-board-hint" id="mobile-board-hint">↔ Доску можно прокручивать по горизонтали</div>
+        <div class="stage-viewport" aria-label="Интерактивная доска"><div id="stage" class="stage" tabindex="0"><noscript>Для интерактивных опытов нужен JavaScript.</noscript></div></div>
+        <div id="metrics" class="metrics" aria-label="Измеренные величины"></div>
+        <div class="playback">
+          <div class="playback-left">
+            <button type="button" id="play" class="primary">▶ Пуск</button>
+            <button type="button" id="step">Шаг</button>
+            <button type="button" id="reset">↺ Сброс</button>
+            <label class="speed-label" id="speed-wrapper"><span id="speed-label">шаг/с</span><input id="speed" type="range" min="2" max="120" step="2" value="24" aria-label="Шагов в секунду"><output id="speed-value">24</output></label>
+          </div>
+          <div class="playback-right">
+            <button type="button" id="fullscreen" title="Полный экран">⛶</button>
+          </div>
+        </div>
+        <div class="status-line"><span id="status" role="status"></span><span id="engine-status">…</span></div>
+      </div>
+    </div>
+  </section>
+  <script>window.PDE4_OFFLINE=true;
+/* Generated from local sources by build.mjs. Do not edit the bundle. */
+'use strict';
+(()=>{const __modules={};
+__modules['kernels.js']=(()=>{
+/** Independent numerical kernels. All lengths and times below are nondimensional.
+ * No plotting dependencies, no DOM, no network. Pure functions unless documented.
+ */
+const TAU=2*Math.PI;
+const range=(n,f=i=>i)=>Array.from({length:n},(_,i)=>f(i));
+const sum=a=>a.reduce((s,x)=>s+x,0);
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const Cx=(re=0,im=0)=>({re,im});
+const add=(a,b)=>Cx(a.re+b.re,a.im+b.im);
+const sub=(a,b)=>Cx(a.re-b.re,a.im-b.im);
+const mul=(a,b)=>Cx(a.re*b.re-a.im*b.im,a.re*b.im+a.im*b.re);
+const scale=(a,s)=>Cx(a.re*s,a.im*s);
+const abs=a=>Math.hypot(a.re,a.im);
+const div=(a,b)=>{const q=b.re*b.re+b.im*b.im;return q?Cx((a.re*b.re+a.im*b.im)/q,(a.im*b.re-a.re*b.im)/q):Cx(Infinity,Infinity);};
+const expi=t=>Cx(Math.cos(t),Math.sin(t));
+function cpow(z,n){if(n===0)return Cx(1);const r=abs(z);if(r===0)return Cx();return scale(expi(Math.atan2(z.im,z.re)*n),Math.exp(Math.min(690,n*Math.log(r))));}
+const norm2=(a,h=1/a.length)=>Math.sqrt(h*sum(a.map(x=>x*x)));
+const normInf=a=>Math.max(...a.map(Math.abs));
+function gain(scheme,c,t){switch(scheme){
+ case 'upwind':return Cx(1-c+c*Math.cos(t),-c*Math.sin(t));
+ case 'downwind':return Cx(1+c-c*Math.cos(t),-c*Math.sin(t));
+ case 'ftcs':return Cx(1,-c*Math.sin(t));
+ case 'lf':return Cx(Math.cos(t),-c*Math.sin(t));
+ case 'lw':return Cx(1+c*c*(Math.cos(t)-1),-c*Math.sin(t));
+ case 'heat':return Cx(1-4*c*Math.sin(t/2)**2);
+ case 'beheat':return Cx(1/(1+4*c*Math.sin(t/2)**2));
+ default:throw Error('Unknown scheme '+scheme);
+}}
+function mixedGain(w,c,t){return Cx(1+c*(1-2*w)*(Math.cos(t)-1),-c*Math.sin(t));}
+function stability(method,z){if(method==='be')return div(Cx(1),sub(Cx(1),z));if(method==='cn')return div(add(Cx(1),scale(z,.5)),sub(Cx(1),scale(z,.5)));
+ const order={euler:1,rk2:2,rk3:3,rk4:4}[method];if(!order)throw Error('Unknown method');let r=Cx(1),t=Cx(1);for(let k=1;k<=order;k++){t=scale(mul(t,z),1/k);r=add(r,t);}return r;}
+function modalSpectrum(kind,s,n){return range(n,k=>{const t=TAU*k/n;return Cx(kind==='advection'?0:-4*s*(kind==='mixed'?.15:1)*Math.sin(t/2)**2,kind==='diffusion'?0:-s*Math.sin(t));});}
+function dft(u){const N=u.length;return range(N,k=>{let re=0,im=0;for(let j=0;j<N;j++){const t=TAU*j*k/N;re+=u[j]*Math.cos(t);im-=u[j]*Math.sin(t);}return Cx(re/N,im/N);});}
+function idft(c){const N=c.length;return range(N,j=>sum(c.map((v,k)=>v.re*Math.cos(TAU*j*k/N)-v.im*Math.sin(TAU*j*k/N))));}
+function foldedEnergy(c){const N=c.length;return range(N/2+1,k=>abs(c[k])**2*(k===0||k===N/2?1:2));}
+function ellipticError(N,iterations,k=1){const h=1/N,q=Math.cos(k*Math.PI*h),lam=4/h**2*Math.sin(k*Math.PI*h/2)**2,amp=(k*Math.PI)**2/lam;
+ const xs=range(N+1,i=>i*h),exact=xs.map(x=>Math.sin(k*Math.PI*x)),star=exact.map(x=>amp*x),iterate=star.map(x=>x*(1-q**iterations));
+ const disc=star.map((x,i)=>x-exact[i]),alg=iterate.map((x,i)=>x-star[i]),total=iterate.map((x,i)=>x-exact[i]),residual=exact.map(x=>-((k*Math.PI)**2)*q**iterations*x);
+ return {xs,exact,star,iterate,disc,alg,total,residual,lam,q};}
+function consistencyStudy(scheme,c,T,logeps=-12,noise=true){return [16,32,64,128,256].map(N=>{
+ const h=1/N,n=Math.ceil(T/(c*h)),dt=T/n,co=dt/h,t=TAU*h,G=gain(scheme,co,t),U=cpow(G,n),truth=expi(-TAU*T);
+ const Ds=scheme==='upwind'?scale(sub(Cx(1),expi(-t)),1/h):scale(sub(expi(t),Cx(1)),1/h);
+ const defect=abs(add(scale(sub(expi(-TAU*dt),Cx(1)),1/dt),Ds));
+ const e0=noise?10**logeps*h*h:0,high=e0*abs(cpow(gain(scheme,co,Math.PI),n)),error=Math.hypot(abs(sub(U,truth)),high);
+ return {N,h,n,dt,co,defect,error,high,initialNoise:e0,U,truth};});}
+function errorHistory(N,p,family,impulse=-1){const dt=1/N,h=1/N,G=family==='decay'?1-.8*dt:family==='physical'?1+.8*dt:1.06,local=h**p;
+ const values=[0],forcing=[];for(let j=0;j<N;j++){const f=j===impulse?local*8:local;forcing.push(f);values.push(G*values[j]-dt*f);}return {N,dt,G,local,values,forcing};}
+function leapfrogRoots(c,t){const a=c*Math.sin(t),d=1-a*a;if(d>=0)return [Cx(Math.sqrt(d),-a),Cx(-Math.sqrt(d),-a)];return [Cx(0,-a+Math.sqrt(-d)),Cx(0,-a-Math.sqrt(-d))];}
+function leapfrogSequence(c,t,eps,n){const roots=leapfrogRoots(c,t),v=[Cx(1),add(roots[0],Cx(eps))];for(let j=1;j<n;j++)v.push(sub(v[j-1],mul(Cx(0,2*c*Math.sin(t)),v[j])));return {roots,v:v.slice(0,n+1)};}
+const matMul2=(A,B)=>[A[0]*B[0]+A[1]*B[2],A[0]*B[1]+A[1]*B[3],A[2]*B[0]+A[3]*B[2],A[2]*B[1]+A[3]*B[3]];
+function matPow2(A,n){let R=[1,0,0,1],B=A.slice();while(n>0){if(n&1)R=matMul2(R,B);B=matMul2(B,B);n=Math.floor(n/2);}return R;}
+function normMat2(A){const tr=sum(A.map(x=>x*x)),det=(A[0]*A[3]-A[1]*A[2])**2;return Math.sqrt(Math.max(0,(tr+Math.sqrt(Math.max(0,tr*tr-4*det)))/2));}
+function resolventNorm(r,s,K,z){const a=div(Cx(1),sub(z,Cx(r))),d=div(Cx(1),sub(z,Cx(s))),b=scale(mul(a,d),K);
+ const tr=abs(a)**2+abs(b)**2+abs(d)**2,det=abs(mul(a,d))**2;return Math.sqrt(Math.max(0,(tr+Math.sqrt(Math.max(0,tr*tr-4*det)))/2));}
+function sbp(N,weight=.5){const h=1/N,H=range(N+1,i=>h*(i===0||i===N?weight:1)),D=range(N+1,()=>range(N+1,()=>0));
+ D[0][0]=-1/h;D[0][1]=1/h;D[N][N-1]=-1/h;D[N][N]=1/h;for(let j=1;j<N;j++){D[j][j-1]=-.5/h;D[j][j+1]=.5/h;}
+ const Q=D.map((r,i)=>r.map(v=>H[i]*v)),B=range(N+1,i=>range(N+1,j=>i===j?(i===0?-1:i===N?1:0):0)),M=Q.map((r,i)=>r.map((v,j)=>v+Q[j][i])),defect=normInf(M.flatMap((r,i)=>r.map((v,j)=>v-B[i][j])));return {h,H,D,Q,B,M,defect};}
+const mv=(A,x)=>A.map(r=>sum(r.map((v,i)=>v*x[i])));
+function satRhs(u,g,sigma,h){const N=u.length-1,du=u.map((_,i)=>i===0?-(u[1]-u[0])/h:i===N?-(u[N]-u[N-1])/h:-(u[i+1]-u[i-1])/(2*h));du[0]-=2*sigma/h*(u[0]-g);return du;}
+function satEnergy(u,g,sigma,h){const N=u.length-1,H=u.map((_,i)=>h*(i===0||i===N?.5:1)),rhs=satRhs(u,g,sigma,h),E=.5*sum(u.map((v,i)=>H[i]*v*v)),dot=sum(u.map((v,i)=>H[i]*v*rhs[i]));const out=-.5*u[N]**2,closure=(.5-sigma)*u[0]**2,inflow=sigma*u[0]*g;return {E,dot,out,closure,inflow,residual:dot-out-closure-inflow};}
+function rk4step(u,t,dt,rhs){const k1=rhs(u,t),k2=rhs(u.map((v,i)=>v+dt*k1[i]/2),t+dt/2),k3=rhs(u.map((v,i)=>v+dt*k2[i]/2),t+dt/2),k4=rhs(u.map((v,i)=>v+dt*k3[i]),t+dt);return u.map((v,i)=>v+dt*(k1[i]+2*k2[i]+2*k3[i]+k4[i])/6);}
+function boundaryMode(c,b){const den=b-1+c,kappa=Math.abs(den)<1e-14?Infinity:c/den;return {z:b,kappa,localized:Number.isFinite(kappa)&&Math.abs(kappa)<1};}
+function boundaryStep(u,c,b){return u.map((v,j)=>j===0?b*v:(1-c)*v+c*u[j-1]);}
+function modifiedRate(w,c,t){const mu=.5*c*(1-2*w-c);return {exact:Math.log(abs(mixedGain(w,c,t))),approx:-mu*t*t,mu};}
+function dispersion(c,t){const q=c*Math.sin(t),omega=Math.asin(clamp(q,-1,1)),den=Math.sqrt(Math.max(0,1-q*q));return {omega,vp:t===0?1:omega/(c*t),vg:den?Math.cos(t)/den:NaN};}
+function packet(c,k0,width,n,N=128){const ks=range(N/2-1,k=>k+1),weights=ks.map(k=>Math.exp(-.5*((k-k0)/width)**2)),Z=sum(weights);
+ const coeffs=weights.map(w=>w/Z),xs=range(401,j=>j/400),x0=.22;
+ const evalAt=(x,exact=false)=>{let re=0,im=0;for(let j=0;j<ks.length;j++){const k=ks[j],t=TAU*k/N,phase=TAU*k*(x-x0)-(exact?c*t:dispersion(c,t).omega)*n;re+=coeffs[j]*Math.cos(phase);im+=coeffs[j]*Math.sin(phase);}return [re,Math.hypot(re,im)];};
+ const num=xs.map(x=>evalAt(x)),exact=xs.map(x=>evalAt(x,true));return {xs,u:num.map(v=>v[0]),env:num.map(v=>v[1]),exact:exact.map(v=>v[0]),exactEnv:exact.map(v=>v[1]),...dispersion(c,TAU*k0/N),time:n*c/N};}
+function rungeStudy(base,path,T=.05,bias=0){const truth=Math.exp(-(Math.PI**2)*T),rows=range(6,l=>{const N=base*2**l,h=1/N,target=path==='h2'?.4*h*h:path==='h'?.3*h:.01,steps=Math.ceil(T/target),dt=T/steps,lambda=4/h**2*Math.sin(Math.PI*h/2)**2,value=Math.exp(-steps*Math.log1p(lambda*dt))+bias;return {N,h,dt,steps,value,truth,error:Math.abs(value-truth)};});return rows;}
+function rungeTriplet(rows,i=0,pAssumed=2){const [a,b,c]=rows.slice(i,i+3),d1=a.value-b.value,d2=b.value-c.value,p=Math.abs(d1)>1e-15&&Math.abs(d2)>1e-15?Math.log(Math.abs(d1/d2))/Math.log(2):NaN;
+ const correction=(c.value-b.value)/(2**pAssumed-1),estimate=c.value+correction;return {p,correction,estimate,errorEstimate:Math.abs(correction),actual:c.error,sameSign:d1*d2>0};}
+function manufactured(x,t,rich=false){return Math.exp(-t)*((rich?1+.2*x:0)+Math.sin(TAU*x));}
+function manufacturedSource(x,t,rich=false,bug='none'){const sh=(rich?1+.2*x:0)+Math.sin(TAU*x),grad=(rich?.2:0)+(bug==='coefficient'?1:TAU)*Math.cos(TAU*x),f=Math.exp(-t)*(-sh+grad);return bug==='source-off'?0:bug==='source-sign'?-f:f;}
+function mmsSolve(N,c,T,rich=false,bug='none'){const h=1/N,xs=range(N+1,i=>i*h);let t=0,u=xs.map(x=>manufactured(x,0,rich)),steps=0;
+ while(t<T-1e-13){const dt=Math.min(c*h,T-t),v=u.slice();v[0]=manufactured(0,bug==='boundary'?0:t+dt,rich);for(let i=1;i<=N;i++)v[i]=u[i]-dt/h*(u[i]-u[i-1])+dt*manufacturedSource(xs[i],t,rich,bug);u=v;t+=dt;steps++;}
+ const exact=xs.map(x=>manufactured(x,T,rich)),error=u.map((v,i)=>v-exact[i]),weights=xs.map((_,i)=>h*(i===0||i===N?.5:1));return {N,h,steps,xs,u,exact,error,L1:sum(error.map((v,i)=>weights[i]*Math.abs(v))),L2:Math.sqrt(sum(error.map((v,i)=>weights[i]*v*v))),Linf:normInf(error)};}
+/** Marching squares: grid values sampled once, returned line segments at one level.
+ * Ambiguous saddle cells use the average to choose their topology. */
+function contours(fn,xmin,xmax,ymin,ymax,nx=64,ny=64,level=0){const dx=(xmax-xmin)/nx,dy=(ymax-ymin)/ny,vals=range(ny+1,j=>range(nx+1,i=>fn(xmin+i*dx,ymin+j*dy))),out=[];
+ for(let j=0;j<ny;j++)for(let i=0;i<nx;i++){const ps=[[xmin+i*dx,ymin+j*dy],[xmin+(i+1)*dx,ymin+j*dy],[xmin+(i+1)*dx,ymin+(j+1)*dy],[xmin+i*dx,ymin+(j+1)*dy]],vs=[vals[j][i],vals[j][i+1],vals[j+1][i+1],vals[j+1][i]],edges=[];
+  for(let k=0;k<4;k++){const l=(k+1)%4,a=vs[k]-level,b=vs[l]-level;if(Number.isFinite(a)&&Number.isFinite(b)&&((a<=0&&b>0)||(a>0&&b<=0))){const q=a/(a-b);edges.push([ps[k][0]+q*(ps[l][0]-ps[k][0]),ps[k][1]+q*(ps[l][1]-ps[k][1])]);}}
+  if(edges.length===2)out.push(edges);else if(edges.length===4){if(sum(vs)/4>level)out.push([edges[0],edges[1]],[edges[2],edges[3]]);else out.push([edges[0],edges[3]],[edges[1],edges[2]]);}}
+ return out;}
+
+return {TAU,range,sum,clamp,Cx,add,sub,mul,scale,abs,div,expi,cpow,norm2,normInf,gain,mixedGain,stability,modalSpectrum,dft,idft,foldedEnergy,ellipticError,consistencyStudy,errorHistory,leapfrogRoots,leapfrogSequence,matMul2,matPow2,normMat2,resolventNorm,sbp,mv,satRhs,satEnergy,rk4step,boundaryMode,boundaryStep,modifiedRate,dispersion,packet,rungeStudy,rungeTriplet,manufactured,manufacturedSource,mmsSolve,contours};
+})();
+__modules['board.js']=(()=>{
+/** Drawing adapter. The deployed gallery uses the site's genuine Chalkish engine.
+ * Standalone preview: an independent Canvas 2D renderer, explicitly identified in UI.
+ * Design coordinates are 1000 x 610; labels share the exact same viewport transform.
+ */
+const C={white:'#f4f1e7',muted:'#a6b8ad',grid:'#2a3a31',yellow:'#f0d477',blue:'#8ac8db',red:'#ef9685',green:'#b6d3a0',bg:'#0d1712',dim:'#506358'};
+const W=1000,H=610;
+let libraryPromise;
+function getLibrary(){
+  if(globalThis.PDE4_OFFLINE || new URLSearchParams(location.search).get('engine')==='canvas')return Promise.resolve(null);
+  return libraryPromise??=import('../../lib/chalkish/src/index.js').catch(()=>null);
+}
+class Ink {
+  constructor(){this.cmd=[];}
+  line(x1,y1,x2,y2,color=C.white,width=1.5,dash=false){this.cmd.push({type:'line',x1,y1,x2,y2,color,width,dash});return this;}
+  arrow(x1,y1,x2,y2,color=C.yellow,width=1.8){this.cmd.push({type:'arrow',x1,y1,x2,y2,color,width});return this;}
+  rect(x,y,w,h,fill=null,color=C.grid,width=1){if(w<0){x+=w;w=-w;}if(h<0){y+=h;h=-h;}if(w<1e-12||h<1e-12){if(color)this.line(x,y,x+w,y+h,color,width);return this;}this.cmd.push({type:'rect',x,y,w,h,fill,color,width});return this;}
+  dot(x,y,r=4,color=C.yellow,fill=color){this.cmd.push({type:'dot',x,y,r,color,fill,width:1.5});return this;}
+  path(points,color=C.white,width=2,dash=false){this.cmd.push({type:'path',points,color,width,dash});return this;}
+  text(x,y,text,size=16,color=C.white,align='left'){this.cmd.push({type:'text',x,y,text:String(text),size,color,align});return this;}
+  title(text,sub=''){this.text(42,31,text,20,C.white);this.cmd.at(-1).maxWidth=835;if(sub){this.text(42,57,sub,14,C.muted);this.cmd.at(-1).maxWidth=915;}return this;}
+  badge(x,y,text,color=C.yellow){this.text(x,y,text,15,color);return this;}
+}
+function graph(ink,{x=72,y=115,w=858,h=295,xmin=0,xmax=1,ymin=-1,ymax=1,xticks=4,yticks=4,xlabel='x',ylabel='u',labels=true}={}){
+  const X=v=>x+(v-xmin)/(xmax-xmin)*w,Y=v=>y+h-(v-ymin)/(ymax-ymin)*h;
+  for(let i=0;xticks>0&&i<=xticks;i++){const v=xmin+(xmax-xmin)*i/xticks,px=X(v);ink.line(px,y,px,y+h,C.grid,1);if(labels)ink.text(px,y+h+20,fmt(v,3),12,C.muted,'center');}
+  for(let i=0;yticks>0&&i<=yticks;i++){const v=ymin+(ymax-ymin)*i/yticks,py=Y(v);ink.line(x,py,x+w,py,C.grid,1);if(labels)ink.text(x-12,py+4,fmt(v,3),12,C.muted,'right');}
+  ink.line(x,y+h,x+w+9,y+h,C.muted,1.2);ink.line(x,y,x,y+h,C.muted,1.2);
+  if(xmin<0&&xmax>0)ink.line(X(0),y,X(0),y+h,C.dim,1.3);
+  if(ymin<0&&ymax>0)ink.line(x,Y(0),x+w,Y(0),C.dim,1.3);
+  ink.text(x+w+14,y+h+5,xlabel,14,C.muted);ink.text(x-4,y-16,ylabel,15,C.muted);
+  const clipped=(pts,color,width=2,dash=false)=>{
+    // Segment clipping prevents a deliberately unstable curve from hiding its axes.
+    let group=[]; const flush=()=>{if(group.length>1)ink.path(group,color,width,dash);group=[];};
+    for(const p of pts){if(Number.isFinite(p[0])&&Number.isFinite(p[1])&&p[0]>=xmin-1e-10&&p[0]<=xmax+1e-10&&p[1]>=ymin&&p[1]<=ymax){group.push([X(p[0]),Y(p[1])]);}else flush();}flush();
+  };
+  return {X,Y,x,y,w,h,xmin,xmax,ymin,ymax,contains:(px,py)=>px>=x&&px<=x+w&&py>=y&&py<=y+h,
+    inverse:(px,py)=>[xmin+(px-x)/w*(xmax-xmin),ymax-(py-y)/h*(ymax-ymin)],
+    curve:(fn,color=C.white,width=2,n=400,dash=false)=>clipped(Array.from({length:n+1},(_,i)=>{const v=xmin+(xmax-xmin)*i/n;return [v,fn(v)];}),color,width,dash),
+    series:(xs,ys,color=C.yellow,width=2,dots=false)=>{clipped(xs.map((v,i)=>[v,ys[i]]),color,width);if(dots)xs.forEach((v,i)=>{if(v>=xmin&&v<=xmax&&ys[i]>=ymin&&ys[i]<=ymax)ink.dot(X(v),Y(ys[i]),3.2,color);});},
+    dot:(a,b,r=4,col=C.yellow)=>{if(a>=xmin&&a<=xmax&&b>=ymin&&b<=ymax)ink.dot(X(a),Y(b),r,col);}
+  };
+}
+function fmt(x,d=4){if(!Number.isFinite(x))return String(x);if(x===0)return '0';return Math.abs(x)>=1e4||Math.abs(x)<1e-3?x.toExponential(2):Number(x.toPrecision(d)).toString();}
+function legend(ink,items,y=492,x=72,step=260){items.forEach(([s,c],i)=>{ink.line(x+i*step,y-5,x+27+i*step,y-5,c,2.5);ink.text(x+37+i*step,y,s,15,c);});}
+function drawShape(ctx,p){
+  ctx.strokeStyle=p.color||C.white;ctx.fillStyle=p.fill||'transparent';ctx.lineWidth=p.width||1.5;ctx.setLineDash(p.dash?[7,6]:[]);ctx.beginPath();
+  if(p.type==='line'||p.type==='arrow'){ctx.moveTo(p.x1,p.y1);ctx.lineTo(p.x2,p.y2);}
+  if(p.type==='rect')ctx.rect(p.x,p.y,p.w,p.h);
+  if(p.type==='dot')ctx.arc(p.x,p.y,p.r,0,2*Math.PI);
+  if(p.type==='path'){p.points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));}
+  if(p.fill)ctx.fill();if(p.color)ctx.stroke();
+  if(p.type==='arrow'){const a=Math.atan2(p.y2-p.y1,p.x2-p.x1),r=8;ctx.beginPath();ctx.moveTo(p.x2-r*Math.cos(a-.4),p.y2-r*Math.sin(a-.4));ctx.lineTo(p.x2,p.y2);ctx.lineTo(p.x2-r*Math.cos(a+.4),p.y2-r*Math.sin(a+.4));ctx.stroke();}
+}
+class Board {
+  constructor(host,{preview=false,onEngine=()=>{}}={}){
+    this.host=host;this.preview=preview;this.commands=[];this.dead=false;this.engine='canvas';this.onEngine=onEngine;this.renderError=null;
+    this.canvas=document.createElement('canvas');this.labels=document.createElement('canvas');
+    this.canvas.className='board-canvas';this.labels.className='board-labels';this.labels.setAttribute('aria-hidden','true');
+    this.canvas.setAttribute('aria-label','Интерактивная математическая диаграмма');this.host.append(this.canvas,this.labels);
+    this.ro=new ResizeObserver(()=>this.paint());this.ro.observe(host);
+    this.ready=(preview?Promise.resolve(null):getLibrary()).then(lib=>{
+      if(this.dead)return;
+      if(lib){try{
+        if(!document.querySelector('[data-chalkish-fonts]')){for(const href of ['../../assets/fonts/open-sans/open-sans.css','./site-fonts.css']){const link=document.createElement('link');link.rel='stylesheet';link.href=href;link.dataset.chalkishFonts='';link.onload=()=>this.paint();document.head.append(link);}}
+        this.lib=lib;this.scene=new lib.Scene({background:C.bg});
+        this.camera=new lib.Camera2D({centerX:W/2,centerY:H/2,height:H,flipY:false});
+        this.app=lib.mount(this.canvas,{scene:this.scene,camera:this.camera,fixedStep:null,adaptiveQuality:false,dprMax:2});
+        this.engine='chalkish';
+      }catch(e){console.warn('Chalkish initialization failed; using standalone renderer.',e);this.app?.destroy();this.app=null;this.engine='canvas';}}
+      this.onEngine(this.engine);this.paint();document.fonts?.ready.then(()=>{if(!this.dead)this.paint();});
+    });
+  }
+  render(ink){this.commands=ink.cmd||ink;this.paint();}
+  view(){const r=this.host.getBoundingClientRect(),w=Math.max(1,r.width),h=Math.max(1,r.height),s=Math.min(w/W,h/H);return {w,h,s,ox:(w-W*s)/2,oy:(h-H*s)/2};}
+  point(ev){const r=this.host.getBoundingClientRect(),v=this.view();return [(ev.clientX-r.left-v.ox)/v.s,(ev.clientY-r.top-v.oy)/v.s];}
+  paint(){
+    if(this.dead||!this.host.isConnected)return;
+    const {w,h,s,ox,oy}=this.view();if(w<2||h<2)return;
+    const dpr=Math.min(devicePixelRatio||1,2),overlay=this.labels.getContext('2d');
+    this.labels.width=Math.round(w*dpr);this.labels.height=Math.round(h*dpr);
+    overlay.setTransform(dpr,0,0,dpr,0,0);overlay.clearRect(0,0,w,h);overlay.translate(ox,oy);overlay.scale(s,s);
+    if(this.engine==='chalkish'){
+      const L=this.lib;this.scene.clear();
+      for(const p of this.commands){if(p.type==='text')continue;
+        const style=L.chalkStyle('dusty',{stroke:p.color,fill:p.fill||null,width:p.width||1.5,passes:2,roughness:this.preview ? .15 : .24,dash:p.dash?[7,6]:null});
+        if(p.type==='line')this.scene.add(new L.Line(p.x1,p.y1,p.x2,p.y2,{style}));
+        if(p.type==='arrow')this.scene.add(new L.Arrow(p.x1,p.y1,p.x2,p.y2,{headLength:8,style}));
+        if(p.type==='dot')this.scene.add(new L.Circle(p.r,{x:p.x,y:p.y,style}));
+        if(p.type==='rect')this.scene.add(new L.Rectangle(p.w,p.h,{x:p.x+p.w/2,y:p.y+p.h/2,style}));
+        if(p.type==='path'&&p.points.length>1)this.scene.add(new L.CurveLayer({x:Float32Array.from(p.points,p=>p[0]),y:Float32Array.from(p.points,p=>p[1]),count:p.points.length,style}));
+      }
+      this.camera.setCenter(W/2,H/2);this.camera.setHeight(h/s);this.app.resize();this.app.render();
+    }else{
+      this.canvas.width=Math.round(w*dpr);this.canvas.height=Math.round(h*dpr);
+      const ctx=this.canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle=C.bg;ctx.fillRect(0,0,w,h);ctx.translate(ox,oy);ctx.scale(s,s);
+      ctx.lineCap='round';ctx.lineJoin='round';for(const p of this.commands)if(p.type!=='text')drawShape(ctx,p);
+    }
+    const fontScale=matchMedia('(max-width:800px)').matches?1.3:1;
+    for(const p of this.commands)if(p.type==='text'){
+      overlay.font=`${p.size*fontScale}px "Neucha", "Shantell Sans", "Open Sans", system-ui, sans-serif`;
+      overlay.fillStyle=p.color;overlay.textAlign=p.align;overlay.textBaseline='alphabetic';
+      const maxWidth=p.maxWidth||(p.align==='left'?W-p.x-20:undefined);
+      if(maxWidth)overlay.fillText(p.text,p.x,p.y,maxWidth);else overlay.fillText(p.text,p.x,p.y);
+    }
+  }
+  destroy(){this.dead=true;this.ro.disconnect();this.app?.destroy();this.canvas.remove();this.labels.remove();}
+}
+
+return {C,W,Ink,graph,fmt,legend,Board};
+})();
+__modules['catalog.js']=(()=>{
+/** Lecture 4 content is mapped to the uploaded body.tex; its legacy subtitle is not changed.
+ * EN is a translation of the RU teaching content, not a different set of experiments. */
+const R=(key,ru,en,value,min,max,step=1)=>({key,label:[ru,en],type:'range',value,min,max,step});
+const O=(value,ru,en)=>({value,label:[ru,en]});
+const S=(key,ru,en,value,options)=>({key,label:[ru,en],type:'select',value,options});
+const P=(ru,en,values)=>({label:[ru,en],values});
+const groups=[['Невязка и сходимость','Residuals & convergence'],['Спектральная устойчивость','Spectral stability'],['Энергия и границы','Energy & boundaries'],['Дифференциальное приближение','Modified equations'],['Оценка ошибки и верификация','Error estimation & verification']];
+const sources={
+ lecture:{label:'body.tex → карта разделов / lecture mapping',url:'./LECTURE_MAP.md'},
+ eigtool:{label:'Oxford: EigTool — interactive pseudospectra (MATLAB)',url:'https://www.cs.ox.ac.uk/pseudospectra/eigtool/'},
+ mms:{label:'Salari & Knupp: SAND2000-1444, code verification by MMS',url:'https://www.sandia.gov/research/publications/details/code-verification-by-the-method-of-manufactured-solutions-2000-06-01/'},
+ sbp:{label:'Carpenter, Gottlieb & Abarbanel (1994): time-stable boundary conditions',url:'https://doi.org/10.1006/jcph.1994.1057'},
+ nodepy:{label:'NodePy: stability functions and stability regions (Python)',url:'https://nodepy.readthedocs.io/en/latest/'},
+ prior:{label:'Предыдущая галерея / previous gallery',url:'../pde-lecture-3/'}
+};
+const schemes=[O('upwind','Противопоточная','Upwind'),O('lf','Лакс — Фридрихс','Lax–Friedrichs'),O('lw','Лакс — Вендрофф','Lax–Wendroff'),O('ftcs','Центральная + Эйлер','Centered + Euler'),O('heat','Явная диффузия','Explicit diffusion'),O('beheat','Неявная диффузия','Implicit diffusion')];
+const demos=[
+{id:'error-budget',group:0,title:['Невязка — не ошибка','A residual is not an error'],short:['Решатель уже сошёлся. А сетка?','The solver converged. Did the grid?'],
+ equation:'ũₕ − Rₕu = (uₕ* − Rₕu) + (ũₕ − uₕ*);    −uₓₓ = (kπ)² sin(kπx)',
+ controls:[S('N','Число интервалов N','Intervals N',32,[16,32,64,128].map(n=>O(n,String(n),String(n)))),R('iterations','Итерации Якоби','Jacobi iterations',100,0,4000,20),R('k','Гармоника источника k','Source harmonic k',1,1,7)],
+ presets:[P('Недорешанная система','Unconverged solve',{iterations:40}),P('Алгебраическая ошибка мала','Small algebraic error',{iterations:3000}),P('Сетка мельче, итераций столько же','Finer grid, same iteration count',{N:128,iterations:100})],
+ question:['Уменьшите невязку. Почему ошибка относительно непрерывного решения перестаёт уменьшаться? Затем увеличьте N, сохранив число итераций.','Reduce the residual. Why does the error relative to the continuous solution stop falling? Then increase N without increasing the iteration count.'],
+ explanation:['Сплошная белая линия — точное непрерывное решение; голубая — точное решение разностных уравнений; жёлтая — незавершённые итерации. Для одной синусоидальной моды итерации Якоби вычислены точно: коэффициент ошибки за итерацию равен cos(kπh). Нижний график показывает знаковые слагаемые полного отклонения.','White is the exact continuous solution; blue is the exact discrete solution; yellow is the unfinished iterative solve. A sine mode has the exact Jacobi error factor cos(kπh). The lower plot displays the signed components of the total error.'],
+ caveat:['Одномерная задача Дирихле, равномерная сетка, центральная вторая производная. Аналитическая формула воспроизводит итерации одной моды, а не является универсальной оценкой Якоби. Случайная компенсация двух ошибок не доказывает точность.','One-dimensional Dirichlet problem, uniform grid, centered second derivative. The formula reproduces Jacobi iteration for one mode, not a universal convergence estimate. Cancellation between two errors does not establish accuracy.'],sources:['lecture'],dynamic:false},
+{id:'consistency',group:0,title:['Согласованность без сходимости','Consistency without convergence'],short:['Малая локальная невязка, растущая сеточная ошибка.','Small local defect; growing global error.'],
+ equation:'τₕ = [(Rₕu)ⁿ⁺¹ − (Rₕu)ⁿ]/τ + Dₕ(Rₕu)ⁿ;    T = const',
+ controls:[S('scheme','Разность по пространству','Spatial difference','downwind',[O('upwind','Против потока','Upwind'),O('downwind','По потоку','Downwind')]),R('co','Число Куранта Co','Courant number Co',.6,.2,.9,.1),R('T','Общее конечное время T','Common final time T',.5,.2,1,.1),R('logeps','log₁₀ ε: шум εh²','log₁₀ ε: noise εh²',-10,-16,-2,1),S('noise','Начальное возмущение','Initial perturbation','on',[O('on','Добавить шахматную моду','Add checkerboard mode'),O('off','Только гладкая гармоника','Smooth harmonic only')])],
+ presets:[P('Правильное направление','Correct direction',{scheme:'upwind'}),P('Обманчивый гладкий тест','Misleading smooth test',{scheme:'downwind',noise:'off'}),P('Малый шум всё меняет','A tiny noise changes everything',{scheme:'downwind',noise:'on',logeps:-14})],
+ question:['Выключите шум: один гладкий тест может выглядеть убедительно. Включите возмущение εh², которое само стремится к нулю. Что происходит при сгущении?','Switch noise off: one smooth test may look convincing. Add an initial perturbation εh² that itself tends to zero. What happens under refinement?'],
+ explanation:['Для каждой сетки вычислены нормированная локальная невязка точной гармоники и ошибка при одном физическом T. Численное решение получено степенями точного символа схемы, без ошибок дополнительного решателя. Высокочастотное начальное возмущение имеет амплитуду εh².','Each grid has a normalized exact-solution defect and a global error at the same physical T. The discrete solution uses powers of the exact scheme symbol, without an additional solver error. The high-frequency initial perturbation has amplitude εh².'],
+ caveat:['Периодическая скалярная линейная задача; комплексная гармоника имеет единичную сеточную L₂-норму. Последний шаг согласован с T; фактический Co показан в CSV. Сходимость одной гладкой моды не является устойчивостью семейства схем.','Periodic scalar linear problem; the complex harmonic has unit discrete L₂ norm. Time steps are adjusted to reach T; actual Co is included in CSV. Convergence for one smooth mode is not stability of the scheme family.'],sources:['lecture'],dynamic:false},
+{id:'accumulation',group:0,title:['Как накапливается ошибка','How errors accumulate'],short:['Каждая невязка оставляет свой след.','Each local defect leaves a trace.'],equation:'eⁿ⁺¹ = G eⁿ − ττₕⁿ;    eⁿ = −τ Σ Gⁿ⁻¹⁻ᵐ τₕᵐ',
+ controls:[R('N','Число шагов, h = τ = 1/N','Steps, h = τ = 1/N',48,8,128,8),R('p','Порядок локальной невязки p','Local defect order p',1,1,3),S('family','Семейство множителей G','Amplification family','decay',[O('decay','1 − 0.8τ','1 − 0.8τ'),O('physical','1 + 0.8τ','1 + 0.8τ'),O('unstable','1.06, независимо от τ','1.06, independent of τ')])],
+ presets:[P('Возмущения затухают','Decaying perturbations',{family:'decay'}),P('|G| > 1, но равномерная оценка','|G| > 1, yet uniformly bounded',{family:'physical'}),P('Шесть процентов — на каждом шаге','Fixed amplification per step',{family:'unstable',N:128})],
+ question:['Нажмите на нижнюю шкалу, чтобы усилить невязку одного шага. Почему G = 1 + 0.8τ допускает оценку на T = 1, а фиксированный G = 1.06 — нет?','Click the lower timeline to amplify one local defect. Why does G = 1 + 0.8τ admit a bound at T = 1, while fixed G = 1.06 does not?'],
+ explanation:['Это скалярное уравнение ошибки одной моды. Каждый столбик — реальный вклад −τGⁿ⁻¹⁻ᵐτₕᵐ в текущую ошибку, а не схема причинности. При увеличении N сравнивается один и тот же промежуток [0,1]. Локальная невязка равна hᵖ.','This is the scalar error equation of one mode. Each bar is the actual contribution −τGⁿ⁻¹⁻ᵐτₕᵐ, not a conceptual flowchart. Increasing N keeps the physical interval [0,1] fixed. The local defect is hᵖ.'],
+ caveat:['Иллюстрация механизма оценки Лакса, не численное доказательство теоремы. G > 1 само по себе не нарушает конечновременную устойчивость: важны зависимость от τ и равномерность.','An illustration of the Lax estimate, not a numerical proof of the theorem. G > 1 alone does not violate finite-time stability: its dependence on τ and uniformity matter.'],sources:['lecture'],dynamic:true},
+{id:'fourier',group:1,title:['Ошибка по гармоникам','Error, harmonic by harmonic'],short:['Нарисуйте возмущение и разберите его энергию.','Draw a perturbation and inspect its energy.'],equation:'v̂ₖ = (1/N) Σ vⱼe⁻ⁱʲϑₖ;    ‖v‖ₕ² = Σ |v̂ₖ|²,    hN = 1',
+ controls:[R('r','Диффузионное число r','Diffusion number r',.6,.1,.7,.05),R('high','Амплитуда шахматной моды','Checkerboard amplitude',.03,0,.2,.01),R('k','Выделенная гармоника k','Highlighted harmonic k',32,0,32)],
+ presets:[P('Устойчивое затухание','Stable decay',{r:.35,k:3}),P('Незаметный опасный шум','Small dangerous noise',{r:.6,high:.01,k:32}),P('Нет высоких частот','No high-frequency seed',{r:.6,high:0,k:3})],
+ question:['На паузе проведите по верхнему графику; нажмите на столбик спектра. Как малая шахматная ошибка может стать главным слагаемым энергии?','While paused, draw on the upper graph; click a spectral bar. How can a small checkerboard error become the dominant energy contribution?'],
+ explanation:['Показаны возмущение, вклад выбранной вещественной гармоники и энергии мод. Парсеваль проверяется по фактическому DFT. При эволюции каждая мода умножается на Gₖ = 1 − 4r sin²(ϑₖ/2). Парные частоты вещественного сигнала объединены.','The display shows the perturbation, the selected real harmonic, and modal energies. Parseval is checked against the actual DFT. Each mode evolves with Gₖ = 1 − 4r sin²(ϑₖ/2). Conjugate frequencies of the real signal are combined.'],
+ caveat:['N = 64, периодическая сетка. Рисование начинает новый опыт с текущего профиля. Нулевая и найквистовская моды учитываются один раз, остальные — с парой. Это анализ ошибки, а не ещё одна демонстрация теплопроводности.','N = 64, periodic grid. Drawing starts a new experiment from the current profile. Zero and Nyquist modes count once; other modes include their conjugate partner. This is error analysis, not another heat-flow demonstration.'],sources:['lecture'],dynamic:true},
+{id:'godograph',group:1,title:['Годограф усиления','The amplification locus'],short:['Выберите частоту, которая испортит расчёт.','Find the frequency that spoils a computation.'],equation:'v̂ⁿ = G(ϑ)ⁿ v̂⁰;    maxϑ |G(ϑ)| — худший множитель одного шага',
+ controls:[S('scheme','Схема','Scheme','upwind',schemes),R('c','Co для переноса / r для диффузии','Co for transport / r for diffusion',.6,.05,1.3,.05),R('theta','ϑ / π','ϑ / π',.7,0,1,.01)],
+ presets:[P('Окружность внутри круга','Locus inside unit disk',{scheme:'upwind',c:.6}),P('Окружность пересекла круг','Locus exits unit disk',{scheme:'upwind',c:1.2}),P('Малый Co не спасает FTCS','Small Co does not save FTCS',{scheme:'ftcs',c:.3}),P('Отрицательный G','Negative G',{scheme:'heat',c:.45,theta:1})],
+ question:['Нажмите на комплексную плоскость и проследите выбранную моду. Отличаются ли отрицательный G, |G| < 1 и |G| > 1?','Click the complex plane and track the selected mode. How do negative G, |G| < 1, and |G| > 1 differ?'],
+ explanation:['Слева — весь годограф G(ϑ) и единичная окружность; справа — |G| по частотам; снизу — накопление амплитуды выбранной моды. Отрицательный вещественный G меняет знак на каждом шаге и может при этом затухать.','Left: the complete locus and unit circle. Right: |G| over frequency. Bottom: the selected modal amplitude over successive steps. A negative real G alternates sign and may still decay.'],
+ caveat:['Скалярные одношаговые схемы, постоянные коэффициенты, периодическая равномерная сетка. Здесь проверяется неувеличение L₂-нормы. Не переносите этот критерий автоматически на границы или ненормальные системы.','Scalar one-step schemes with constant coefficients on a uniform periodic grid. This tests L₂ contractivity. Do not transfer the criterion automatically to boundaries or nonnormal systems.'],sources:['lecture'],dynamic:true},
+{id:'mol',group:1,title:['Пространство × время','Space × time'],short:['Поместите спектр внутрь области устойчивости.','Fit the spectrum inside a stability region.'],equation:'u̇ₕ = Aₕuₕ;    uₕⁿ⁺¹ = R(τAₕ)uₕⁿ;    zₖ = τλₖ(Aₕ)',
+ controls:[S('operator','Пространственный оператор','Spatial operator','advection',[O('advection','Центральная адвекция','Centered advection'),O('diffusion','Центральная диффузия','Centered diffusion'),O('mixed','Адвекция + диффузия, r = 0.15Co','Advection + diffusion, r = 0.15Co')]),S('method','Интегратор по времени','Time integrator','euler',[O('euler','Явный Эйлер','Forward Euler'),O('rk2','RK2','RK2'),O('rk3','RK3','RK3'),O('rk4','RK4','RK4'),O('be','Неявный Эйлер','Backward Euler'),O('cn','Кранк — Николсон','Crank–Nicolson')]),R('s','Масштаб шага s = Co (или r)','Step scale s = Co (or r)',1,.05,3.2,.05),R('k','Выбранная мода k, N = 32','Selected mode k, N = 32',8,1,16)],
+ presets:[P('Мнимая ось и Эйлер','Imaginary axis and Euler',{operator:'advection',method:'euler',s:.5}),P('Тот же оператор, RK4','Same operator, RK4',{operator:'advection',method:'rk4',s:2.5}),P('Безусловно устойчиво ≠ точно','Unconditionally stable ≠ accurate',{operator:'diffusion',method:'be',s:3})],
+ question:['Не меняя пространственный оператор, замените Эйлера на RK4. Затем сравните R(z)ⁿ с exp(nz) при большом неявном шаге.','Keep the spatial operator and replace Euler with RK4. Then compare R(z)ⁿ with exp(nz) for a large implicit step.'],
+ explanation:['Контур вычислен из |R(z)| = 1, точки — фактический спектр периодического пространственного оператора. Нижний график сравнивает интегратор с точным решением полудискретной системы, а не с исходным PDE. Для чистой диффузии s = r; иначе s = Co.','The contour is computed from |R(z)| = 1; the dots are the actual periodic spatial spectrum. The lower plot compares the integrator with the exact semidiscrete solution, not with the original PDE. For pure diffusion s = r; otherwise s = Co.'],
+ caveat:['Дополнение к методу прямых из лекции: RK2/3/4 введены как варианты временной функции устойчивости. Операторы здесь нормальны. Спектр сам по себе недостаточен в опыте с ненормальной матрицей.','Extension of the lecture’s method-of-lines section: RK2/3/4 are additional stability functions. The operators here are normal. Spectrum alone is insufficient in the nonnormal-matrix experiment.'],sources:['lecture','nodepy'],dynamic:true},
+{id:'roots',group:1,title:['Два корня — две моды','Two roots, two modes'],short:['Начальный второй слой тоже имеет значение.','The second starting layer matters.'],equation:'z² + 2iCo sin(ϑ) z − 1 = 0;    v̂ⁿ⁺¹ = v̂ⁿ⁻¹ − 2iCo sin(ϑ)v̂ⁿ',
+ controls:[R('co','Co','Co',.8,.1,1.2,.05),R('theta','ϑ / π','ϑ / π',.4,0,1,.01),R('eps','Ошибка второго слоя ε','Second-layer error ε',.08,0,.3,.01)],
+ presets:[P('Одна ветвь','One branch',{co:.8,theta:.3,eps:0}),P('Вычислительная мода','Computational mode',{co:.8,theta:.3,eps:.2}),P('Кратный корень на окружности','Repeated unit-circle root',{co:1,theta:.5,eps:.05}),P('Корень с |z| > 1','Root outside the circle',{co:1.1,theta:.5,eps:.05})],
+ question:['Добавьте небольшую ошибку только во второй временной слой. Что меняется при Co = 1, ϑ = π/2, когда корни совпадают?','Perturb only the second time layer. What changes at Co = 1, ϑ = π/2, where the roots coincide?'],
+ explanation:['На комплексной плоскости показаны оба корня схемы «крест». Последовательность действительно вычисляется трёхслойной рекуррентной формулой. Старт: v̂⁰ = 1, v̂¹ = z₊ + ε. При совпадении корней это корректно воспроизводит множитель n, не деля на z₊ − z₋.','Both leapfrog roots are shown in the complex plane. The sequence is computed using the actual three-level recurrence. Startup is v̂⁰ = 1, v̂¹ = z₊ + ε. At coalescence this correctly produces an n factor without dividing by z₊ − z₋.'],
+ caveat:['Уточнение к предельному Co = 1: при соответствующей сеточной частоте корень кратный. Произвольная ошибка старта может расти линейно; специально согласованный старт может её исключить. Это не противоречит точному переносу одной согласованной ветви.','Qualification at Co = 1: at the relevant grid frequency the root is repeated. Generic startup error may grow linearly; a compatible startup can suppress it. This does not contradict exact translation on a compatible branch.'],sources:['lecture'],dynamic:true},
+{id:'nonnormal',group:1,title:['Собственных значений недостаточно','Eigenvalues are not enough'],short:['Спектр затухает. Норма сначала растёт.','The spectrum decays. The norm first grows.'],equation:'G = [[r, K], [0, s]];    ‖Gⁿ‖₂ ≥ ρ(G)ⁿ;    (zI − G)⁻¹ — резольвента',
+ controls:[R('r','Первое собственное значение r','First eigenvalue r',.9,.2,.98,.02),R('s','Второе собственное значение s','Second eigenvalue s',.8,.2,.98,.02),R('K','Связь K','Coupling K',2,0,6,.1),R('angle','Направление начального вектора, °','Initial-vector direction, °',90,0,180,5)],
+ presets:[P('Нормальная диагональная матрица','Normal diagonal matrix',{K:0}),P('Тот же спектр, другой рост','Same spectrum, different growth',{K:3}),P('Жорданов блок','Jordan block',{r:.9,s:.9,K:2})],
+ question:['Сохраните r и s, изменяйте только K. Затем нажмите вне единичного круга: как резольвента замечает то, чего не показывают собственные значения?','Keep r and s fixed and vary only K. Then click outside the unit circle: how does the resolvent detect what the eigenvalues miss?'],
+ explanation:['Слева единичная окружность превращается в эллипс Gⁿ; справа — контуры нормы резольвенты и спектр; снизу — ‖Gⁿ‖₂ и ρ(G)ⁿ. Нормы вычислены по сингулярным значениям, а не по выбранному одному вектору. Пробник показывает (|z|−1)‖(zI−G)⁻¹‖₂.','Left: Gⁿ maps the unit circle into an ellipse. Right: resolvent-norm contours and eigenvalues. Bottom: ‖Gⁿ‖₂ and ρ(G)ⁿ. Norms use singular values, not one selected vector. The probe reports (|z|−1)‖(zI−G)⁻¹‖₂.'],
+ caveat:['При фиксированных r,s < 1 и конечном K степени этой матрицы ограничены. Временный рост — не автоматическое доказательство неустойчивости. Пробник даёт лишь нижнюю оценку константы Крайсса, не её точный супремум.','With fixed r,s < 1 and finite K, this matrix is power bounded. Transient growth is not automatically instability. A probe gives only a lower bound for the Kreiss constant, not its exact supremum.'],sources:['lecture','eigtool'],dynamic:true},
+{id:'sbp',group:2,title:['Суммирование по частям','Summation by parts'],short:['Почему у крайних узлов половинный вес?','Why do boundary nodes have half weight?'],equation:'HD + DᵀH = B;    uᵀHDv + (Du)ᵀHv = uᴺvᴺ − u⁰v⁰',
+ controls:[R('N','Число интервалов N','Intervals N',8,4,10),R('weight','Крайние веса H / h','Endpoint weights H / h',.5,.1,1,.05),R('phase','Фаза функции v / π','Phase of v / π',.25,0,1,.05)],
+ presets:[P('Точная SBP-структура','Exact SBP identity',{weight:.5}),P('Все веса равны','All weights equal',{weight:1}),P('Граница недовзвешена','Boundary underweighted',{weight:.25})],
+ question:['Измените только два крайних веса квадратуры. Где появляются лишние элементы в HD + DᵀH? Нажмите на клетку матрицы.','Change only the two endpoint quadrature weights. Where do extra entries appear in HD + DᵀH? Click a matrix cell.'],
+ explanation:['Внутри D — центральная первая производная, на краях — односторонняя первого порядка. При H = h diag(1/2,1,…,1/2) симметричная часть Q = HD оставляет только граничную матрицу B. Нижние столбики показывают реальные локальные слагаемые интегрирования по частям.','D is centered in the interior and first-order one-sided at the boundaries. H = h diag(1/2,1,…,1/2) makes Q + Qᵀ reduce to the boundary matrix B. Lower bars are the actual local integration-by-parts contributions.'],
+ caveat:['Простейший SBP-оператор 2–1. Изменение H здесь намеренно разрушает тождество при неизменном D; это не альтернативный согласованно построенный SBP-оператор.','The simplest 2–1 SBP operator. Changing H deliberately breaks the identity while holding D fixed; it is not an alternative consistently constructed SBP operator.'],sources:['lecture','sbp'],dynamic:false},
+{id:'sat',group:2,title:['Граница не должна создавать энергию','A boundary must not create energy'],short:['Меняйте штраф и наблюдайте энергетический баланс.','Change the penalty and inspect the energy budget.'],equation:'u̇ + Du = −σH⁻¹e₀(u₀−g);    Ė = −uᴺ²/2 + (1/2−σ)u₀² + σu₀g',
+ controls:[R('sigma','Коэффициент SAT σ','SAT coefficient σ',1,0,1.5,.05),S('input','Входные данные g(t)','Inflow data g(t)','zero',[O('zero','Однородный вход','Homogeneous inflow'),O('pulse','Гладкий импульс','Smooth pulse')]),S('N','Число интервалов N','Intervals N',60,[30,60,90].map(n=>O(n,String(n),String(n))))],
+ presets:[P('Штраф из лекции','Lecture penalty',{sigma:1,input:'zero'}),P('Нет энергетической гарантии','No energy guarantee',{sigma:0,input:'zero'}),P('Энергия приходит с входом','Energy enters at inflow',{sigma:1,input:'pulse'})],
+ question:['При g = 0 сравните σ = 1 и σ = 0. Затем включите входной импульс: любое увеличение энергии является неустойчивостью?','With g = 0, compare σ = 1 and σ = 0. Then enable the inflow pulse: is every increase of energy an instability?'],
+ explanation:['Решается полудискретная SBP–SAT система; столбики дают три члена точного баланса Ė. Для g = 0 и σ ≥ 1/2 правая часть неположительна. При σ = 1 получается штраф из лекции. Физически заданный вход может законно поставлять энергию.','The semidiscrete SBP–SAT system is integrated; bars show the three exact contributions to Ė. For g = 0 and σ ≥ 1/2, energy production is nonpositive. σ = 1 gives the lecture’s penalty. Prescribed inflow may legitimately supply energy.'],
+ caveat:['Баланс проверяется как полудискретное тождество. Анимация использует RK4 с малым внутренним шагом; это не утверждение безусловной устойчивости полностью дискретной схемы. a = 1, на выходе произвольное условие не задаётся.','The balance is checked as a semidiscrete identity. Animation uses RK4 with a small internal step; this is not unconditional stability of the fully discrete method. a = 1; no arbitrary outflow condition is imposed.'],sources:['lecture','sbp'],dynamic:true},
+{id:'boundary',group:2,title:['Неустойчивость живёт у границы','Instability lives at the boundary'],short:['Внутренняя схема та же; испорчено только замыкание.','Same interior scheme; only the closure is broken.'],equation:'vⱼⁿ⁺¹ = (1−Co)vⱼⁿ + Co vⱼ₋₁ⁿ;    v₀ⁿ⁺¹ = b v₀ⁿ;    κ = Co/(b−1+Co)',
+ controls:[R('b','Ошибочное граничное усиление b','Artificial boundary amplification b',1.08,0,1.2,.02),R('co','Co внутренней схемы','Interior Co',.5,.2,.8,.1),R('logeps','log₁₀ начальной амплитуды','log₁₀ initial amplitude',-3,-6,-1)],
+ presets:[P('Однородная граница','Homogeneous boundary',{b:0}),P('Рост из-за замыкания','Growth caused by closure',{b:1.08}),P('Почти единичный корень','Root close to one',{b:1.02})],
+ question:['Оставьте Co = 0.5 и измените лишь граничный множитель. Почему устойчивый периодический анализ внутренней схемы не обнаружит эту моду?','Keep Co = 0.5 and change only the boundary multiplier. Why can periodic analysis of the stable interior scheme miss this mode?'],
+ explanation:['Искусственное замыкание v₀ⁿ⁺¹ = b v₀ⁿ введено намеренно. Если b > 1, существует точная мода vⱼⁿ = εbⁿκʲ: она растёт во времени и затухает от границы в пространство. Внутренняя противопоточная схема при этом не изменена.','The artificial closure v₀ⁿ⁺¹ = b v₀ⁿ is deliberately introduced. For b > 1, vⱼⁿ = εbⁿκʲ is an exact mode: it grows in time and decays away from the boundary. The interior upwind scheme remains unchanged.'],
+ caveat:['Конкретный скалярный контрпример, не общий решатель условия GKS. При |κ| ≥ 1 локализованной моды данного вида нет, и используется обычное локальное возмущение. Выход не отражает информацию назад.','A specific scalar counterexample, not a general GKS-condition solver. When |κ| ≥ 1, this localized mode is unavailable and a local perturbation is used instead. The outflow does not reflect information upstream.'],sources:['lecture'],dynamic:true},
+{id:'modified',group:3,title:['Где работает схемная вязкость','Where numerical viscosity works'],short:['Длинная волна верит приближению; короткая — нет.','Long waves follow the approximation; short waves may not.'],equation:'uₜ + uₓ ≈ μₙᵤₘuₓₓ;    μₙᵤₘ = h(1−2w−Co)/2;    w ≡ θ в лекции',
+ controls:[R('w','Вес прямой разности w','Forward-difference weight w',0,0,1,.05),R('co','Co','Co',.6,.1,1.2,.05),R('theta','Волновое число kh / π','Wavenumber kh / π',.15,.02,1,.02)],
+ presets:[P('Длинная волна','Long wave',{w:0,co:.6,theta:.1}),P('Почти предел Найквиста','Near Nyquist',{w:0,co:.6,theta:.9}),P('Центральная антидиффузия','Centered antidiffusion',{w:.5,co:.6,theta:.2}),P('Точный сдвиг','Exact shift',{w:0,co:1})],
+ question:['При тех же Co и весе w увеличивайте kh. Когда коэффициент при uₓₓ перестаёт количественно объяснять изменение амплитуды?','Keep Co and w fixed and increase kh. When does the coefficient of uₓₓ cease to predict the amplitude change quantitatively?'],
+ explanation:['Сравниваются фактический log|G(kh)| и длинноволновая оценка −μₙᵤₘk²τ. Нижний график накапливает оба предсказания по шагам. Обозначение w отделяет вес пространственной формулы от спектрального угла kh.','The actual log|G(kh)| is compared with the long-wave estimate −μₙᵤₘk²τ. The lower plot accumulates both predictions over time steps. w distinguishes the stencil weight from the spectral angle kh.'],
+ caveat:['Первое дифференциальное приближение, a = 1. Оно не используется как общий критерий устойчивости. При G = 0 логарифм равен −∞: график помечает погашенную моду, а не подставляет фиктивное конечное значение.','First modified-equation approximation, a = 1. It is not used as a general stability criterion. When G = 0, the logarithm is −∞; the plot marks an annihilated mode instead of reporting a fictitious finite value.'],sources:['lecture'],dynamic:true},
+{id:'packet',group:3,title:['Фаза и огибающая','Phase and envelope'],short:['Гребни идут вправо, пакет может идти влево.','Crests and packets need not travel together.'],equation:'sin Ω = Co sin(kh);    vₚ/a = Ω/(Co kh);    v𝗀/a = cos(kh)/√(1−Co²sin²(kh))',
+ controls:[R('co','Co','Co',.7,.2,.95,.05),R('k0','Центральная гармоника k₀, N = 128','Carrier harmonic k₀, N = 128',12,4,56),R('width','Спектральная ширина Δk','Spectral width Δk',3,1,6)],
+ presets:[P('Длинноволновый пакет','Long-wave packet',{k0:8,width:2}),P('Малая групповая скорость','Slow group velocity',{k0:31,width:2}),P('Пакет идёт против переноса','Packet travels backwards',{k0:47,width:2})],
+ question:['Следите отдельно за гребнями и огибающей. Что происходит, когда центральное kh пересекает π/2?','Track crests and envelope separately. What happens when the carrier kh crosses π/2?'],
+ explanation:['Пакет собран из конечного набора гармоник и эволюционирует с Ω = arcsin(Co sin kh). Амплитуды не меняются: видимое искажение является дисперсией. Пунктирная огибающая соответствует точному переносу исходного PDE.','A finite Fourier packet evolves using Ω = arcsin(Co sin kh). Modal amplitudes do not change: the deformation is dispersive. The dashed envelope is the exact translation of the original PDE.'],
+ caveat:['Выбрана ветвь, согласованная с физической при kh → 0. Вычислительная ветвь исключена точным спектральным стартом и отдельно изучается в опыте «Два корня». Формула групповой скорости относится к узкому пакету; широкая огибающая деформируется. Co < 1.','The branch is consistent with the physical branch as kh → 0. The computational branch is excluded by exact spectral startup and studied separately in “Two roots”. Group velocity describes a narrow packet; a broad envelope deforms. Co < 1.'],sources:['lecture'],dynamic:true},
+{id:'runge',group:4,title:['Можно ли верить трём сеткам?','Can we trust three grids?'],short:['Порядок, экстраполяция и невидимая общая ошибка.','Order, extrapolation, and invisible common bias.'],equation:'pₒᵦₛ = log₂ |(Jₕ−Jₕ/₂)/(Jₕ/₂−Jₕ/₄)|;    Jᴿ = Jₕ/₄ + (Jₕ/₄−Jₕ/₂)/(2ᵖ−1)',
+ controls:[S('base','Начальное N','Coarsest N',8,[8,16,32].map(n=>O(n,String(n),String(n)))),S('path','Как уменьшается τ','Time-step refinement','h2',[O('h2','τ ≈ 0.4h²','τ ≈ 0.4h²'),O('h','τ ≈ 0.3h','τ ≈ 0.3h'),O('fixed','τ = 0.01 на всех сетках','τ = 0.01 on every grid')]),R('bias','Общая добавка к J: η','Common added bias in J: η',0,0,.02,.001),R('triplet','Начало тройки сеток','First level of grid triplet',0,0,3),R('p','Порядок в экстраполяции p','Order used for extrapolation p',2,1,3),S('reveal','Точное значение','Exact value','hide',[O('hide','Скрыть: только сеточные данные','Hide: grid data only'),O('show','Открыть истинную ошибку','Reveal actual error')])],
+ presets:[P('Асимптотический порядок 2','Asymptotic order 2',{path:'h2',bias:0,p:2}),P('Время ограничивает порядок','Time limits the order',{path:'h',bias:0,p:1}),P('Незаметная общая ошибка','Invisible common error',{path:'h2',bias:.01,p:2}),P('Время не сгущается','No temporal refinement',{path:'fixed',bias:0,p:2})],
+ question:['Оцените J по трём сеткам, не открывая точный ответ. Затем включите общую добавку η и раскройте истинную ошибку. Что пропустил метод Рунге?','Estimate J from three grids without revealing the truth. Then add a common η and reveal the actual error. What did the Runge estimate miss?'],
+ explanation:['J — значение в x = 1/2 для uₜ = uₓₓ, u(x,0) = sin(πx), T = 0.05. Используется точное решение полностью дискретной неявной схемы для одной моды. Все уровни сравниваются в одной физической точке и при одном T.','J is the value at x = 1/2 for uₜ = uₓₓ, u(x,0) = sin(πx), T = 0.05. The exact fully discrete backward-Euler solution of one mode is used. All levels share one physical point and one final time.'],
+ caveat:['η — специально добавленная контролируемая общая ошибка результата, не дискретизационная ошибка схемы. Она сокращается в разностях сеток. Три уровня и красивый p сами по себе не подтверждают отсутствие общей ошибки модели, данных или кода.','η is a deliberately added common result bias, not a scheme discretization error. It cancels in grid differences. Three levels and an attractive p do not establish the absence of a common model, data, or code error.'],sources:['lecture','mms'],dynamic:false},
+{id:'mms',group:4,title:['Поймай ошибку в коде','Catch a code defect'],short:['Искусственное решение должно возбуждать проверяемые члены.','A manufactured solution must exercise the terms being tested.'],equation:'uₜ + uₓ = fᵐˢ;    uᵐˢ = e⁻ᵗ sin(2πx);    fᵐˢ = e⁻ᵗ[−sin(2πx)+2πcos(2πx)]',
+ controls:[S('bug','Реализация','Implementation','none',[O('none','Правильная','Correct'),O('coefficient','Потерян коэффициент 2π в источнике','Missing source coefficient 2π'),O('source-sign','Перепутан знак источника','Reversed source sign'),O('source-off','Источник не вызван','Source callback omitted'),O('boundary','Вход заморожен при t = 0','Inflow frozen at t = 0')]),S('rich','Искусственное решение','Manufactured solution','sine',[O('sine','Из упражнения: e⁻ᵗsin(2πx)','Exercise: e⁻ᵗsin(2πx)'),O('rich','Возбудить вход: e⁻ᵗ[1+0.2x+sin(2πx)]','Excite inflow: e⁻ᵗ[1+0.2x+sin(2πx)]')]),S('N','Показать сетку N','Display grid N',100,[25,50,100,200,400].map(n=>O(n,String(n),String(n)))),R('co','Co','Co',.5,.2,.9,.1)],
+ presets:[P('Верная реализация','Correct implementation',{bug:'none',rich:'sine'}),P('Источник с ошибкой','Incorrect source',{bug:'coefficient',rich:'sine'}),P('Граница: тест не видит ошибку','Boundary: test misses the defect',{bug:'boundary',rich:'sine'}),P('Граница: ошибка обнаружена','Boundary: defect exposed',{bug:'boundary',rich:'rich'})],
+ question:['Заморозьте граничное значение. Почему исходное решение из упражнения не обнаруживает ошибку? Включите обогащённое решение и повторите проверку.','Freeze the boundary value. Why does the exercise’s manufactured solution miss the defect? Enable the enriched solution and repeat the test.'],
+ explanation:['На всех пяти сетках реально выполняются противопоточные шаги с источником. Источник и граница проходят через те же функции рабочего решателя; переключатель вносит конкретную ошибку в этот путь. Вычислены L₁, L₂, L∞ и порядок между соседними сетками.','All five grids are actually advanced using upwind steps with a source. Source and boundary callbacks are part of the same working solver; the selector inserts a concrete defect in that path. L₁, L₂, L∞ and adjacent-grid orders are computed.'],
+ caveat:['a = 1, T = 0.6, вход в x = 0, выход в x = 1 без произвольного дополнительного условия. Последний шаг укорочен до T. Обогащённое решение — дополнение для проверки границы. MMS проверяет реализацию, но не физическую адекватность модели.','a = 1, T = 0.6, inflow at x = 0, outflow at x = 1 without an arbitrary extra condition. The last step is shortened to T. The enriched solution is an extension for testing inflow. MMS verifies implementation, not physical validity.'],sources:['lecture','mms'],dynamic:false}
+];
+function defaults(d){return Object.fromEntries(d.controls.map(c=>[c.key,c.value]));}
+function translate(s,lang='ru'){return Array.isArray(s)?s[lang==='en'?1:0]:s;}
+
+return {groups,sources,demos,defaults,translate};
+})();
+__modules['labs.js']=(()=>{
+const {Ink,C,graph,fmt,legend}=__modules['board.js'];
+const K=__modules['kernels.js'];
+const {range,sum,abs,Cx,cpow,expi,mul,scale,sub,add,norm2,clamp,TAU}=K;
+const Xs=n=>range(n,i=>i/(n-1));
+const ll=lang=>(ru,en)=>lang==='en'?en:ru;
+const maxabs=a=>Math.max(1e-10,...a.filter(Number.isFinite).map(Math.abs));
+const padded=a=>Math.max(.01,1.15*maxabs(a));
+const logs=a=>a.map(v=>v>0&&Number.isFinite(v)?Math.log10(v):NaN);
+const out=(ink,stats,rows=[],note='',warning=false)=>({ink,stats,rows,note,warning});
+const lbl=(ink,x,y,s,col=C.white)=>ink.text(x,y,s,17,col);
+function panel(ink,title,{x=75,y=115,w=850,h=260,...rest}={}){ink.text(x,y-30,title,17,C.white);ink.cmd.at(-1).maxWidth=w;return graph(ink,{x,y,w,h,...rest});}
+function unit(ink,g,col=C.dim){ink.path(range(161,j=>[g.X(Math.cos(TAU*j/160)),g.Y(Math.sin(TAU*j/160))]),col,1.5,true);}
+function contourDraw(ink,g,segments,col=C.blue,width=1.4){for(const seg of segments)ink.path(seg.map(([x,y])=>[g.X(x),g.Y(y)]),col,width);}
+function timing(ink,n){ink.text(945,32,'n = '+n,17,C.yellow,'right');}
+function dynamic(render,step,limit=100){return {count:0,time:0,stop:'',render,step(){if(this.stop)return;if(this.count>=limit){this.stop='■';return;}step.call(this);this.count++;}};}
+function lineLog(ink,title,xs,series,{x=80,y=443,w=840,h=110,xlabel='n',ymin,ymax}={}){
+ const all=series.flatMap(s=>logs(s.values)).filter(Number.isFinite);ymin=ymin??Math.min(-.1,...all);ymax=ymax??Math.max(.1,...all);
+ if(ymax-ymin<.2){ymin-=.1;ymax+=.1;}const g=panel(ink,title,{x,y,w,h,xmin:Math.min(...xs),xmax:Math.max(1,...xs),ymin,ymax,yticks:3,xlabel,ylabel:'log₁₀'});
+ for(const s of series)g.series(xs,logs(s.values),s.color,s.width||2,Boolean(s.dots));return g;
+}
+function errorBudget(p,lang){const L=ll(lang);return {render(){const d=K.ellipticError(p.N,p.iterations,p.k),ink=new Ink();ink.title(L('Три решения одной задачи','Three solutions of one problem'),L('Белое: непрерывное · голубое: дискретное · жёлтое: итерации','White: continuous · blue: discrete · yellow: iterate'));
+ const g=panel(ink,L('Решение','Solution'),{y:108,h:205,ymin:-padded(d.star),ymax:padded(d.star),ylabel:'u'});g.series(d.xs,d.exact,C.white,2.2);g.series(d.xs,d.star,C.blue,2);g.series(d.xs,d.iterate,C.yellow,2.5,p.N<=64);
+ const s=padded([...d.disc,...d.alg,...d.total]),e=panel(ink,L('Знаковые слагаемые ошибки: жёлтое = голубое + красное','Signed error components: yellow = blue + red'),{y:407,h:125,ymin:-s,ymax:s,ylabel:'e'});e.series(d.xs,d.disc,C.blue);e.series(d.xs,d.alg,C.red);e.series(d.xs,d.total,C.yellow,2.5);
+ legend(ink,[[L('Дискретизация','Discretization'),C.blue],[L('Алгебраическая','Algebraic'),C.red],[L('Полная ошибка','Total error'),C.yellow]],577,80,290);
+ return out(ink,[[L('‖e дискр.‖₂','‖discretization error‖₂'),fmt(norm2(d.disc,1/p.N))],[L('‖e алгебр.‖₂','‖algebraic error‖₂'),fmt(norm2(d.alg,1/p.N))],[L('‖e полная‖₂','‖total error‖₂'),fmt(norm2(d.total,1/p.N))],[L('Относительная невязка','Relative residual'),fmt(Math.abs(d.q**p.iterations))]],d.xs.map((x,i)=>({x,exact:d.exact[i],discrete:d.star[i],iterate:d.iterate[i],discretization_error:d.disc[i],algebraic_error:d.alg[i],total_error:d.total[i],residual:d.residual[i]})));}};}
+function consistency(p,lang){const L=ll(lang),rows=K.consistencyStudy(p.scheme,p.co,p.T,p.logeps,p.noise==='on');return {render(){const ink=new Ink();ink.title(L('Одна физическая задача, пять сеток','One physical problem, five grids'),L('Гладкое решение + начальное возмущение εh²(−1)ʲ','Smooth solution + initial perturbation εh²(−1)ʲ'));
+ const x=rows.map(r=>Math.log2(r.N)),common={x:85,y:120,w:355,h:255,xlabel:'log₂ N',xmin:4,xmax:8};
+ const left=panel(ink,L('Локальная невязка уменьшается','Local defect decreases'),{...common,ymin:Math.min(...logs(rows.map(r=>r.defect)))-.1,ymax:Math.max(...logs(rows.map(r=>r.defect)))+.1,ylabel:'log₁₀ ‖τₕ‖'});left.series(x,logs(rows.map(r=>r.defect)),C.blue,2.6,true);
+ const le=logs(rows.map(r=>r.error)),right=panel(ink,L('Ошибка при одном T','Global error at one T'),{...common,x:570,w:340,ymin:Math.min(-1,...le)-.1,ymax:Math.max(...le)+.15,ylabel:'log₁₀ ‖e(T)‖'});right.series(x,le,C.red,2.5,true);
+ const headings=['N','τ','Co',L('‖τₕ‖₂','‖defect‖₂'),L('‖e(T)‖₂','‖error(T)‖₂')],xs=[95,230,390,570,780];headings.forEach((s,i)=>ink.text(xs[i],429,s,16,C.muted));rows.forEach((r,i)=>[r.N,fmt(r.dt),fmt(r.co),fmt(r.defect),fmt(r.error)].forEach((s,j)=>ink.text(xs[j],456+25*i,s,16,j===4?C.red:C.white)));
+ const last=rows.at(-1);return out(ink,[[L('Конечное время','Final time'),p.T],[L('Невязка, N=256','Defect, N=256'),fmt(last.defect)],[L('Начальный шум, N=256','Initial noise, N=256'),fmt(last.initialNoise)],[L('Ошибка, N=256','Error, N=256'),fmt(last.error)]],rows.map(({U,truth,...r})=>r),p.noise==='off'?L('Одна гладкая гармоника не проверяет устойчивость ко всем возмущениям.','A single smooth harmonic does not test stability against all perturbations.'):'');}};}
+function accumulation(p,lang){const L=ll(lang);let impulse=-1,data=K.errorHistory(p.N,p.p,p.family,impulse);return {count:0,time:0,stop:'',step(){if(this.count>=p.N){this.stop=L('Достигнуто T = 1. Сгущайте N при том же T.','Reached T = 1. Refine N at fixed T.');return;}this.count++;this.time=this.count/p.N;},click(x,y){if(y<350||y>550||x<80||x>920)return false;impulse=clamp(Math.floor((x-80)/840*p.N),0,p.N-1);data=K.errorHistory(p.N,p.p,p.family,impulse);return true;},render(){const ink=new Ink(),n=this.count;ink.title(L('Невязка превращается в накопленную ошибку','Local defects accumulate into global error'),L('Нажмите на нижнюю шкалу: один источник ошибки станет в 8 раз сильнее','Click the lower timeline: make one local defect eight times larger'));timing(ink,n);
+ const yMax=padded(data.values),g=panel(ink,L('Ошибка за физическое время','Error over physical time'),{y:110,h:190,xmin:0,xmax:1,ymin:-yMax,ymax:.05*yMax,ylabel:'e'});g.series(range(n+1,j=>j/p.N),data.values.slice(0,n+1),C.yellow,2.5);
+ const terms=range(n,m=>-data.dt*data.forcing[m]*data.G**(n-1-m)),M=padded(terms);this.g=panel(ink,L('Вес каждой прошлой невязки в текущем eⁿ','Contribution of each past local defect to current eⁿ'),{y:420,h:100,xmin:0,xmax:p.N,ymin:-M,ymax:M*.2,xlabel:'m',ylabel:'−τGⁿ⁻¹⁻ᵐτₕᵐ'});
+ for(let j=0;j<p.N;j++){const c=j===impulse?C.red:C.blue;ink.rect(this.g.X(j+.1),this.g.Y(0),.8*this.g.w/p.N,j<n?this.g.Y(terms[j])-this.g.Y(0):0,c,null);if(j===impulse)ink.dot(this.g.X(j+.5),545,5,C.red);}
+ ink.text(82,584,L('Сумма столбиков точно восстанавливает eⁿ; при сгущении T остаётся равным 1.','The bars sum to eⁿ; refinement always keeps T = 1.'),16,C.muted);
+ return out(ink,[['G',fmt(data.G)],[L('Локальная невязка hᵖ','Local defect hᵖ'),fmt(data.local)],['|eⁿ|',fmt(Math.abs(data.values[n]))],['|G|ᴺ',fmt(data.G**p.N)]],range(n+1,j=>({step:j,time:j/p.N,error:data.values[j],G:data.G})));}};}
+function fourier(p,lang){const L=ll(lang),N=64;let original=range(N,j=>.6*Math.sin(TAU*3*j/N)+p.high*((j%2)?-1:1)),coef=K.dft(original);return {count:0,time:0,stop:'',step(){if(this.count>=90){this.stop=L('90 шагов. Сбросьте опыт или измените r.','90 steps. Reset or change r.');return;}coef=coef.map((z,k)=>scale(z,1-4*p.r*Math.sin(Math.PI*k/N)**2));this.count++;this.time=this.count*p.r/N**2;if(Math.max(...coef.map(abs))>1e6)this.stop=L('Рост превысил 10⁶. Опыт остановлен, данные не обрезаны.','Growth exceeded 10⁶. Stopped; data are not clipped.');},click(x,y){if(this.sg?.contains(x,y)){p.k=clamp(Math.round(this.sg.inverse(x,y)[0]),0,32);return true;}return false;},paint(x,y){if(!this.ug?.contains(x,y))return false;const [xx,yy]=this.ug.inverse(x,y);const u=K.idft(coef),j=clamp(Math.round(xx*N),0,N-1);u[j]=yy;coef=K.dft(u);original=u;this.count=0;this.time=0;this.stop='';return true;},render(){const u=K.idft(coef),en=K.foldedEnergy(coef),isolated=coef.map((z,k)=>k===p.k||k===(N-p.k)%N?z:Cx()),part=K.idft(isolated),ink=new Ink();ink.title(L('Сигнал и его спектральная энергия','Signal and its spectral energy'),L('Рисуйте сверху; выбирайте гармонику снизу','Draw above; select a harmonic below'));timing(ink,this.count);
+ const m=Math.max(1,1.15*maxabs(u));this.ug=panel(ink,L('Возмущение и выделенная гармоника','Perturbation and selected harmonic'),{y:110,h:205,ymin:-m,ymax:m,ylabel:'v'});this.ug.series(range(N,j=>j/N),u,C.white,2,true);this.ug.series(range(N,j=>j/N),part,C.yellow,2.8);
+ const emax=Math.max(.2,Math.max(...en)*1.15);this.sg=panel(ink,L('Вклад пары ±k в ‖v‖²; k = 0 и N/2 считаются один раз','Energy of pair ±k; k = 0 and N/2 count once'),{y:413,h:112,xmin:0,xmax:32,ymin:0,ymax:emax,xlabel:'k',ylabel:'Eₖ'});
+ for(let k=0;k<=32;k++){const w=10;ink.rect(this.sg.X(k)-w/2,this.sg.Y(en[k]),w,this.sg.Y(0)-this.sg.Y(en[k]),k===p.k?C.yellow:C.blue,null);if(k===p.k)ink.dot(this.sg.X(k),548,4,C.yellow);}
+ const real=sum(u.map(v=>v*v))/N,spec=sum(coef.map(z=>abs(z)**2));ink.text(85,584,L('DFT и обратное DFT пересчитываются из данных; это не заранее заданные столбики.','DFT and inverse DFT are computed from data, not from predesigned bars.'),15,C.muted);
+ return out(ink,[['‖v‖ₕ²',fmt(real)],['Σ |v̂ₖ|²',fmt(spec)],[L('Невязка Парсеваля','Parseval residual'),fmt(Math.abs(real-spec))],['G(k='+p.k+')',fmt(1-4*p.r*Math.sin(Math.PI*p.k/N)**2)]],coef.map((z,k)=>({k,real:z.re,imag:z.im,energy:abs(z)**2,amplification:1-4*p.r*Math.sin(Math.PI*k/N)**2})));}};}
+function godograph(p,lang){const L=ll(lang);return dynamic(function(){const ink=new Ink(),n=this.count,c=p.c,t=p.theta*Math.PI,z=K.gain(p.scheme,c,t),samples=range(501,j=>j/500*Math.PI),gains=samples.map(th=>abs(K.gain(p.scheme,c,th))),worst=Math.max(...gains);ink.title(L('Одна схема — множество независимых гармоник','One scheme — many independent harmonics'),L('Нажмите рядом с годографом, чтобы выбрать частоту','Click near the locus to choose a frequency'));timing(ink,n);
+ const bound=Math.max(1.5,1.1*worst);this.zg=panel(ink,'G(ϑ)',{x:100,y:105,w:285,h:285,xmin:-bound,xmax:bound,ymin:-bound,ymax:bound,xticks:4,yticks:4,xlabel:'Re',ylabel:'Im'});unit(ink,this.zg);ink.path(range(401,j=>{const v=K.gain(p.scheme,c,-Math.PI+TAU*j/400);return [this.zg.X(v.re),this.zg.Y(v.im)];}),C.blue,2.5);this.zg.dot(z.re,z.im,6,C.yellow);ink.arrow(this.zg.X(0),this.zg.Y(0),this.zg.X(z.re),this.zg.Y(z.im),C.yellow);
+ const g=panel(ink,L('Наихудшая гармоника','Worst harmonic'),{x:560,y:105,w:350,h:235,xmin:0,xmax:1,ymin:0,ymax:Math.max(1.3,worst*1.1),xlabel:'ϑ/π',ylabel:'|G|'});g.curve(x=>abs(K.gain(p.scheme,c,x*Math.PI)),C.blue,2.5);g.curve(()=>1,C.dim,1,2,true);g.dot(p.theta,abs(z),6,C.yellow);
+ ink.text(565,383,'G = '+fmt(z.re)+' '+(z.im<0?'−':'+')+' '+fmt(Math.abs(z.im))+'i',18,C.yellow);
+ const ns=range(n+1),a=ns.map(j=>j===0?1:abs(z)**j);lineLog(ink,L('Амплитуда выбранной моды','Selected modal amplitude'),ns,[{values:a,color:C.yellow}],{y:461,h:90});
+ return out(ink,[['ϑ / π',fmt(p.theta)],['|G(ϑ)|',fmt(abs(z))],['max |G|',fmt(worst)],[L('Амплитуда |G|ⁿ','Amplitude |G|ⁿ'),fmt(abs(z)**n)]],samples.map((th,i)=>{const v=K.gain(p.scheme,c,th);return {theta:th,real:v.re,imag:v.im,abs:gains[i]};}),L('Отрицательный G означает смену знака, а не обязательно рост.','Negative G means alternating sign, not necessarily growth.'));
+ },function(){this.time++;},100);}
+function mol(p,lang){const L=ll(lang),zs=K.modalSpectrum(p.operator,p.s,32),cs=K.contours((x,y)=>abs(K.stability(p.method,Cx(x,y))),-4,2,-3,3,90,90,1);return dynamic(function(){const n=this.count,ink=new Ink(),z=zs[p.k],R=K.stability(p.method,z);ink.title(L('Временной интегратор видит спектр пространственного оператора','The time integrator acts on the spatial spectrum'),L('Область |R(z)| ≤ 1, граница вычислена по функции R','Region |R(z)| ≤ 1; boundary computed from R'));timing(ink,n);
+ const g=panel(ink,L('Спектр τAₕ','Spectrum of τAₕ'),{x:92,y:110,w:370,h:370,xmin:-4,xmax:2,ymin:-3,ymax:3,xlabel:'Re z',ylabel:'Im z',xticks:3,yticks:3});
+ // Sparse interior hatching indicates the stable side, also for unbounded regions.
+ for(let j=0;j<24;j++)for(let i=0;i<24;i++){const x=-4+6*(i+.5)/24,y=-3+6*(j+.5)/24;if(abs(K.stability(p.method,Cx(x,y)))<1)ink.line(g.X(x)-3,g.Y(y)+3,g.X(x)+3,g.Y(y)-3,C.grid,1);}
+ contourDraw(ink,g,cs,C.green,2);let outsideView=0;zs.forEach((q,k)=>{if(q.re<-4||q.re>2||Math.abs(q.im)>3)outsideView++;else g.dot(q.re,q.im,k===p.k?6:3.5,k===p.k?C.yellow:abs(K.stability(p.method,q))>1+1e-10?C.red:C.blue);});
+ const ns=range(n+1),num=ns.map(j=>abs(cpow(R,j))),truth=ns.map(j=>Math.exp(j*z.re));lineLog(ink,L('Одна мода: |R(z)|ⁿ и |exp(nz)|','One mode: |R(z)|ⁿ and |exp(nz)|'),ns,[{values:num,color:C.yellow},{values:truth,color:C.white}],{x:590,y:160,w:320,h:185});
+ ink.text(590,400,'z = '+fmt(z.re)+' '+(z.im<0?'−':'+')+' '+fmt(Math.abs(z.im))+'i',17,C.blue);ink.text(590,432,'|R(z) − exp(z)| = '+fmt(abs(sub(R,scale(expi(z.im),Math.exp(z.re))))),17,C.yellow);
+ ink.text(95,530,L('Голубое: |R| ≤ 1 · красное: |R| > 1 · жёлтое: выбранная мода','Blue: |R| ≤ 1 · red: |R| > 1 · yellow: selected mode'),16,C.muted);
+ ink.text(95,574,p.operator==='diffusion'?'s = r = τ / h²':'s = Co = τ / h'+(p.operator==='mixed'?';  r = 0.15Co':''),17,C.white);
+ const outside=zs.filter(v=>abs(K.stability(p.method,v))>1+1e-10).length;return out(ink,[[L('Мод вне области |R|≤1','Modes outside |R|≤1'),outside+'/32'],['|R(zₖ)|',fmt(abs(R))],[L('Точная амплитуда ОДУ','Exact ODE amplitude'),fmt(Math.exp(n*z.re))],[L('Вне окна графика','Outside plotting window'),outsideView]],zs.map((v,k)=>({k,real:v.re,imag:v.im,absR:abs(K.stability(p.method,v))})),L('Сравнение с точной ОДУ отделяет временную ошибку от пространственной.','The exact ODE comparison isolates temporal error from spatial error.'));},function(){this.time++;},60);}
+function roots(p,lang){const L=ll(lang);return dynamic(function(){const n=this.count,data=K.leapfrogSequence(p.co,p.theta*Math.PI,p.eps,100),ink=new Ink();ink.title(L('Что хранится во втором временном слое','What the second time layer stores'),L('Старт: v̂⁰ = 1, v̂¹ = z₊ + ε','Startup: v̂⁰ = 1, v̂¹ = z₊ + ε'));timing(ink,n);
+ const g=panel(ink,L('Корни характеристического полинома','Roots of the characteristic polynomial'),{x:100,y:110,w:280,h:280,xmin:-1.7,xmax:1.7,ymin:-1.7,ymax:1.7,xlabel:'Re z',ylabel:'Im z'});unit(ink,g);data.roots.forEach((z,i)=>{g.dot(z.re,z.im,i?5:8,i?C.red:C.blue);ink.text(g.X(z.re)+12,g.Y(z.im)+(i?24:-12),i?'z₋':'z₊',18,i?C.red:C.blue);});
+ const shown=data.v.slice(0,n+1),m=Math.max(1.2,maxabs(shown.flatMap(z=>[z.re,z.im]))*1.1),q=panel(ink,L('Реальная рекуррентная последовательность','The actual recurrence sequence'),{x:550,y:110,w:355,h:250,xmin:0,xmax:100,ymin:-m,ymax:m,xlabel:'n',ylabel:'Re, Im'});q.series(range(shown.length),shown.map(z=>z.re),C.yellow,1.8,true);q.series(range(shown.length),shown.map(z=>z.im),C.blue,1.8);
+ const mod=shown.map(abs);lineLog(ink,L('Модуль |v̂ⁿ|: норма может расти и при |z| = 1','Magnitude |v̂ⁿ|: growth may occur even when |z| = 1'),range(shown.length),[{values:mod,color:C.yellow}],{y:457,h:92});
+ const gap=abs(sub(data.roots[0],data.roots[1]));return out(ink,[['|z₊|',fmt(abs(data.roots[0]))],['|z₋|',fmt(abs(data.roots[1]))],['|z₊ − z₋|',fmt(gap)],['|v̂ⁿ|',fmt(abs(data.v[n]))]],shown.map((v,j)=>({n:j,real:v.re,imag:v.im,abs:abs(v)})),gap<1e-8?L('Кратный корень: ошибка старта создаёт полиномиальный рост.','Repeated root: startup error creates polynomial growth.'):'',gap<1e-8);
+ },function(){this.time++;},100);}
+function nonnormal(p,lang){const L=ll(lang),A=[p.r,p.K,0,p.s],norms=range(81,n=>K.normMat2(K.matPow2(A,n))),rho=Math.max(p.r,p.s),levels=[1,2,5,10,30],colors=[C.grid,C.dim,C.green,C.blue,C.red],cont=levels.map(v=>K.contours((x,y)=>Math.log10(K.resolventNorm(p.r,p.s,p.K,Cx(x,y))),-1.2,2.2,-1.7,1.7,60,60,Math.log10(v)));let probe=Cx(1.15,.12);const m=dynamic(function(){const n=this.count,ink=new Ink(),An=K.matPow2(A,n),R=Math.max(1.2,K.normMat2(An)*1.15);ink.title(L('Один спектр допускает совершенно разное усиление','One spectrum can hide very different amplification'),L('Изменяйте K, не меняя собственных значений r и s','Change K while keeping eigenvalues r and s fixed'));timing(ink,n);
+ const g=panel(ink,L('Образ единичной окружности под Gⁿ','Image of the unit circle under Gⁿ'),{x:95,y:110,w:280,h:280,xmin:-R,xmax:R,ymin:-R,ymax:R,xlabel:'v₁',ylabel:'v₂',xticks:2,yticks:2});unit(ink,g);const ellipse=range(201,j=>{const u=Math.cos(TAU*j/200),v=Math.sin(TAU*j/200);return [g.X(An[0]*u+An[1]*v),g.Y(An[2]*u+An[3]*v)];});ink.path(ellipse,C.yellow,2.5);const a=p.angle*Math.PI/180,u=Math.cos(a),v=Math.sin(a);ink.arrow(g.X(0),g.Y(0),g.X(An[0]*u+An[1]*v),g.Y(An[2]*u+An[3]*v),C.red);
+ this.zg=panel(ink,L('Контуры ‖(zI−G)⁻¹‖₂','Contours of ‖(zI−G)⁻¹‖₂'),{x:590,y:110,w:280,h:280,xmin:-1.2,xmax:2.2,ymin:-1.7,ymax:1.7,xlabel:'Re z',ylabel:'Im z',xticks:2,yticks:2});unit(ink,this.zg,C.muted);cont.forEach((cc,i)=>contourDraw(ink,this.zg,cc,colors[i],1.2));this.zg.dot(p.r,0,5,C.yellow);this.zg.dot(p.s,0,4,C.yellow);this.zg.dot(probe.re,probe.im,5,C.white);
+ ink.text(585,418,L('Уровни: 1, 2, 5, 10, 30','Levels: 1, 2, 5, 10, 30'),14,C.muted);
+ const q=panel(ink,L('Норма степени и спектральный радиус в степени','Power norm versus powered spectral radius'),{x:85,y:467,w:825,h:78,xmin:0,xmax:80,ymin:0,ymax:Math.max(...norms)*1.08,xlabel:'n',ylabel:'‖Gⁿ‖₂'});q.series(range(81),norms,C.yellow);q.series(range(81),range(81,j=>rho**j),C.blue);q.dot(n,norms[n],5,C.red);
+ const resol=K.resolventNorm(p.r,p.s,p.K,probe),lower=abs(probe)>1?(abs(probe)-1)*resol:NaN;return out(ink,[['ρ(G)',fmt(rho)],['‖Gⁿ‖₂',fmt(norms[n])],['max₀≤ₘ≤₈₀ ‖Gᵐ‖₂',fmt(Math.max(...norms))],['(|z|−1)‖R(z)‖₂',Number.isFinite(lower)?fmt(lower):L('Выберите |z| > 1','Choose |z| > 1')]],range(81,j=>({n:j,power_norm:norms[j],spectral_power:rho**j})),L('Фиксированная матрица остаётся устойчивой; временный рост не равен неограниченному.','The fixed matrix remains power bounded; transient growth is not unbounded growth.'));
+ },function(){this.time++;},80);m.click=function(x,y){if(!this.zg?.contains(x,y))return false;const [re,im]=this.zg.inverse(x,y);probe=Cx(re,im);return true;};return m;}
+function sbp(p,lang){const L=ll(lang);let selected=[0,0];return {click(x,y){const cell=260/(p.N+1),i=Math.floor((y-115)/cell),j=Math.floor((x-120)/cell);if(i<0||j<0||i>p.N||j>p.N)return false;selected=[i,j];return true;},render(){const d=K.sbp(p.N,p.weight),xs=range(p.N+1,j=>j/p.N),u=xs.map(x=>.4+Math.sin(Math.PI*x)+.3*x),v=xs.map(x=>.6*Math.cos(TAU*x+p.phase*Math.PI)+.5*x),du=K.mv(d.D,u),dv=K.mv(d.D,v),terms=u.map((a,i)=>d.H[i]*(a*dv[i]+du[i]*v[i])),boundary=u.at(-1)*v.at(-1)-u[0]*v[0],ink=new Ink();ink.title(L('Интегрирование по частям — точное матричное тождество','Integration by parts as an exact matrix identity'),L('Меняется только квадратура H; оператор D остаётся тем же','Only quadrature H changes; the operator D stays fixed'));
+ const cell=260/(p.N+1);const matrix=(M,x,title)=>{ink.text(x,84,title,18,C.white);M.forEach((r,i)=>r.forEach((val,j)=>{const xx=x+j*cell,yy=115+i*cell,col=val>1e-10?'#38503a':val< -1e-10?'#603f39':null;ink.rect(xx,yy,cell-1,cell-1,col,C.grid,.7);if(Math.abs(val)>1e-10)ink.text(xx+cell/2,yy+cell*.67,fmt(val,2),Math.min(17,cell*.56),Math.abs(val)>1?C.red:C.white,'center');}));};matrix(d.M,120,'HD + DᵀH');matrix(d.B,600,'B = diag(−1, 0, …, 0, 1)');
+ const [i,j]=selected;ink.rect(120+j*cell,115+i*cell,cell,cell,null,C.yellow,2.5);ink.text(435,235,'=',32,d.defect<1e-12?C.green:C.red);if(d.defect>1e-12)ink.line(427,240,456,218,C.red,2.5);
+ ink.text(121,402,'H₀₀ = Hᴺᴺ = '+fmt(p.weight)+'h',17,C.blue);ink.text(600,402,'(HD+DᵀH)ᵢⱼ − Bᵢⱼ = '+fmt(d.M[i][j]-d.B[i][j]),16,C.yellow);
+ const lim=padded(terms),g=panel(ink,L('Слагаемые uⱼHⱼ(Dv)ⱼ + (Du)ⱼHⱼvⱼ','Terms uⱼHⱼ(Dv)ⱼ + (Du)ⱼHⱼvⱼ'),{x:100,y:460,w:780,h:70,xmin:0,xmax:p.N,ymin:-lim,ymax:lim,yticks:2,xlabel:'j',ylabel:'bⱼ'});terms.forEach((t,k)=>ink.rect(g.X(k)-8,g.Y(Math.max(0,t)),16,Math.abs(g.Y(t)-g.Y(0)),t>=0?C.blue:C.red,null));
+ ink.text(100,582,'Σ bⱼ = '+fmt(sum(terms))+';    uᴺvᴺ − u₀v₀ = '+fmt(boundary),18,C.white);
+ return out(ink,[[L('Крайний вес / h','Endpoint weight / h'),p.weight],[L('Невязка матрицы, max|·|','Matrix defect, max|·|'),fmt(d.defect)],[L('Сумма по сетке','Discrete sum'),fmt(sum(terms))],[L('Граничное выражение','Boundary term'),fmt(boundary)]],d.M.flatMap((r,i)=>r.map((value,j)=>({row:i,column:j,symmetric_Q:value,B:d.B[i][j],defect:value-d.B[i][j]}))));}};}
+function sat(p,lang){const L=ll(lang),h=1/p.N,dt=.12*h/(1+p.sigma),xs=range(p.N+1,j=>j*h),input=t=>p.input==='pulse'&&t>=0&&t<=.3?Math.sin(Math.PI*t/.3)**2:0,initial=x=>Math.sin(Math.PI*x)*Math.exp(-(((x-.22)/.075)**2));let u=xs.map(initial),history=[{t:0,E:K.satEnergy(u,0,p.sigma,h).E}];return {count:0,time:0,stop:'',step(){if(this.time>=1.25){this.stop=L('Возмущение прошло область: t ≥ 1.25.','The perturbation crossed the domain: t ≥ 1.25.');return;}for(let l=0;l<4;l++){u=K.rk4step(u,this.time,dt,(v,t)=>K.satRhs(v,input(t),p.sigma,h));this.time+=dt;}this.count++;const E=K.satEnergy(u,input(this.time),p.sigma,h).E;history.push({t:this.time,E});if(E>1e5)this.stop=L('Энергия превысила 10⁵: остановлено без обрезания данных.','Energy exceeded 10⁵: stopped without clipping data.');},render(){const ink=new Ink(),e=K.satEnergy(u,input(this.time),p.sigma,h),truth=xs.map(x=>x>=this.time?initial(x-this.time):input(this.time-x));ink.title(L('Кто поставляет энергию: вход или ошибочное замыкание?','Who supplies energy: inflow or a faulty closure?'),L('Голубое — точный перенос; жёлтое — решение SBP–SAT','Blue: exact advection; yellow: SBP–SAT solution'));
+ const m=Math.max(1.15,padded(u)),lower=Math.min(-.15,1.15*Math.min(...u,...truth)),g=panel(ink,L('Поле и входное значение','Field and inflow value'),{y:110,h:205,ymin:lower,ymax:m,ylabel:'u'});g.series(xs,truth,C.blue,2);g.series(xs,u,C.yellow,2.5);g.dot(0,input(this.time),6,C.red);
+ const Emax=Math.max(.05,...history.map(v=>v.E))*1.12,eg=panel(ink,L('Энергия E = uᵀHu/2','Energy E = uᵀHu/2'),{x:90,y:431,w:420,h:100,xmin:0,xmax:Math.max(.2,this.time),ymin:0,ymax:Emax,ylabel:'E',xlabel:'t',yticks:2});eg.series(history.map(v=>v.t),history.map(v=>v.E),C.yellow,2.5);
+ const terms=[e.out,e.closure,e.inflow],lim=Math.max(.02,padded(terms)),bg=panel(ink,L('Три вклада в Ė','Three contributions to Ė'),{x:630,y:431,w:270,h:100,xmin:0,xmax:3,ymin:-lim,ymax:lim,xticks:0,yticks:2,xlabel:'',ylabel:'Ė'});terms.forEach((v,j)=>{ink.rect(bg.X(j+.22),bg.Y(Math.max(0,v)),bg.w/3*.55,Math.abs(bg.Y(v)-bg.Y(0)),v>0?C.red:C.blue,null);ink.text(bg.X(j+.5),561,[L('Выход','Outflow'),L('Штраф','Closure'),L('Вход','Inflow')][j],14,C.muted,'center');});
+ return out(ink,[['t',fmt(this.time)],['E',fmt(e.E)],['dE/dt',fmt(e.dot)],[L('Невязка энерготождества','Energy identity residual'),fmt(e.residual)]],xs.map((x,i)=>({x,u:u[i],exact:truth[i],time:this.time})),p.sigma<.5&&p.input==='zero'?L('σ < 1/2: однородная граница может создавать энергию.','σ < 1/2: a homogeneous boundary can create energy.'):L('Рост при ненулевом входе нужно сравнивать с энергией, внесённой входными данными.','With nonzero inflow, compare growth with the energy supplied by the input.'),p.sigma<.5);}};}
+function boundary(p,lang){const L=ll(lang),N=48,mode=K.boundaryMode(p.co,p.b),eps=10**p.logeps;let u=range(N+1,j=>eps*(mode.localized?mode.kappa**j:Math.exp(-j/3))),history=[K.normInf(u)];return {count:0,time:0,stop:'',step(){if(this.count>=100){this.stop=L('100 шагов.','100 steps.');return;}u=K.boundaryStep(u,p.co,p.b);this.count++;this.time=this.count*p.co/N;history.push(K.normInf(u));},render(){const n=this.count,ink=new Ink();ink.title(L('Устойчивая внутренняя схема не защищает от плохой границы','A stable interior scheme cannot protect against a bad boundary'),L('Внутри Co ≤ 1; меняется только v₀ⁿ⁺¹ = b v₀ⁿ','Interior Co ≤ 1; only v₀ⁿ⁺¹ = b v₀ⁿ changes'));timing(ink,n);
+ const m=Math.max(eps*1.2,1.15*maxabs(u)),lower=Math.min(-.1*m,1.15*Math.min(...u)),g=panel(ink,L('Возмущение у входной границы','Perturbation near the inflow boundary'),{x:80,y:118,w:540,h:240,xmin:0,xmax:48,ymin:lower,ymax:m,xlabel:'j',ylabel:'vⱼ'});g.series(range(N+1),u,C.yellow,2.5,true);if(mode.localized)g.series(range(N+1),range(N+1,j=>eps*p.b**n*mode.kappa**j),C.blue,1.5);
+ const zg=panel(ink,L('Временной множитель z = b','Temporal factor z = b'),{x:715,y:130,w:170,h:170,xmin:-1.4,xmax:1.4,ymin:-1.4,ymax:1.4,xlabel:'Re',ylabel:'Im',xticks:2,yticks:2});unit(ink,zg);zg.dot(p.b,0,7,p.b>1?C.red:C.green);
+ ink.text(700,357,'κ = '+fmt(mode.kappa),18,C.yellow);ink.text(700,387,mode.localized?'|κ| < 1':'|κ| ≥ 1',17,C.muted);
+ lineLog(ink,L('Норма возмущения во времени','Perturbation norm over time'),range(history.length),[{values:history,color:C.yellow}],{y:455,h:92});
+ return out(ink,[[L('Внутреннее Co','Interior Co'),p.co],['z',p.b],['κ',fmt(mode.kappa)],[L('‖vⁿ‖∞ / ε','‖vⁿ‖∞ / ε'),fmt(K.normInf(u)/eps)]],u.map((value,j)=>({j,value,n,kappa:mode.kappa,z:p.b})),mode.localized?L('Точная локализованная мода ε bⁿ κʲ: b > 1 даёт рост, b < 1 — затухание по времени.','Exact localized mode ε bⁿ κʲ: b > 1 grows in time; b < 1 decays.'):L('Локализованной моды этого вида нет; показано развитие локального начального возмущения.','This localized mode is unavailable; a local initial perturbation is evolved instead.'),p.b>1);}};}
+function modified(p,lang){const L=ll(lang);return dynamic(function(){const ink=new Ink(),n=this.count,t=p.theta*Math.PI,r=K.modifiedRate(p.w,p.co,t),thetas=range(401,j=>j/400*Math.PI),rates=thetas.map(t=>K.modifiedRate(p.w,p.co,t));ink.title(L('Полный символ против первого дифференциального приближения','The full symbol versus the first modified equation'),L('Сравниваются скорости изменения амплитуды, не просто два похожих профиля','Compare rates of amplitude change, not merely two similar profiles'));timing(ink,n);
+ const lo=Math.max(-5,Math.min(-.05,...rates.map(v=>v.exact).filter(Number.isFinite),...rates.map(v=>v.approx))),hi=Math.max(.05,...rates.map(v=>v.exact).filter(Number.isFinite),...rates.map(v=>v.approx)),g=panel(ink,L('Логарифм множителя за один шаг','Logarithm of the one-step multiplier'),{x:90,y:118,w:820,h:240,xmin:0,xmax:1,ymin:lo,ymax:hi*1.1,xlabel:'kh/π',ylabel:'log |G|'});g.series(thetas.map(v=>v/Math.PI),rates.map(v=>v.exact),C.yellow,2.6);g.series(thetas.map(v=>v/Math.PI),rates.map(v=>v.approx),C.blue,2);g.dot(p.theta,r.exact,6,C.yellow);g.dot(p.theta,r.approx,5,C.blue);
+ legend(ink,[[L('Полный символ','Full symbol'),C.yellow],[L('Первое приближение','First approximation'),C.blue]],394,100,430);
+ const ns=range(n+1),exact=ns.map(j=>j===0?1:Math.exp(Math.min(690,j*r.exact))),ap=ns.map(j=>Math.exp(Math.min(690,j*r.approx)));lineLog(ink,L('Накопленное изменение выбранной гармоники','Accumulated change of selected harmonic'),ns,[{values:exact,color:C.yellow},{values:ap,color:C.blue}],{y:463,h:85});
+ return out(ink,[['μₙᵤₘ / h',fmt((1-2*p.w-p.co)/2)],['log |G|',fmt(r.exact)],['−μk²τ',fmt(r.approx)],[L('Разность скоростей','Rate difference'),fmt(Math.abs(r.exact-r.approx))]],rates.map((r,i)=>({kh:thetas[i],log_abs_G:r.exact,modified_prediction:r.approx})),!Number.isFinite(r.exact)?L('G = 0: мода полностью погашена за один шаг; log|G| = −∞.','G = 0: the mode is annihilated in one step; log|G| = −∞.'):L('При kh ≈ π разложение по малому kh количественно ненадёжно.','Near kh ≈ π, a small-kh expansion is not quantitatively reliable.'));
+ },function(){this.time++;},90);}
+function packet(p,lang){const L=ll(lang);return dynamic(function(){const n=this.count,d=K.packet(p.co,p.k0,p.width,n),ink=new Ink();ink.title(L('Гребни и огибающая измеряют разные скорости','Crests and envelope measure different velocities'),L('Белое: точная огибающая PDE · жёлтое: численная · голубое: несущая','White: exact PDE envelope · yellow: numerical · blue: carrier'));timing(ink,n);
+ const g=panel(ink,L('Пакет без диссипации','A packet with no dissipation'),{x:80,y:112,w:840,h:232,ymin:-1.05,ymax:1.12,ylabel:'u, |ψ|'});g.series(d.xs,d.exactEnv,C.white,1.8);g.series(d.xs,d.u,C.blue,1.5);g.series(d.xs,d.env,C.yellow,2.8);
+ const ph=panel(ink,L('Фазовая и групповая скорости','Phase and group velocities'),{x:85,y:453,w:825,h:95,xmin:0,xmax:1,ymin:-1.3,ymax:1.3,xlabel:'kh/π',ylabel:'v / a',yticks:2});ph.curve(x=>K.dispersion(p.co,x*Math.PI).vp,C.blue,2);ph.curve(x=>K.dispersion(p.co,x*Math.PI).vg,C.yellow,2.5);ph.dot(2*p.k0/128,d.vp,5,C.blue);ph.dot(2*p.k0/128,d.vg,5,C.yellow);
+ ink.text(85,386,L('На выбранной ветви высокочастотная огибающая может двигаться в обратную сторону.','On the selected branch, the high-frequency envelope can move backwards.'),16,C.muted);
+ return out(ink,[['t',fmt(d.time)],['k₀h / π',fmt(2*p.k0/128)],['vₚ / a',fmt(d.vp)],['v𝗀 / a',fmt(d.vg)]],d.xs.map((x,i)=>({x,n,time:d.time,numerical:d.u[i],envelope:d.env[i],exact:d.exact[i],exact_envelope:d.exactEnv[i]})),L('Выбрана одна спектральная ветвь; паразитная мода не подмешана в старт.','One spectral branch is selected; startup contains no computational mode.'));
+ },function(){this.time=(this.count+1)*p.co/128;},100);}
+function runge(p,lang){const L=ll(lang),rows=K.rungeStudy(p.base,p.path,.05,p.bias);return {render(){const ink=new Ink(),trip=K.rungeTriplet(rows,p.triplet,p.p),reveal=p.reveal==='show';ink.title(L('Три сетки видят различия, но не общую систематическую ошибку','Three grids see differences, not a common systematic error'),L('Одинаковые T = 0.05 и точка x = 1/2; числа получены из дискретной схемы','Same T = 0.05 and point x = 1/2; values come from the discrete scheme'));
+ const xx=rows.map(r=>Math.log2(r.N)),ymin=Math.min(...rows.map(r=>r.value),...(reveal?[rows[0].truth,trip.estimate]:[trip.estimate]))-.003,ymax=Math.max(...rows.map(r=>r.value))+.003,g=panel(ink,L('Наблюдаемый функционал J','Observed functional J'),{x:95,y:120,w:370,h:250,xmin:xx[0],xmax:xx.at(-1),ymin,ymax,xlabel:'log₂ N',ylabel:'J'});g.series(xx,rows.map(r=>r.value),C.blue,2.5,true);for(let j=p.triplet;j<p.triplet+3;j++)g.dot(xx[j],rows[j].value,6,C.yellow);g.dot(xx[p.triplet+2],trip.estimate,6,C.red);if(reveal)g.curve(()=>rows[0].truth,C.white,1.8,2,true);
+ const delta=rows.slice(1).map((r,j)=>Math.abs(r.value-rows[j].value)),xx2=xx.slice(1),all=logs([...delta,...(reveal?rows.map(r=>r.error):[])]).filter(Number.isFinite),q=panel(ink,reveal?L('Разность сеток и истинная ошибка','Grid difference and actual error'):L('Разности соседних сеток','Differences between adjacent grids'),{x:590,y:120,w:315,h:250,xmin:xx[0],xmax:xx.at(-1),ymin:Math.min(...all)-.15,ymax:Math.max(...all)+.15,xlabel:'log₂ N',ylabel:'log₁₀'});q.series(xx2,logs(delta),C.blue,2.5,true);if(reveal)q.series(xx,logs(rows.map(r=>r.error)),C.red,2.5,true);
+ ink.text(95,422,L('N              τ                  J(N)               разность с предыдущим','N              τ                  J(N)               difference from previous'),15,C.muted);
+ rows.forEach((r,j)=>{const yy=450+j*23;ink.text(95,yy,r.N,16,C.white);ink.text(210,yy,fmt(r.dt),16,C.muted);ink.text(375,yy,r.value.toFixed(9),16,j>=p.triplet&&j<p.triplet+3?C.yellow:C.white);ink.text(650,yy,j?fmt(Math.abs(r.value-rows[j-1].value)):'—',16,C.blue);});
+ return out(ink,[[L('Наблюдаемый порядок p','Observed order p'),fmt(trip.p)],['Jᴿ (p='+p.p+')',fmt(trip.estimate)],[L('Оценка ошибки Рунге','Runge error estimate'),fmt(trip.errorEstimate)],[L('Истинная ошибка мелкой сетки','Actual fine-grid error'),reveal?fmt(trip.actual):L('скрыта','hidden')]],rows.map(r=>reveal?r:(({truth,error,...visible})=>visible)(r)),p.bias?L('Общая добавка η сокращается во всех сеточных разностях.','The common bias η cancels in every grid difference.'):L('Сдвигайте тройку сеток; порядок должен стабилизироваться, а не просто однажды совпасть.','Shift the grid triplet: the observed order should stabilize, not merely match once.'),Boolean(p.bias));}};}
+function mms(p,lang){const L=ll(lang),rich=p.rich==='rich',all=[25,50,100,200,400].map(N=>K.mmsSolve(N,p.co,.6,rich,p.bug)),d=all.find(v=>v.N===p.N);return {render(){const ink=new Ink();ink.title(L('Искусственное решение проверяет реальный программный путь','A manufactured solution tests the real code path'),rich?'uᵐˢ = exp(−t)[1 + 0.2x + sin(2πx)]':'uᵐˢ = exp(−t)sin(2πx)');
+ const m=padded([...d.u,...d.exact]),g=panel(ink,L('Результат и заданное искусственное решение','Computed and manufactured solutions'),{x:80,y:118,w:460,h:235,ymin:-m,ymax:m,xlabel:'x',ylabel:'u'});g.series(d.xs,d.exact,C.white,2);g.series(d.xs,d.u,C.yellow,2.5);g.dot(0,d.u[0],6,C.red);
+ const xx=all.map(v=>Math.log2(v.N)),vals=logs(all.flatMap(v=>[v.L1,v.L2,v.Linf])).filter(Number.isFinite),q=panel(ink,L('Измеренный порядок','Measured convergence order'),{x:660,y:118,w:260,h:235,xmin:xx[0],xmax:xx.at(-1),ymin:Math.min(...vals)-.1,ymax:Math.max(...vals)+.1,xlabel:'log₂ N',ylabel:'log₁₀ E'});q.series(xx,logs(all.map(v=>v.L1)),C.green,2,true);q.series(xx,logs(all.map(v=>v.L2)),C.blue,2.4,true);q.series(xx,logs(all.map(v=>v.Linf)),C.red,2,true);
+ const coords=[90,235,420,615,790];[L('Сетка N','Grid N'),'L₁','L₂','L∞',L('p по L₂','p from L₂')].forEach((s,j)=>ink.text(coords[j],423,s,16,C.muted));all.forEach((r,j)=>{const order=j?Math.log2(all[j-1].L2/r.L2):NaN;[r.N,fmt(r.L1),fmt(r.L2),fmt(r.Linf),j?fmt(order):'—'].forEach((s,k)=>ink.text(coords[k],451+j*26,s,17,k===4?C.yellow:C.white));});
+ const last=all.at(-1),order=Math.log2(all.at(-2).L2/last.L2),blind=p.bug==='boundary'&&!rich;const result=out(ink,[[L('Число узлов','Node count'),p.N+1],['L₂ (N='+p.N+')',fmt(d.L2)],[L('p на последних сетках','p on finest levels'),fmt(order)],[L('Ожидаемый порядок','Expected order'),'1']],all.map((r,j)=>({N:r.N,h:r.h,steps:r.steps,L1:r.L1,L2:r.L2,Linf:r.Linf,p_observed:j?Math.log2(all[j-1].L2/r.L2):''})),blind?L('Ошибка есть, но g(t) ≡ 0: тест не возбуждает дефект границы.','The bug is present, but g(t) ≡ 0: this test does not exercise the boundary defect.'):L('Проверьте все нормы. MMS не является валидацией физической модели.','Check all norms. MMS does not validate the physical model.'),blind);
+ result.equation=rich?'uₜ + uₓ = fᵐˢ; uᵐˢ = e⁻ᵗψ(x); ψ = 1 + 0.2x + sin(2πx); fᵐˢ = e⁻ᵗ(ψ′ − ψ)':null;return result;
+ }};}
+function createLab(id,p,lang='ru'){
+ const fn={'error-budget':errorBudget,consistency,accumulation,fourier,godograph,mol,roots,nonnormal,sbp,sat,boundary,modified,packet,runge,mms}[id];if(!fn)throw Error('Unknown laboratory: '+id);const model=fn(p,lang);
+ if(id==='godograph')model.click=function(x,y){if(!this.zg?.contains(x,y))return false;let best=Infinity,theta=0;for(let j=0;j<=400;j++){const a=K.gain(p.scheme,p.c,j/400*Math.PI),dist=(this.zg.X(a.re)-x)**2+(this.zg.Y(a.im)-y)**2;if(dist<best){best=dist;theta=j/400;}}p.theta=Math.round(theta*100)/100;return true;};
+ return model;
+}
+
+return {createLab};
+})();
+__modules['app.js']=(()=>{
+const {Board,Ink,C,fmt}=__modules['board.js'];
+const {demos,groups,sources,defaults,translate}=__modules['catalog.js'];
+const {createLab}=__modules['labs.js'];
+const $=id=>document.getElementById(id),paramsURL=new URLSearchParams(location.search);
+let lang=paramsURL.get('lang')==='en'?'en':'ru',filter=-1,active=null,model=null,board=null,params={},lastView=null,playing=false,accumulator=0,lastFrame=0,raf=0,galleryBoards=[],lastGalleryScroll=0;
+const states=new Map();
+const T=value=>translate(value,lang),L=(ru,en)=>lang==='en'?en:ru;
+const quantize=(v,c)=>Number(Math.max(c.min,Math.min(c.max,c.min+Math.round((Number(v)-c.min)/c.step)*c.step)).toFixed(10));
+const makeModel=(id,p)=>createLab(id,p,lang);
+const ui={
+ 'mobile-board-hint':['↔ Доску можно прокручивать по горизонтали','↔ Scroll the board horizontally to see both panels'],
+ 'catalogue-label':['ИНТЕРАКТИВНЫЙ КАТАЛОГ','INTERACTIVE CATALOGUE'],
+ 'catalogue-title':['Почему вычислению можно доверять?','Why should we trust a computation?'],
+ 'catalogue-description':['Пятнадцать опытов: невязка, усиление ошибок, границы и проверка кода.','Fifteen experiments: residuals, error amplification, boundaries and code verification.'],
+ 'catalogue-count-label':['опытов<br>с объяснениями','explained<br>experiments'],
+ 'catalogue-help':['Нажмите на карточку. Опыт откроется здесь же. Esc — вернуться в каталог.','Select a card to open the experiment here. Esc returns to the catalogue.'],
+ 'control-heading':['УСЛОВИЯ ОПЫТА','EXPERIMENT PARAMETERS'],'preset-heading':['ПОПРОБУЙТЕ','TRY THESE'],
+ 'defaults':['Параметры по умолчанию','Default parameters'],'question-heading':['Что проверить?','What should you investigate?'],
+ 'math-heading':['Математика опыта','Mathematical explanation'],'assumptions-heading':['Соглашения и ограничения','Conventions and limitations'],
+ 'sources-heading':['Источники и идеи','Sources and ideas'],'step':['Шаг','Step'],'reset':['↺ Сброс','↺ Reset'],'speed-label':['шаг/с','steps/s']
+};
+function safeStorage(key,value){try{if(value===undefined)return localStorage.getItem(key);localStorage.setItem(key,value);}catch{}return null;}
+function applyTheme(theme){document.documentElement.dataset.theme=theme;document.documentElement.classList.toggle('theme-dark',theme==='dark');safeStorage('site-theme',theme);$('theme-button').setAttribute('aria-label',L('Переключить светлую / тёмную тему','Toggle light / dark theme'));}
+applyTheme(safeStorage('site-theme')||((document.documentElement.classList.contains('theme-dark')||document.documentElement.dataset.theme==='dark')?'dark':'light'));
+function setLanguage(){document.documentElement.lang=lang;document.title=L('Лекция 4 · Свойства разностных схем','Lecture 4 · Properties of difference schemes');
+  $('page-title').innerHTML=L('Лекция 4 <span>Свойства разностных схем</span>','Lecture 4 <span>Properties of difference schemes</span>');
+  $('course-link').textContent='←';
+  $('language-button').textContent=lang==='en'?'RU':'EN';$('language-button').setAttribute('aria-label',lang==='en'?'Русский':'English');
+  for(const[id,s]of Object.entries(ui))$(id).innerHTML=T(s);
+  $('previous').setAttribute('aria-label',L('Предыдущий опыт','Previous experiment'));$('next').setAttribute('aria-label',L('Следующий опыт','Next experiment'));$('close-demo').setAttribute('aria-label',L('Вернуться в каталог','Return to catalogue'));
+  $('fullscreen').title=L('Полный экран','Full screen');
+}
+function thumbnail(d){
+  const p={...defaults(d)},m=makeModel(d.id,p);
+  if(d.dynamic)for(let j=0;j<Math.min(12,d.thumbSteps??12);j++)m.step();
+  const ink=m.render().ink;
+  // Same mathematical view as the laboratory. Do not distort data for thumbnails.
+  ink.cmd=ink.cmd.filter(c=>c.type!=='text'||(c.y>70&&c.y<520));
+  return ink;
+}
+function buildGallery(){
+  for(const b of galleryBoards)b.destroy();galleryBoards=[];$('catalogue-grid').replaceChildren();$('filters').replaceChildren();
+  const addFilter=(n,label)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.className=n===filter?'active':'';b.setAttribute('aria-pressed',String(n===filter));b.onclick=()=>{filter=n;buildGallery();};$('filters').append(b);};
+  addFilter(-1,L('Все опыты','All experiments'));groups.forEach((g,i)=>addFilter(i,T(g)));
+  demos.forEach((d,i)=>{if(filter!==-1&&d.group!==filter)return;
+    const card=document.createElement('button');card.className='demo-card';card.type='button';card.dataset.demo=d.id;card.setAttribute('aria-label',`${i+1}. ${T(d.title)}`);
+    const image=document.createElement('div');image.className='thumbnail';image.setAttribute('aria-hidden','true');
+    const text=document.createElement('div');text.className='card-text';
+    const num=document.createElement('span');num.className='card-num';num.textContent=String(i+1).padStart(2,'0');
+    const words=document.createElement('div');const title=document.createElement('h3');title.className='card-title';title.textContent=T(d.title);const short=document.createElement('p');short.className='card-short';short.textContent=T(d.short);const group=document.createElement('span');group.className='card-group';group.textContent=T(groups[d.group]);words.append(title,short,group);text.append(num,words);card.append(image,text);card.onclick=()=>{lastGalleryScroll=scrollY;location.hash=d.id;};$('catalogue-grid').append(card);
+    const b=new Board(image,{preview:true});b.render(thumbnail(d));galleryBoards.push(b);
+  });
+}
+function buildControls(){
+  $('controls').replaceChildren();$('presets').replaceChildren();
+  for(const c of active.controls){const row=document.createElement('div');row.className='control';
+    const label=document.createElement('label');label.htmlFor='control-'+c.key;label.textContent=T(c.label);row.append(label);
+    if(c.type==='range'){
+      const wrap=document.createElement('div');wrap.className='control-row';const slider=document.createElement('input'),number=document.createElement('input');
+      slider.type='range';number.type='number';slider.id='control-'+c.key;number.id='number-'+c.key;
+      for(const el of[slider,number]){el.min=c.min;el.max=c.max;el.step=c.step;el.value=params[c.key];el.dataset.key=c.key;}
+      number.setAttribute('aria-label',T(c.label));
+      const set=(value)=>{if(!Number.isFinite(Number(value)))return;const v=quantize(value,c);params[c.key]=v;slider.value=number.value=v;restart(false);};
+      slider.addEventListener('input',()=>set(slider.value));number.addEventListener('change',()=>set(number.value));wrap.append(slider,number);row.append(wrap);
+    }else{const select=document.createElement('select');select.id='control-'+c.key;select.dataset.key=c.key;
+      for(const o of c.options){const option=document.createElement('option');option.value=o.value;option.textContent=T(o.label);select.append(option);}select.value=params[c.key];
+      select.onchange=()=>{const found=c.options.find(o=>String(o.value)===select.value);params[c.key]=found.value;restart(false);};row.append(select);
+    }$('controls').append(row);
+  }
+  for(const preset of active.presets){const b=document.createElement('button');b.type='button';b.className='preset';b.textContent=T(preset.label);b.onclick=()=>{params={...defaults(active),...structuredClone(preset.values)};buildControls();restart(false);};$('presets').append(b);}
+}
+function syncControls(){
+  for(const c of active.controls){for(const id of ['control-','number-']){const el=$(id+c.key);if(el)el.value=params[c.key];}}
+}
+function setPlayback(){
+  const dynamic=Boolean(active?.dynamic);$('play').hidden=$('step').hidden=$('speed-wrapper').hidden=!dynamic;
+  $('play').textContent=playing?L('❚❚ Пауза','❚❚ Pause'):L('▶ Пуск','▶ Play');$('play').setAttribute('aria-pressed',String(playing));
+  $('step').disabled=Boolean(model?.stop);$('play').disabled=Boolean(model?.stop);
+}
+function draw(){if(!model||!board)return;try{
+  lastView=model.render();if(lastView.equation)$('equation').textContent=lastView.equation;else $('equation').innerHTML=active.equation;board.render(lastView.ink);$('metrics').replaceChildren();
+  for(const [label,value]of lastView.stats){const m=document.createElement('div');m.className='metric';const a=document.createElement('span');a.className='metric-label';a.textContent=label;const b=document.createElement('span');b.className='metric-value';b.textContent=value;m.append(a,b);$('metrics').append(m);}
+  if(lastView.note){$('status').textContent=lastView.note;$('status').className=lastView.warning?'warning':'';}
+  if(model.stop){playing=false;$('status').textContent=model.stop==='■'?L('Конец показанного интервала. Сбросьте опыт для нового запуска.','End of displayed interval. Reset the experiment to run it again.'):model.stop;$('status').className='warning';}
+  setPlayback();
+}catch(e){playing=false;console.error(e);$('status').textContent=L('Ошибка опыта: ','Experiment error: ')+e.message;$('status').className='warning';setPlayback();}}
+function restart(message=true){playing=false;accumulator=0;model=makeModel(active.id,params);states.set(active.id,structuredClone(params));$('status').className='';
+  $('status').textContent=active.dynamic?L('Параметры изменяют задачу; новый опыт начинается с t = 0. Пробел — пуск, N — шаг.','Changing parameters starts a new problem at t = 0. Space: play; N: step.'):
+    ['fourier','godograph','nonnormal','sbp'].includes(active.id)?L('Можно взаимодействовать с рисунком: нажмите на узел или ячейку.','Interact with the diagram: click a node or a cell.'):
+    L('Изменяйте параметры и сравнивайте фактические значения.','Change the parameters and compare the computed values.');
+  draw();
+}
+function loadParams(d){
+  let p={...defaults(d),...(states.get(d.id)||{})};
+  const s=new URLSearchParams(location.search).get('state');if(s){try{const data=JSON.parse(s);if(data.id===d.id){
+    for(const c of d.controls){const v=data.p?.[c.key];if(c.type==='range'&&typeof v==='number'&&Number.isFinite(v))p[c.key]=quantize(v,c);else if(c.type==='select'&&c.options.some(o=>o.value===v))p[c.key]=v;}
+    if(Array.isArray(data.p?.nodes))p.nodes=[...new Set(data.p.nodes.filter(v=>Number.isInteger(v)&&Math.abs(v)<=3))].sort((a,b)=>a-b);
+  }}catch{}}
+  return p;
+}
+function dispose(){playing=false;board?.destroy();board=null;model=null;lastView=null;accumulator=0;}
+function route(){
+  let id;try{id=decodeURIComponent(location.hash.slice(1));}catch{id='';}const d=demos.find(d=>d.id===id);
+  dispose();active=d||null;
+  document.body.classList.toggle('lab-active',Boolean(d));$('catalogue').hidden=Boolean(d);$('demo-view').hidden=!d;
+  if(!d){document.title=L('Лекция 4 · Свойства разностных схем','Lecture 4 · Properties of difference schemes');requestAnimationFrame(()=>scrollTo(0,lastGalleryScroll));return;}
+  params=loadParams(d);$('demo-title').textContent=T(d.title);$('demo-section').textContent=T(groups[d.group]);$('demo-number').textContent=String(demos.indexOf(d)+1).padStart(2,'0');
+  document.title=T(d.title)+' · '+L('Лекция 4','Lecture 4');$('equation').innerHTML=d.equation;
+  $('question').textContent=T(d.question);$('explanation').textContent=T(d.explanation);$('caveat').textContent=T(d.caveat);$('demo-sources').replaceChildren();
+  for(const key of d.sources){const s=sources[key],a=document.createElement('a');a.href=s.url;a.textContent=s.label+' ↗';a.target='_blank';a.rel='noopener noreferrer';$('demo-sources').append(a);}
+  board=new Board($('stage'),{onEngine:e=>{$('engine-status').textContent=e==='chalkish'?'Chalkish · site library':L('Canvas · автономный просмотр','Canvas · standalone preview');}});
+  $('stage').onclick=e=>{if(model?.click){const[x,y]=board.point(e);if(model.click(x,y)){states.set(d.id,structuredClone(params));syncControls();draw();}}};
+  $('stage').onpointerdown=e=>{if(model?.paint){const[x,y]=board.point(e);if(model.paint(x,y)){playing=false;$('stage').setPointerCapture(e.pointerId);draw();}}};
+  $('stage').onpointermove=e=>{if(e.buttons===1&&model?.paint&&$('stage').hasPointerCapture(e.pointerId)){const[x,y]=board.point(e);if(model.paint(x,y))draw();}};
+
+  buildControls();restart();$('controls-panel').scrollTop=0;scrollTo(0,0);
+}
+function changeDemo(delta){if(!active)return;location.hash=demos[(demos.indexOf(active)+delta+demos.length)%demos.length].id;}
+$('previous').onclick=()=>changeDemo(-1);$('next').onclick=()=>changeDemo(1);$('close-demo').onclick=()=>{location.hash='';};
+$('defaults').onclick=()=>{params=defaults(active);buildControls();restart();};$('reset').onclick=()=>restart();
+$('play').onclick=()=>{if(!model?.step||model.stop)return;playing=!playing;accumulator=0;setPlayback();};$('step').onclick=()=>{playing=false;model?.step?.();draw();};
+$('speed').oninput=()=>{$('speed-value').textContent=$('speed').value;};
+$('theme-button').onclick=()=>applyTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
+$('language-button').onclick=()=>{if(active)states.set(active.id,structuredClone(params));lang=lang==='ru'?'en':'ru';const url=new URL(location.href);url.searchParams.set('lang',lang);try{history.replaceState(null,'',url);}catch{/* Opaque-origin previews may prohibit URL rewriting. */}setLanguage();buildGallery();route();};
+$('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await $('demo-view').requestFullscreen();}catch{$('status').textContent=L('Браузер не разрешил полноэкранный режим.','The browser did not allow fullscreen mode.');}};
+function frame(now){
+  const elapsed=Math.min(.15,(now-(lastFrame||now))/1000);lastFrame=now;
+  if(playing&&model?.step){accumulator+=elapsed*Number($('speed').value);let updated=false;while(accumulator>=1&&playing){accumulator--;model.step();updated=true;if(model.stop)playing=false;}if(updated)draw();}
+  raf=requestAnimationFrame(frame);
+}
+document.addEventListener('visibilitychange',()=>{if(document.hidden){playing=false;setPlayback();}});
+window.addEventListener('hashchange',route);
+window.addEventListener('keydown',e=>{if(!active||e.ctrlKey||e.metaKey||e.altKey)return;if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)||e.target.isContentEditable)return;
+  if(e.key==='Escape'||e.key==='q'||e.key==='й'){if(!document.fullscreenElement){e.preventDefault();location.hash='';}}
+  if(e.key==='ArrowLeft'){e.preventDefault();changeDemo(-1);}if(e.key==='ArrowRight'){e.preventDefault();changeDemo(1);}
+  if(e.code==='Space'&&model?.step){e.preventDefault();$('play').click();}if(e.key.toLowerCase()==='n'||e.key==='т'){$('step').click();}if(e.key.toLowerCase()==='r'||e.key==='к')restart();
+});
+window.addEventListener('pagehide',()=>{cancelAnimationFrame(raf);dispose();for(const b of galleryBoards)b.destroy();});
+setLanguage();buildGallery();route();raf=requestAnimationFrame(frame);
+// Read-only diagnostics for reproducibility and automated browser tests.
+Object.defineProperty(window,'PDE4',{value:{get id(){return active?.id??null;},get engine(){return board?.engine??null;},get params(){return structuredClone(params);},get time(){return model?.time??0;},get count(){return model?.count??0;},get stats(){return lastView?.stats??[];},get commands(){return lastView?.ink.cmd??[];},get rows(){return lastView?.rows??[];},get stop(){return model?.stop??'';},get running(){return playing;}}});
+
+return {};
+})();
+})();
+
+(()=>{const notes={"SOURCES.md":"# Sources, provenance and mathematical conventions\n\n## Primary basis: the uploaded lecture\n\nThe lesson organization, terminology and principal equations come from the user-supplied `body.tex`, headed “Лекция 3. О свойствах разностных схем.” The requested new gallery is numbered 4. The TeX source has not been rewritten or corrected by this package. See `LECTURE_MAP.md` for exact frame-title mappings and for the distinction between source material and added examples.\n\nThe lecture's references include Lax–Richtmyer (1956), Gustafsson–Kreiss–Oliger (2013), Carpenter–Gottlieb–Abarbanel (1994), Godunov–Ryaben'kii, LeVeque, Hesthaven, and Salari–Knupp (2000). This gallery illustrates selected statements; running an experiment is not a proof of a general theorem.\n\n## Existing implementations and external references inspected\n\n1. **Current Lecture 3 gallery and Chalkish source.** The visual shell and API usage are adapted from the user's existing site, not from an unrelated UI library.\n   - https://ckpeiika.github.io/demos/pde-lecture-3/\n   - https://raw.githubusercontent.com/ckpeiika/ckpeiika.github.io/main/demos/pde-lecture-3/index.html\n   - https://raw.githubusercontent.com/ckpeiika/ckpeiika.github.io/main/lib/chalkish/src/index.js\n   - Retained interaction pattern: compact catalogue, in-place experiment, left controls, dark mathematical board, previous/next, RU/EN and light/dark interface.\n\n2. **Oxford EigTool**, an existing MATLAB GUI for nonsymmetric eigenproblems and pseudospectra.\n   - https://www.cs.ox.ac.uk/pseudospectra/eigtool/\n   - Useful teaching idea: do not show eigenvalues alone; connect the resolvent landscape with transient behaviour.\n   - Experiment 08 is an independent, small JavaScript implementation for a specified 2×2 family. EigTool is not embedded, ported in full or required at runtime.\n\n3. **NodePy**, an existing Python package for constructing, analyzing and testing ODE integration methods.\n   - https://nodepy.readthedocs.io/en/latest/\n   - Useful teaching idea: treat the time integrator as an object with a stability function and compare its region against a spatial spectrum.\n   - Experiment 06 independently evaluates explicit formulas for R(z); it does not run Python in the browser or include NodePy code.\n\n4. **M. H. Carpenter, D. Gottlieb and S. Abarbanel (1994)**, “Time-Stable Boundary Conditions for Finite-Difference Schemes Solving Hyperbolic Systems: Methodology and Application to High-Order Compact Schemes,” Journal of Computational Physics 111, 220–236.\n   - https://doi.org/10.1006/jcph.1994.1057\n   - Publisher record: https://www.sciencedirect.com/science/article/pii/S0021999184710576\n   - Already cited in the uploaded lecture. The gallery uses a minimal diagonal-norm second-order-interior/first-order-boundary SBP example for explicit inspection, not a reproduction of the paper's full high-order machinery.\n\n5. **K. Salari and P. Knupp (2000)**, “Code Verification by the Method of Manufactured Solutions,” SAND2000-1444.\n   - https://www.sandia.gov/research/publications/details/code-verification-by-the-method-of-manufactured-solutions-2000-06-01/\n   - https://doi.org/10.2172/759450\n   - The report discusses manufactured-solution verification and blind tests of coding mistakes. The gallery's source and boundary defects are independently constructed concrete examples. The original sine solution comes from the lecture exercise; the enriched inflow-sensitive solution is an explicitly identified extension.\n\nNo third-party simulator, MATLAB engine, Python package or external plotting service is embedded. References are optional reading; the calculations run locally in JavaScript.\n\n## Numerical conventions\n\nAll demo variables are nondimensional. Fourier plots use a periodic uniform grid unless a bounded-domain problem is explicitly stated. The Fourier angle is ϑ=kh; it must not be confused with a time-integration parameter or the mixed-difference weight w.\n\n**Error decomposition (01).** On x∈[0,1], −uₓₓ=(kπ)²sin(kπx), with homogeneous Dirichlet values. The exact continuous solution is sin(kπx). The centered discrete Laplacian has eigenvalue λₕ=4h⁻²sin²(kπh/2); therefore the exact discrete solution has amplitude (kπ)²/λₕ. Starting Jacobi from zero yields the iterate factor 1−cos(kπh)^m. These are calculated discrete results, not drawn convergence curves. The lower plot adds signed errors. Norms do not in general add.\n\n**Consistency study (02).** The smooth mode is complex exp(2πix), with unit discrete L₂ norm on a periodic unit interval. At each N, the number of steps is chosen to reach the same final time T. The displayed defect is the time-normalized residual of the exact smooth mode in the scheme. An orthogonal checkerboard mode of amplitude εh² is optionally added to the initial numerical data. Powers of the exact scheme symbol produce the numerical solution. This example shows why a successful test on one smooth mode is not a uniform stability result.\n\n**Error accumulation (03).** This is the scalar modal recurrence eⁿ⁺¹=Geⁿ−ττₕⁿ, with T=1, h=τ=1/N and τₕ=hᵖ except for a chosen impulse. It visualizes the Duhamel sum underlying an error estimate, not a separate PDE solver. G=1+0.8τ can be bounded over a fixed physical interval even though G>1. Fixed G=1.06 cannot be bounded uniformly as N increases. The sufficient bound |G|≤1+Cτ is not advertised as a universal definition of stability for arbitrary matrix families.\n\n**DFT (04).** N=64, h=1/N; the forward transform includes 1/N and the inverse has no normalization. Consequently hΣ|vⱼ|²=Σ|v̂ₖ|². The real-signal spectrum combines ±k; k=0 and N/2 are counted only once. The displayed heat step is a device to evolve an error spectrum, not another heat-flow lesson. Drawing rebuilds the DFT from the actual field and restarts the experiment.\n\n**Amplification locus (05).** The schemes are scalar, linear and constant-coefficient. The stability conclusion belongs to that class and its periodic uniform-grid setting. G=0 annihilates a mode; its log amplitude is −∞ and is not plotted as an ordinary finite value. A finite-step plot is not a uniform-in-grid proof.\n\n**Method of lines (06).** The displayed points are z=τλₕ(ϑ). For central advection z=−i s sinϑ; for diffusion z=−4s sin²(ϑ/2); the mixed example combines the former with 0.15 times the latter. Thus s is the appropriate operator scaling, not the same dimensional time step for every operator. Comparison is with exp(nz), the exact evolution of the semi-discrete system, which isolates the time-integration error. FE, BE and CN use their rational stability functions; RK2, RK3 and RK4 use the corresponding truncated exponential stability polynomials. Extra RK choices extend the lecture's Euler example. Spectral inclusion is sufficient here because these periodic scalar operators are normal; experiment 08 explains why that does not generalize to arbitrary nonnormal matrices.\n\n**Multistep root condition (07).** Leapfrog gives z²+2iCo sinϑ z−1=0. The displayed sequence is generated by that recurrence, with a controlled error in the second starting value. At Co=1, ϑ=π/2 the root −i is repeated; a generic startup perturbation causes an n(−i)ⁿ component. Exact transport of compatible sampled data at Co=1 must not be confused with robustness to arbitrary two-level starting errors. The gallery makes this endpoint qualification explicit rather than silently treating all |Co|≤1 cases as equivalent.\n\n**Nonnormality (08).** G=[[r,K],[0,s]], with 0<r,s<1 and bounded K in the controls. ‖Gⁿ‖₂ is computed from singular values, not the length of one selected vector. The fixed matrix is power bounded despite transient growth. For a grid-dependent family, uniformity would require a separate bound. The resolvent diagram shows contours of ‖(zI−G)⁻¹‖₂ at stated levels; a clicked value with |z|>1 yields a lower bound for the Kreiss constant, not its exact supremum. The displayed maximum of powers is over 0≤n≤80, not all n.\n\n**SBP (09).** D uses centered interior differences and first-order one-sided endpoint differences. H=h·diag(1/2,1,…,1,1/2) gives HD+DᵀH=B exactly. The endpoint-weight control intentionally breaks this structure while keeping D fixed. The displayed bilinear forms and matrix entries are actually evaluated. This is distinct from teaching generic matrix assembly.\n\n**SAT (10).** With a=1, the implemented semi-discrete equation is u̇=−Du−σH⁻¹e₀(u₀−g). Its exact instantaneous identity is\n\n```text\nE = uᵀHu/2\nĖ = −uN²/2 + (1/2−σ)u0² + σu0g.\n```\n\nFor g=0, σ≥1/2 gives a nonpositive energy derivative. At σ=1 the expression can be written −uN²/2−(u0−g)²/2+g²/2, matching the lecture. The time trace uses RK4 with Δt=0.12h/(1+σ), four substeps per displayed step. The checked energy identity is semi-discrete; finite-step energy monotonicity is a distinct issue. The right boundary is outflow, not an independently prescribed Dirichlet condition.\n\n**Boundary mode (11).** For interior upwind Co∈(0,1], impose the deliberately faulty homogeneous-boundary update v0ⁿ⁺¹=bv0ⁿ. The ansatz zⁿκʲ gives z=b and κ=Co/(b−1+Co). If |κ|<1, the initial condition is that exact localized mode and the computed interior update preserves it. Otherwise the demo uses a local initial perturbation and says so. For b>1, the boundary mode grows although the interior periodic scheme is stable. This is one explicit counterexample, not a general GKS determinant or a proof of the full Kreiss–Lopatinsky condition.\n\n**Modified equation (12).** For a=1 and mixed forward/backward weight w,\n\n```text\nG = 1 + Co(1−2w)(cosϑ−1) − iCo sinϑ\nμnum/h = (1−2w−Co)/2\nlog|G| ≈ −[Co(1−2w−Co)/2] ϑ².\n```\n\nThe full symbol is compared against this small-ϑ approximation. No claim is made that a favorable leading viscosity establishes stability for every scheme or every grid frequency. The wave-packet experiment and amplification locus handle phase and full-symbol effects separately.\n\n**Wave packet (13).** The initial packet is a specified sum of positive discrete Fourier modes with Gaussian spectral weights. Each evolves by the principal branch Ω=arcsin(Co sinϑ); the plotted envelope is the modulus of the complex sum, not a guessed moving Gaussian. Controls keep Co<1 to avoid branch degeneracy. This deliberately selected branch can give a negative group velocity for high frequencies. It is not a claim that all possible initialization choices excite that branch alone. Startup/computational-mode issues are kept in experiment 07.\n\n**Runge (14).** The observable is u(1/2,T) for the Dirichlet heat problem with initial sin(πx), T=0.05. On each grid the exact backward-Euler modal value (1+τλₕ)^(-n) is calculated. Space and time are refined along the stated paths; the actual step reaches T exactly. The optional common bias η is added transparently to every result. It cancels from grid differences but not from error against the exact PDE value. Observed p uses the three-grid ratio; the extrapolation uses the separately selected assumed p. Neither is a general error guarantee outside an asymptotic regime. Hidden truth is also omitted from CSV until revealed.\n\n**MMS (15).** The solver actually advances uₜ+uₓ=f on five bounded-domain grids using explicit upwind with a source. The source, sign/coefficient defects and inflow callback all run through that solver. The baseline is the lecture's uᵐˢ=e⁻ᵗsin(2πx). The extension e⁻ᵗ[1+0.2x+sin(2πx)] is added specifically to excite a nonzero time-dependent inflow. Its source is derived independently from the continuous equation. Trapezoidal spatial weights define L₁ and L₂; L∞ is the maximum nodal error. The final step is shortened to reach T=0.6. MMS is code verification, not model validation or a shock-resolution test.\n\n## Implementation and verification limits\n\nContours are sampled with marching squares, not analytically exact level sets. Complex norms and DFTs use JavaScript double precision. Very large deliberately unstable states trigger stop conditions; an on-screen warning explains the stop. Diagnostic plots mark logarithmic axes explicitly and do not turn an infinite logarithm into a misleading finite value.\n\nThe standalone preview uses an independently implemented Canvas renderer. The deployment entry imports real Chalkish and reports the engine in the footer; it does not rename the fallback. This package changes no Chalkish core modules. External-library execution remains a deployment smoke test; local numerical and browser reports concern the delivered standalone build.\n\nNo font binaries are included. No third-party simulator code or image assets are required. Explanations, controls and references can be edited in the source modules without changing the numerical kernels.\n","LECTURE_MAP.md":"# Карта лекции → интерактивные опыты\n\nОснова: загруженный пользователем `body.tex`, с датой 22 сентября 2026 и подзаголовком «Лекция 3. О свойствах разностных схем». Файл оставлен без изменений. Название новой галереи — «Лекция 4», согласно запросу. Привязка дана к названиям кадров, а не к номерам страниц: номера зависят от сборки Beamer и разбиения библиографии.\n\n## Введение\n\n**01. Невязка — не ошибка** (`#error-budget`). После кадров «Состав погрешности» и «Уравнение для ошибки».\n\nПоказать отдельно Rₕu, uₕ* и ũₕ. Сначала увеличить число итераций при неизменном N: итерационная ошибка исчезает, дискретизационная остаётся. Затем увеличить N без увеличения числа итераций. Нижний график показывает знаковую сумму ошибок, а не неверное сложение их норм. Синусоидальная задача Пуассона и аналитическое воспроизведение Якоби — конкретизация общей операторной постановки из лекции.\n\n## Согласованность и сходимость\n\n**02. Согласованность без сходимости** (`#consistency`). После одноимённого кадра в разделе «Сходимость».\n\nОдна конечная величина T, пять сеток. При неверном направлении разности сначала выключить шум и увидеть убедительную картину для одной гладкой моды. Затем добавить шахматное возмущение εh². Локальная невязка уменьшается, но возмущение усиливается. Это спектральная конкретизация идеи контрпримера из лекции, а не повторение геометрии областей зависимости из предыдущей галереи.\n\n**03. Как накапливается ошибка** (`#accumulation`). Ввести при кадре «Устойчивость эволюционной схемы»; вернуться после «Теорема Лакса–Рихтмайера».\n\nШаг за шагом складывать вклады −τGⁿ⁻¹⁻ᵐτₕᵐ. Нажатие на шкалу усиливает один источник. Сравнить 1−0.8τ, 1+0.8τ и фиксированное 1.06. При увеличении N сохранять T=1. Опыт раскрывает механизм оценки, но не подменяет формулировку теоремы.\n\n## Устойчивость: спектральные критерии\n\n**04. Ошибка по гармоникам** (`#fourier`). Кадры «Метод гармонических возмущений», «Разложение на гармоники», «Анализ фон Неймана».\n\nНарисовать произвольное возмущение. Выбрать гармонику на спектре, сопоставить её с пространственным вкладом и энергией. Включить эволюцию мод и измерять равенство Парсеваля. Предмет опыта — разложение и усиление ошибки, не ещё одно изображение решения теплопроводности.\n\n**05. Годограф и усиление** (`#godograph`). После «Анализ фон Неймана», использовать для примеров противопоточной схемы, центрального переноса, Лакса–Фридрихса, Лакса–Вендроффа и диффузии.\n\nВыбрать частоту нажатием на комплексную кривую. Связать |G|, положение относительно единичного круга и |G|ⁿ. Изменить параметры и найти опасные частоты. Это инструмент исследования символа, а не повторение сравнения профилей схем из Lecture 3.\n\n**06. Метод прямых** (`#mol`). Кадры «Метод прямых», «Область устойчивости Эйлера», «Центральная схема и метод прямых».\n\nМенять только временной метод или масштаб τAₕ и наблюдать, какие пространственные собственные значения попадают в область устойчивости. Сравнивать с точным решением полу-дискретной системы, чтобы изолировать ошибку временного интегратора. Методы RK2–RK4 добавлены как явно обозначенное расширение примера Эйлера.\n\n**07. Корни и вычислительная мода** (`#roots`). После «Корневое условие многослойной схемы»; повторно обратиться при дисперсии схемы «крест».\n\nЗадать небольшой дефект второго начального слоя. Следить за обеими ветвями и фактической рекуррентной последовательностью. Отдельный режим демонстрирует кратный корень при Co=1, kh=π/2: условие |z|≤1 недостаточно без простоты корней на окружности.\n\n**08. Собственных значений недостаточно** (`#nonnormal`). Кадры «Нормальность оператора», «Теорема Крайсса».\n\nСохранить r и s, изменить внедиагональную связь K. Измерить ‖Gⁿ‖₂, сравнить с ρ(G)ⁿ, преобразовать единичную окружность. Нажать вне единичного круга на резольвентной диаграмме. Матрица 2×2 — педагогическая конкретизация лекции; не универсальный анализатор спектра CFD-оператора.\n\n## Лакс и энергетика; входные границы\n\n**09. Суммирование по частям** (`#sbp`). После кадра «SBP: интегрирование по частям».\n\nИзменить вес крайних узлов H и увидеть остаток HD+DᵀH−B. Нажатие на ячейку показывает численное значение. Сопоставить матричную тождественность с билинейной формой и граничным членом. Формулы простейшего оператора 2–1 выбраны для обозримости матрицы.\n\n**10. Энергия и SAT** (`#sat`). После «Энергетический метод» и «SAT: граничное условие».\n\nИзменить штраф σ, запустить начальное возмущение или ненулевой вход. Сопоставить dE/dt с выходным потоком, вкладом замыкания и работой входа. По умолчанию σ=1 воспроизводит штраф из лекции. Вариация σ нужна для проверки энергетического условия.\n\n**11. Опасная граничная мода** (`#boundary`). После «Входная граница» и «Условие Крайсса–Лопатинского».\n\nВнутри оставлена устойчивая противопоточная схема. Меняется только ошибочное граничное правило v₀ⁿ⁺¹=bv₀ⁿ. При b>1 возникает мода bⁿκʲ с |κ|<1: она растёт во времени, оставаясь локализованной у входа. Это явно заданный контрпример, а не реализация полного условия GKS для произвольной системы.\n\n## Дифференциальное приближение\n\n**12. Где работает схемная вязкость** (`#modified`). Кадры «Первое приближение», «Схемная вязкость», «Противопоточный выбор».\n\nДля семейства прямой/обратной разностей сравнить log|G| с −μₙᵤₘk²τ. Перейти от длинной волны к kh≈π. Второй график показывает накопленное отличие прогнозов. Коэффициент смешивания назван w, чтобы не смешивать его с фазовым углом гармоники.\n\n**13. Гребни и огибающая** (`#packet`). Кадры «Дисперсионные ошибки», «Дисперсия схемы “крест”», «Спектральный портрет ошибки».\n\nМенять несущую частоту, ширину спектра и Co. Сравнить движения гребней и огибающей с точным переносом. Пакет использует одну указанную спектральную ветвь; вычислительная мода исследуется отдельно в опыте 07. Это не повторение модифицированного волнового числа пространственных производных из Lecture 3.\n\n## Погрешность\n\n**14. Что видят три сетки** (`#runge`). Кадры «Перед сеточным исследованием», «Оценка методом Рунге», «Метод Рунге для оценки порядка схемы», «Когда оценке Рунге нельзя доверять».\n\nОценить порядок и экстраполированный функционал без показа точного ответа. Сдвигать тройку по шести сеткам; изменять правило сгущения времени. Добавить одинаковое смещение результата на всех сетках и раскрыть истинную ошибку. Это контролируемый диагностический пример, не подмена численного расчёта заранее нарисованным законом E=Chᵖ.\n\n**15. Поймай ошибку в коде** (`#mms`). Кадры «Метод искусственных решений (MMS)», «Что MMS доказывает, а что нет», упражнение с e⁻ᵗsin(2πx).\n\nПоследовательно проверить правильную реализацию, коэффициент источника, знак, отключение источника и замороженную входную границу. Базовое решение имеет g(t)=0 и не обнаруживает последнее нарушение. Обогащённое решение из интерфейса — отдельное авторское расширение, которое возбуждает вход и обнаруживает этот дефект. Все сетки действительно проходят через один решатель.\n\n## Что намеренно не повторено\n\nСетка и выборки; построение обычных шаблонов; оператор сдвига; компактные производные; геометрия CFL; базовое сравнение адвекции и диффузии; сборка обычной матрицы; попарная консервативность потоков; неверная скорость скачка; оценка стоимости сгущения. Эти вопросы уже раскрыты в предыдущей галерее.\n\nЛокальное сгущение для явной диффузии оставлено пояснением лектора к спектру, а не ещё одним калькулятором затрат. Численные потоки, монотонность, ограничители и ENO/WENO здесь не введены: последний кадр источника относит их к следующей лекции.\n"};let dialog;
+ document.addEventListener('click',e=>{const a=e.target.closest?.('a');if(!a)return;const key=(a.getAttribute('href')||'').split('/').pop();if(!notes[key])return;e.preventDefault();
+ if(!dialog){dialog=document.createElement('dialog');dialog.className='docs-dialog';dialog.id='docs-dialog';document.body.append(dialog);}
+ dialog.replaceChildren();const close=document.createElement('button');close.type='button';close.textContent='×';close.setAttribute('aria-label','Close notes');close.onclick=()=>dialog.close();const title=document.createElement('h2');title.textContent=key;const pre=document.createElement('pre');pre.textContent=notes[key];dialog.append(close,title,pre);dialog.showModal();dialog.scrollTop=0;
+ });document.addEventListener('keydown',e=>{if(dialog?.open&&e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();dialog.close();}},true);
+})();
+</script>
+</body>
+</html>
