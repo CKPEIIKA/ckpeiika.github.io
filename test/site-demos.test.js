@@ -192,8 +192,6 @@ test('site and demo links do not assume deployment at the domain root', async ()
     '_layouts/default.html',
     '_includes/nav.html',
     'index.html',
-    'pages/fvm-demo.md',
-    'pages/dsmc-demo.md',
     ...DEMOS.map((demo) => `${demo.directory}index.html`),
   ];
   for (const file of files) {
@@ -225,11 +223,9 @@ test('primary navigation keeps the requested teaching order', async () => {
   const orderedPaths = [
     'pages/resources.md',
     'pages/eucken.md',
-    'pages/paper-reviews.md',
+    'pages/cfd2026.md',
     'pages/physico-chemical-gas-dynamics-2026.md',
     'pages/ml2026.md',
-    'pages/dsmc-demo.md',
-    'pages/fvm-demo.md',
   ];
 
   let previous = -1;
@@ -243,11 +239,9 @@ test('primary navigation keeps the requested teaching order', async () => {
   const expectedLabels = [
     ['pages/resources.md', 'Полезные ссылки'],
     ['pages/eucken.md', 'О поправке Эйкена'],
-    ['pages/paper-reviews.md', 'Обзоры статей'],
-    ['pages/physico-chemical-gas-dynamics-2026.md', 'Физико-химическая газодинамика'],
+    ['pages/cfd2026.md', 'CFD 2026'],
+    ['pages/physico-chemical-gas-dynamics-2026.md', 'ФХГД'],
     ['pages/ml2026.md', 'ML 2026'],
-    ['pages/dsmc-demo.md', 'DSMC DEMO'],
-    ['pages/fvm-demo.md', 'DG/FV DEMO'],
   ];
   for (const [path, label] of expectedLabels) {
     const source = await readFile(new URL(path, ROOT), 'utf8');
