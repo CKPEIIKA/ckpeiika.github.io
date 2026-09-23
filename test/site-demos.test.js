@@ -227,7 +227,7 @@ test('primary navigation keeps the requested teaching order', async () => {
     'pages/eucken.md',
     'pages/paper-reviews.md',
     'pages/physico-chemical-gas-dynamics-2026.md',
-    'pages/ml2025.md',
+    'pages/ml2026.md',
     'pages/dsmc-demo.md',
     'pages/fvm-demo.md',
   ];
@@ -245,7 +245,7 @@ test('primary navigation keeps the requested teaching order', async () => {
     ['pages/eucken.md', 'О поправке Эйкена'],
     ['pages/paper-reviews.md', 'Обзоры статей'],
     ['pages/physico-chemical-gas-dynamics-2026.md', 'Физико-химическая газодинамика'],
-    ['pages/ml2025.md', 'ML 2026'],
+    ['pages/ml2026.md', 'ML 2026'],
     ['pages/dsmc-demo.md', 'DSMC DEMO'],
     ['pages/fvm-demo.md', 'DG/FV DEMO'],
   ];
