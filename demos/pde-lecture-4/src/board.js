@@ -96,7 +96,7 @@ class Board {
       const ctx=this.canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle=C.bg;ctx.fillRect(0,0,w,h);ctx.translate(ox,oy);ctx.scale(s,s);
       ctx.lineCap='round';ctx.lineJoin='round';for(const p of this.commands)if(p.type!=='text')drawShape(ctx,p);
     }
-    const fontScale=matchMedia('(max-width:800px)').matches?1.3:1;
+    const fontScale=Math.min(2,Math.max(1,W/w));
     for(const p of this.commands)if(p.type==='text'){
       overlay.font=`${p.size*fontScale}px "Neucha", "Shantell Sans", "Open Sans", system-ui, sans-serif`;
       overlay.fillStyle=p.color;overlay.textAlign=p.align;overlay.textBaseline='alphabetic';
