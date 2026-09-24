@@ -1261,7 +1261,6 @@ const ui={
  'catalogue-description':['Смотрим на сеточные данные, работу операторов и сохранение величин.','See grid data, operator actions, and conserved quantities.'],
  'catalogue-count-label':['опытов<br>с объяснениями','explained<br>experiments'],
  'catalogue-help':['Выберите опыт. Он откроется на этой странице. Esc возвращает к списку.','Choose an experiment. It opens on this page. Esc returns to the list.'],
- 'source-link':['Источники и математические соглашения ↗','Sources and mathematical conventions ↗'],
  'control-heading':['УСЛОВИЯ ОПЫТА','EXPERIMENT PARAMETERS'],'preset-heading':['ПОПРОБУЙТЕ','TRY THESE'],
  'defaults':['Параметры по умолчанию','Default parameters'],'question-heading':['Что проверить?','What should you investigate?'],
  'math-heading':['Как считается','How it is computed'],'assumptions-heading':['Границы применимости','Limits of the model'],
@@ -1405,21 +1404,6 @@ for(const [selector,classes] of [['.lab-main','chalk-surface chalk-rule-both'],[
 }
 document.querySelector('.heading-group')?.setAttribute('hidden','');
 
-const sourceLink = document.getElementById('source-link');
-sourceLink.href = '#sources';
-sourceLink.onclick = event => {
-  event.preventDefault();
-  let dialog = document.getElementById('source-dialog');
-  if(!dialog){
-    dialog=document.createElement('dialog');dialog.id='source-dialog';
-    const close=document.createElement('button');close.textContent='×';close.onclick=()=>dialog.close();
-    const title=document.createElement('h2');title.textContent='Sources / Источники';
-    dialog.append(close,title);
-    const note=document.createElement('p');note.textContent='This standalone file uses Canvas 2D. The site package imports your existing Chalkish library. Research examples were independently reimplemented; legacy UIUC modules are Java applets, not embedded dependencies.';dialog.append(note);
-    for(const s of Object.values(__modules['catalog.js'].sources)){const p=document.createElement('p'),a=document.createElement('a');a.href=s.url;a.target='_blank';a.rel='noopener noreferrer';a.textContent=s.label;p.append(a);dialog.append(p);}
-    document.body.append(dialog);
-  }dialog.showModal();
-};
 document.getElementById('course-link').href='../../pages/cfd2026.html';
 
 </script>
