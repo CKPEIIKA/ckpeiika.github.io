@@ -1,0 +1,26 @@
+student_id,row_id,row_class,task0_status,task1_status,task1_variant,task1_title,coursework_status,task2_status,task3_status,task4_status,task5_status,task6_status
+st117205,,,assigned,assigned,1,Аэроакустика профиля,unassigned,closed,closed,closed,closed,closed
+st117168,,,assigned,assigned,2,Сопротивление корпуса яхты,unassigned,closed,closed,closed,closed,closed
+st116552,,,assigned,assigned,3,Прочность бетона,unassigned,closed,closed,closed,closed,closed
+st117157,st117157,,completed,assigned,4,Реология свежего бетона,unassigned,closed,closed,closed,closed,closed
+st106773,,,assigned,assigned,5,Тепловая нагрузка здания,unassigned,closed,closed,closed,closed,closed
+st117162,,,assigned,assigned,6,Мощность парогазовой установки,unassigned,closed,closed,closed,closed,closed
+st117208,,,assigned,assigned,7,Выбросы газовой турбины,unassigned,closed,closed,closed,closed,closed
+st123067,,,assigned,assigned,8,Мощность ветротурбины,unassigned,closed,closed,closed,closed,closed
+st117179,,,assigned,assigned,9,Диагностика гидросистемы,unassigned,closed,closed,closed,closed,closed
+st117209,,,assigned,assigned,10,Вибрации вращающейся машины,unassigned,closed,closed,closed,closed,closed
+st122316,,,assigned,assigned,11,Деградация Li-ion аккумулятора,unassigned,closed,closed,closed,closed,closed
+st117210,,,assigned,assigned,12,Износ фрезерного инструмента,unassigned,closed,closed,closed,closed,closed
+st117207,,,assigned,assigned,13,Деградация подшипника,unassigned,closed,closed,closed,closed,closed
+st117158,,,assigned,assigned,14,Остаточный ресурс турбореактивного двигателя,unassigned,closed,closed,closed,closed,closed
+stxxxxx,,,assigned,closed,,,unassigned,closed,closed,closed,closed,closed
+stxxxxx,,,assigned,closed,,,unassigned,closed,closed,closed,closed,closed
+stxxxxx,,,assigned,closed,,,unassigned,closed,closed,closed,closed,closed
+stxxxxx,,,assigned,closed,,,unassigned,closed,closed,closed,closed,closed
+stxxxxx,,,assigned,closed,,,unassigned,closed,closed,closed,closed,closed
+stxxxxx,,,assigned,closed,,,unassigned,closed,closed,closed,closed,closed
+stxxxxx,,,assigned,closed,,,unassigned,closed,closed,closed,closed,closed
+stxxxxx,,,assigned,closed,,,unassigned,closed,closed,closed,closed,closed
+stxxxxx,,,assigned,closed,,,unassigned,closed,closed,closed,closed,closed
+stxxxxx,,,assigned,closed,,,unassigned,closed,closed,closed,closed,closed
+stxxxxx,,,assigned,closed,,,unassigned,closed,closed,closed,closed,closed
