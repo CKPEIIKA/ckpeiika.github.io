@@ -67,7 +67,10 @@ test('all curve lessons remain finite after deterministic evolution', () => {
     const model = new CurveLessonModel(id);
     for (let step = 0; step < 8; step += 1) model.step(1 / 120);
     for (const panel of model.panels) {
-      for (const curve of panel.curves) assert.ok(finiteArray(curve.data, panel.label === 'x–t'), id);
+      for (const curve of panel.curves) {
+        const isSpaceTimePanel = panel.label.replace(/[–—]/g, '-') === 'x-t';
+        assert.ok(finiteArray(curve.data, isSpaceTimePanel), id);
+      }
     }
   }
 });

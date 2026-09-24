@@ -61,6 +61,7 @@ a[href^="http"]:not([href*="ckpeiika.github.io"])::after {
 }
 
 .theme-toggle {
+  display: inline-block;
   background: none;
   border: none;
   color: var(--accent-color);
@@ -68,6 +69,35 @@ a[href^="http"]:not([href*="ckpeiika.github.io"])::after {
   cursor: pointer;
   text-decoration: underline;
   padding: 0;
+}
+
+.theme-toggle-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.theme-toggle-input:focus-visible + .theme-toggle {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 3px;
+}
+
+.theme-dark-label {
+  display: none;
+}
+
+body:has(#site-theme-toggle:checked) .theme-light-label {
+  display: none;
+}
+
+body:has(#site-theme-toggle:checked) .theme-dark-label {
+  display: inline;
 }
 
 .theme-toggle:hover {
@@ -162,6 +192,18 @@ body.theme-dark {
   color: var(--accent-color);
 }
 body.theme-dark a {
+  border-bottom-color: rgba(255, 255, 255, 0.4);
+}
+
+body:has(#site-theme-toggle:checked) {
+  --bg-color: #181818;
+  --accent-color: #F1D8C0;
+  background-color: var(--bg-color);
+  color: var(--accent-color);
+  color-scheme: dark;
+}
+
+body:has(#site-theme-toggle:checked) a {
   border-bottom-color: rgba(255, 255, 255, 0.4);
 }
 

@@ -10,6 +10,7 @@
         {% endunless %}
       {% endif %}
     {% endfor %}
-    | <button class="theme-toggle" type="button" aria-label="Переключить тему">Темно</button>
+    | <input class="theme-toggle-input" type="checkbox" id="site-theme-toggle">
+    <label class="theme-toggle" for="site-theme-toggle"><span class="theme-light-label">Мне светло</span><span class="theme-dark-label">Мне темно</span></label>
   </p>
 </nav>
