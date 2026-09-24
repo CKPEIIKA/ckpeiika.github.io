@@ -4,8 +4,29 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Индивидуальные задания по машинному обучению: общая задача 0 и варианты задачи 1.">
-<script>window.MathJax={tex:{inlineMath:[["\\(","\\)"]],displayMath:[["\\[","\\]"]]},options:{skipHtmlTags:["script","noscript","style","textarea","pre","code"]}};</script>
-<script async src="../vendor/mathjax/es5/tex-mml-chtml.js"></script>
+<script>window.MathJax={tex:{inlineMath:[["\\(","\\)"]],displayMath:[["\\[","\\]"]]},options:{skipHtmlTags:["script","noscript","style","textarea","pre","code"]},startup:{typeset:false}};</script>
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  const formulas = document.querySelectorAll(".formula");
+  for (const formula of formulas) {
+    formula.dataset.plainFormula = formula.textContent;
+    formula.classList.add("mathjax-source");
+    formula.textContent = `\\(${formula.textContent}\\)`;
+  }
+  try {
+    await window.MathJax.startup.promise;
+    await window.MathJax.typesetPromise();
+  } catch (error) {
+    for (const formula of formulas) {
+      formula.classList.remove("mathjax-source");
+      formula.textContent = formula.dataset.plainFormula;
+      delete formula.dataset.plainFormula;
+    }
+    console.error("MathJax could not typeset assignment formulas.", error);
+  }
+});
+</script>
+<script defer src="../vendor/mathjax/es5/tex-mml-chtml.js"></script>
 <noscript><style>.mathjax-source{display:none}</style></noscript>
 <title>Индивидуальные задания — ML 2026</title>
 <link rel="icon" type="image/png" href="../hero.png">
@@ -94,6 +115,7 @@ body:has(#site-theme-toggle:checked) #site-theme-toggle+.theme-toggle .theme-dar
 body:has(#site-theme-toggle:checked){--bg:#181818;--panel:#232323;--line:#F1D8C0;--text:#F1D8C0;--muted:#C6B9AD;--accent:#F1D8C0;--ok:#A8C68F;color-scheme:dark}
 body:has(#site-theme-toggle:checked) .tablewrap th{background:#f1d8c018}
 body:has(#site-theme-toggle:checked) .gost{background:#f1d8c010}
+.ml-topbar .theme-toggle:hover{background:var(--accent);color:var(--bg);border-color:var(--accent)}
 </style>
 </head>
 <body>

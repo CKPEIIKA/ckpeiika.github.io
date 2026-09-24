@@ -106,7 +106,6 @@ nav_label: "🔗 Полезные ссылки"
 
 ## Прочее
 
-- [Обзоры статей]({{ '/pages/paper-reviews.html' | relative_url }}) — разборы публикаций.
 
 - [Structure and Interpretation of Computer Programs (SICP)](https://sarabander.github.io/sicp/html/index.xhtml)  
  Классический учебник по программированию и интерпретации программ.
