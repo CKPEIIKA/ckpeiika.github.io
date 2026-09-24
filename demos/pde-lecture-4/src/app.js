@@ -113,7 +113,7 @@ function route(){
   document.title=T(d.title)+' · '+L('Лекция 4','Lecture 4');$('equation').innerHTML=d.equation;
   $('question').textContent=T(d.question);$('explanation').textContent=T(d.explanation);$('caveat').textContent=T(d.caveat);$('demo-sources').replaceChildren();
   for(const key of d.sources){const s=sources[key],a=document.createElement('a');a.href=s.url;a.textContent=s.label+' ↗';a.target='_blank';a.rel='noopener noreferrer';$('demo-sources').append(a);}
-  board=new Board($('stage'),{onEngine:e=>{$('engine-status').textContent=e==='chalkish'?'Chalkish · site library':L('Canvas · автономный просмотр','Canvas · standalone preview');}});
+  board=new Board($('stage'));
   $('stage').onclick=e=>{if(model?.click){const[x,y]=board.point(e);if(model.click(x,y)){states.set(d.id,structuredClone(params));syncControls();draw();}}};
   $('stage').onpointerdown=e=>{if(model?.paint){const[x,y]=board.point(e);if(model.paint(x,y)){playing=false;$('stage').setPointerCapture(e.pointerId);draw();}}};
   $('stage').onpointermove=e=>{if(e.buttons===1&&model?.paint&&$('stage').hasPointerCapture(e.pointerId)){const[x,y]=board.point(e);if(model.paint(x,y))draw();}};
