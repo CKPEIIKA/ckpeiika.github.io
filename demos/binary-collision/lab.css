@@ -65,13 +65,16 @@ body,button,input,select,output,textarea,select option{font-family:var(--font-ch
 .chapter-button *{font-size:15px!important;line-height:1.1!important;white-space:nowrap!important}
 .chapter-button .num{font-size:25px!important;line-height:1!important;flex:0 0 auto!important}
 .chapters{display:flex!important;flex-flow:row nowrap!important;align-items:center!important;overflow:hidden!important}
-.chapters{padding-left:72px!important;padding-right:126px!important;margin-top:0!important}
+.chapters{padding-left:72px!important;padding-right:164px!important;margin-top:0!important}
 /* Wide screens keep the full board height: the shared header sits over the chapter row. */
 @media(min-width:801px){.collision-lab .demo-header{display:contents}.collision-lab .demo-header h1,.collision-lab .demo-home-label{display:none}.collision-lab .demo-home{position:absolute;top:12px;left:16px;z-index:3}.collision-lab .demo-tools{position:absolute;top:14px;right:16px;z-index:3}}
 .chapters{display:grid!important;grid-template-columns:repeat(9,minmax(0,1fr))!important;gap:0!important;box-sizing:border-box!important}
 .chapter-button{flex:1 1 0!important;min-width:0!important;align-items:center!important;justify-content:center!important;overflow:hidden!important;line-height:1!important}
 .chapter-button>*{display:inline!important;width:auto!important;max-width:none!important;white-space:nowrap!important}
 .chapter-button .num{display:inline-block!important}
+/* Section tabs: full names where they fit; when a name would be clipped (fitChapterTabs in app.js)
+   inactive tabs keep only their number (the name stays in the tooltip) and the active one its name. */
+@media(min-width:801px){.chapters{grid-template-columns:repeat(9,auto)!important;justify-content:space-between!important}.chapters.compact-tabs .chapter-button:not(.active)>span:not(.num){display:none!important}}
 .chapters .chapter-button{width:auto!important;min-width:0!important;padding-inline:4px!important;gap:4px!important;overflow:hidden!important}
 .chapters .chapter-button,.chapters .chapter-button *{font-size:13px!important;line-height:1.1!important;letter-spacing:0!important}
 .chapters .chapter-button .num{font-size:25px!important;line-height:1!important}
@@ -90,7 +93,7 @@ main :has(> .board){padding-top:0!important}
 @media (min-width:2400px){
  body{padding:.8rem 2rem 1.5rem;font-size:20px}
  .workspace{max-width:3200px;grid-template-columns:minmax(0,1fr) 620px}
- .chapters{height:88px;padding-left:112px!important;padding-right:190px!important}
+ .chapters{height:88px;padding-left:112px!important;padding-right:236px!important}
  .collision-lab .demo-home{top:19px;left:28px;font-size:1rem}
  .collision-lab .demo-tools{top:21px;right:28px}
  .chapters .chapter-button,.chapters .chapter-button *{font-size:20px!important}

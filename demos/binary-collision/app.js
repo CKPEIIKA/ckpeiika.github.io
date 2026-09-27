@@ -103,6 +103,7 @@ function updateText(){
   $('prevButton').disabled=state.chapter===0&&state.step===0;$('nextButton').disabled=state.chapter===8&&state.step===2;
   $('prevButton').textContent='‹';$('nextButton').textContent='›';
   document.querySelectorAll('.chapter-button').forEach((el,i)=>{el.classList.toggle('active',i===state.chapter);el.setAttribute('aria-current',i===state.chapter?'step':'false');});
+  fitChapterTabs();
   if(matchMedia('(max-width:800px)').matches){const active=$('chapters').querySelector('.chapter-button.active');requestAnimationFrame(()=>active?.scrollIntoView({block:'nearest',inline:'center'}));}
   $('steps').innerHTML=chapter().steps.map((s,i)=>`<button data-step="${i}" class="${i===state.step?'active':i<state.step?'complete':''}" aria-label="Шаг ${i+1}: ${s.title}" title="${s.title}" ${i===state.step?'aria-current="step"':''}></button>`).join('');
   $('plotSwitch').hidden=state.chapter!==6;
@@ -508,7 +509,11 @@ function syncStaticCopy(){
  $('seedButton').textContent=copy.seed;for(const [name,text]of Object.entries({weak:copy.weak,rainbow:copy.rainbow,orbit:copy.orbit})){const button=document.querySelector(`button[data-preset="${name}"]`);if(button)button.textContent=text;}
  const compare=$('compareControl'),wrong=$('wrongControl');if(compare)compare.lastChild.nodeValue=' '+copy.compare;if(wrong)wrong.lastChild.nodeValue=' '+copy.wrong;$('plotTitle').textContent=copy.plot;
 }
+// Desktop section tabs: if any name would be clipped (narrow window, projector, longer English
+// names), inactive tabs show only their number; the full name stays in the tooltip.
+function fitChapterTabs(){const bar=$('chapters');bar.classList.remove('compact-tabs');if(matchMedia('(max-width:800px)').matches)return;if([...bar.children].some(b=>b.scrollWidth>b.clientWidth+1))bar.classList.add('compact-tabs');}
 function bind(){
+  new ResizeObserver(()=>fitChapterTabs()).observe($('chapters'));
   $('chapters').innerHTML=CHAPTERS.map((ch,i)=>`<button class="chapter-button" data-chapter="${i}" title="${ch.title.replace('<br>',' ')}"><span class="num">${String(i+1).padStart(2,'0')}</span><span>${ch.tab}</span></button>`).join('');
   $('chapters').addEventListener('click',e=>{const el=e.target.closest('[data-chapter]');if(el)applyLesson(Number(el.dataset.chapter),0);});
   $('steps').addEventListener('click',e=>{const el=e.target.closest('[data-step]');if(el)applyLesson(state.chapter,Number(el.dataset.step));});
