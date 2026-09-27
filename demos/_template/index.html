@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="Лекция {{N}}: {{SUMMARY_RU}}">
+  <title>Лекция {{N}} · {{TITLE_RU}}</title>
+  <script src="../theme-init.js"></script>
+  <link rel="stylesheet" href="../../assets/fonts/open-sans/open-sans.css">
+  <link rel="stylesheet" href="../shell.css" data-chalkish-fonts>
+  <link rel="stylesheet" href="../pde-gallery/catalogue.css">
+  <link rel="stylesheet" href="../pde-gallery/gallery.css">
+</head>
+<body>
+  <header class="demo-header">
+    <a class="demo-home" href="../../pages/cfd2026.html" aria-label="К странице курса">
+      <span aria-hidden="true">←</span> <span class="demo-home-label">к странице курса</span>
+    </a>
+    <h1 id="page-title">Лекция {{N}} · {{TITLE_RU}}</h1>
+    <div class="demo-tools">
+      <button class="demo-help-toggle" type="button" data-help-toggle aria-label="Справка" title="Справка">?</button>
+      <button class="demo-theme-toggle" type="button" data-theme-toggle aria-label="Включить тёмную тему">☾</button>
+      <nav class="demo-locale" data-locale-switch aria-label="Язык">
+        <a href="?lang=en" data-lang="en" lang="en">EN</a>
+        <span aria-hidden="true">/</span>
+        <a href="?lang=ru" data-lang="ru" lang="ru">RU</a>
+      </nav>
+    </div>
+  </header>
+  <main id="catalogue">
+    <section class="catalogue-intro">
+      <div><p class="eyebrow" id="catalogue-label">ИНТЕРАКТИВНЫЙ КАТАЛОГ</p><h2 id="catalogue-title">{{QUESTION_RU}}</h2><p id="catalogue-description">{{SUMMARY_RU}}</p></div>
+      <div class="catalogue-count"><strong id="catalogue-count">2</strong><span id="catalogue-count-label">опытов<br>с объяснениями</span></div>
+    </section>
+    <nav id="filters" class="filters" aria-label="Разделы лекции"></nav>
+    <div id="catalogue-grid" class="catalogue-grid"></div>
+    <footer class="catalogue-footer">
+      <span id="catalogue-help">Нажмите на карточку. Опыт откроется здесь же. Esc — вернуться в каталог.</span>
+    </footer>
+  </main>
+  <section id="demo-view" hidden aria-label="Интерактивный опыт">
+    <div class="demo-toolbar">
+      <div class="demo-heading"><span class="demo-number" id="demo-number"></span><div><span class="demo-section" id="demo-section"></span><h2 id="demo-title"></h2></div></div>
+      <div class="demo-navigation">
+        <button type="button" id="previous" aria-label="Предыдущий опыт">‹</button>
+        <button type="button" id="next" aria-label="Следующий опыт">›</button>
+        <button type="button" id="close-demo" aria-label="Каталог">×</button>
+      </div>
+    </div>
+    <div class="lab-layout">
+      <aside class="controls-panel" id="controls-panel">
+        <div class="panel-label" id="control-heading">УСЛОВИЯ ОПЫТА</div>
+        <div id="controls"></div>
+        <div class="panel-label preset-label" id="preset-heading">ПОПРОБУЙТЕ</div>
+        <div id="presets" class="presets"></div>
+        <button type="button" id="defaults" class="defaults-button">Параметры по умолчанию</button>
+        <section class="inquiry"><h3 id="question-heading">Что проверить?</h3><p id="question"></p></section>
+        <details id="math-details" open><summary id="math-heading">Математика опыта</summary><p id="explanation"></p></details>
+        <details><summary id="assumptions-heading">Соглашения и ограничения</summary><p id="caveat"></p></details>
+        <details><summary id="sources-heading">Источники и идеи</summary><div id="demo-sources"></div></details>
+      </aside>
+      <div class="lab-main">
+        <div class="equation" id="equation" aria-label="Уравнение"></div>
+        <div class="equation-caption" id="equation-caption" hidden></div>
+        <div class="mobile-board-hint" id="mobile-board-hint">↔ Доску можно прокручивать по горизонтали</div>
+        <div class="stage-viewport" aria-label="Интерактивная доска"><div id="stage" class="stage" tabindex="0"><noscript>Для интерактивных опытов нужен JavaScript.</noscript></div></div>
+        <div id="metrics" class="metrics" aria-label="Измеренные величины"></div>
+        <div class="playback">
+          <div class="playback-left">
+            <button type="button" id="play" class="primary">▶ Пуск</button>
+            <button type="button" id="step">Шаг</button>
+            <button type="button" id="reset">↺ Сброс</button>
+            <label class="speed-label" id="speed-wrapper"><span id="speed-label">шаг/с</span><input id="speed" type="range" min="2" max="120" step="2" value="24" aria-label="Шагов в секунду"><output id="speed-value">24</output></label>
+          </div>
+          <div class="playback-right">
+            <button type="button" id="tool" aria-pressed="false" hidden>✎</button>
+            <button type="button" id="fullscreen" title="Полный экран">⛶</button>
+          </div>
+        </div>
+        <div class="status-line"><span id="status" role="status"></span></div>
+      </div>
+      <button type="button" class="sheet-toggle" id="sheet-toggle" aria-controls="controls-panel" aria-expanded="true">▾ Скрыть параметры</button>
+    </div>
+  </section>
+  <script type="module" src="../theme.js"></script>
+  <script type="module" src="./src/app.js"></script>
+</body>
+</html>

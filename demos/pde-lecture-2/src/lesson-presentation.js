@@ -1,7 +1,7 @@
 // Student-facing statements describe the implemented problem, including its
 // domain and boundary data. Numerical implementation notes live in docs.
 const pair = (ru, en) => ({ ru, en });
-const conditions = {
+export const conditions = {
   'pde-field': pair('Периодические края: u(-1)=u(1), uₓ(-1)=uₓ(1). Для волны uₜ(x,0)=0.', 'Periodic ends: u(-1)=u(1), uₓ(-1)=uₓ(1). For the wave, uₜ(x,0)=0.'),
   diffusion: pair('Сверху вниз: поле, его градиент и поток. q направлен против градиента.', 'Top to bottom: field, gradient, and flux. q points against the gradient.'),
   boundaries: pair('Положительная ∂u/∂n добавляет тепло: наружный поток равен −D∂u/∂n.', 'Positive ∂u/∂n adds heat: outward flux is −D∂u/∂n.'),

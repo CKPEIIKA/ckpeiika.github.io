@@ -1,4 +1,4 @@
-import module0 from './board.js';
+import * as module0 from '../../pde-gallery/board.js';
 import module1 from './kernels.js';
 const __modules = { "board.js": module0, "kernels.js": module1 };
 const moduleValue = (() => {

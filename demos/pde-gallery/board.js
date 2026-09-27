@@ -1,14 +1,13 @@
-const moduleValue = (() => {
-/** Drawing adapter. The deployed gallery uses the site's genuine Chalkish engine.
- * Standalone preview: an independent Canvas 2D renderer, explicitly identified in UI.
+/** Drawing adapter shared by the PDE lecture galleries. Experiments draw with the
+ * site's Chalkish engine; catalogue thumbnails and `?engine=canvas` use plain Canvas 2D.
  * Design coordinates are 1000 x 610; labels share the exact same viewport transform.
  */
 const C={white:'#f4f1e7',muted:'#a6b8ad',grid:'#2a3a31',yellow:'#f0d477',blue:'#8ac8db',red:'#ef9685',green:'#b6d3a0',bg:'#0d1712',dim:'#506358'};
 const W=1000,H=610;
 let libraryPromise;
 function getLibrary(){
-  if(globalThis.PDE4_OFFLINE || new URLSearchParams(location.search).get('engine')==='canvas')return Promise.resolve(null);
-  return libraryPromise??=import('../../../lib/chalkish/src/index.js').catch(()=>null);
+  if(new URLSearchParams(location.search).get('engine')==='canvas')return Promise.resolve(null);
+  return libraryPromise??=import('../../lib/chalkish/src/index.js').catch(error=>{console.error('Chalkish could not be loaded; using the Canvas 2D renderer.',error);return null;});
 }
 class Ink {
   constructor(){this.cmd=[];}
@@ -62,7 +61,7 @@ class Board {
     this.ready=(preview?Promise.resolve(null):getLibrary()).then(lib=>{
       if(this.dead)return;
       if(lib){try{
-        if(!document.querySelector('[data-chalkish-fonts]')){for(const href of ['../../assets/fonts/open-sans/open-sans.css','./site-fonts.css']){const link=document.createElement('link');link.rel='stylesheet';link.href=href;link.dataset.chalkishFonts='';link.onload=()=>this.paint();document.head.append(link);}}
+        if(!document.querySelector('[data-chalkish-fonts]')){for(const href of [new URL('../../assets/fonts/open-sans/open-sans.css',import.meta.url).href,new URL('../shell.css',import.meta.url).href]){const link=document.createElement('link');link.rel='stylesheet';link.href=href;link.dataset.chalkishFonts='';link.onload=()=>this.paint();document.head.append(link);}}
         this.lib=lib;this.scene=new lib.Scene({background:C.bg});
         this.camera=new lib.Camera2D({centerX:W/2,centerY:H/2,height:H,flipY:false});
         this.app=lib.mount(this.canvas,{scene:this.scene,camera:this.camera,fixedStep:null,adaptiveQuality:false,dprMax:2});
@@ -90,6 +89,8 @@ class Board {
         if(p.type==='rect')this.scene.add(new L.Rectangle(p.w,p.h,{x:p.x+p.w/2,y:p.y+p.h/2,style}));
         if(p.type==='path'&&p.points.length>1)this.scene.add(new L.CurveLayer({x:Float32Array.from(p.points,p=>p[0]),y:Float32Array.from(p.points,p=>p[1]),count:p.points.length,style}));
       }
+      // Chalkish pins the canvas to an inline pixel size; clear it so the CSS size (100% of the host) is measured.
+      this.canvas.style.removeProperty('width');this.canvas.style.removeProperty('height');
       this.camera.setCenter(W/2,H/2);this.camera.setHeight(h/s);this.app.resize();this.app.render();
     }else{
       this.canvas.width=Math.round(w*dpr);this.canvas.height=Math.round(h*dpr);
@@ -107,6 +108,4 @@ class Board {
   destroy(){this.dead=true;this.ro.disconnect();this.app?.destroy();this.canvas.remove();this.labels.remove();}
 }
 
-return {C,W,Ink,graph,fmt,legend,Board};
-})();
-export default moduleValue;
+export {C,W,H,Ink,graph,fmt,legend,Board};

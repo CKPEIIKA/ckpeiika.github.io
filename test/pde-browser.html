@@ -11,9 +11,9 @@
 <output id="result">Running…</output>
 <script type="module">
 import { mount } from '../lib/chalkish/src/index.js';
-import { createLessonModel } from '../demos/pde-lecture-2/lesson-models.js';
-import { LESSON_SPECS } from '../demos/pde-lecture-2/lesson-specs.js';
-import { bindLessonView } from '../demos/pde-lecture-2/lesson-views.js';
+import { createLessonModel } from '../demos/pde-lecture-2/src/lesson-models.js';
+import { LESSON_SPECS } from '../demos/pde-lecture-2/src/lesson-specs.js';
+import { bindLessonView } from '../demos/pde-lecture-2/src/lesson-views.js';
 const canvas = document.querySelector('canvas'), output = document.querySelector('output');
 const failures = [];
 let count = 0;

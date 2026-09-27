@@ -1,0 +1,65 @@
+/* Experiment catalogue shared by the PDE lecture pages: intro, filters and board-thumbnail cards.
+   Load after ../shell.css (fonts, site tokens, header). Lectures 3-4 also load gallery.css. */
+/* Palette scoped to the catalogue, so it cannot leak into a page's own experiment view. */
+:where(#catalogue){--bg:var(--site-background);--paper:var(--site-panel);--ink:var(--site-text);--muted:var(--site-muted);--line:var(--site-accent);--accent:var(--site-accent);--active:#d7dde2;--board:#0d1712;--ui:var(--font-board-ui);--board-texture:url("../../lib/chalkish/examples/assets/board-grain.png")}
+html.theme-dark :where(#catalogue){--active:#393329}
+/* Self-contained basics, so pages without gallery.css (Lecture 2) render the same cards. */
+:where(#catalogue,#catalogue *){box-sizing:border-box}
+:where(#catalogue){color:var(--ink);font:15px/1.48 var(--ui)}
+:where(#catalogue) :where(h2,h3,p){margin:0}
+#catalogue :is(h2,h3,.eyebrow){font-family:var(--ui);text-shadow:none} /* beats chalkboard-theme.css heading faces */
+.demo-card{color:inherit;font:inherit;text-decoration:none;cursor:pointer}
+.demo-card:focus-visible{outline:3px solid #41758a;outline-offset:3px}
+#catalogue{max-width:1600px;padding:29px 3.2vw 34px;margin:auto}
+.catalogue-intro{display:flex;justify-content:space-between;gap:40px;padding:0 0 25px}
+.eyebrow{font-size:11px;color:var(--accent);font-weight:700;letter-spacing:.16em;margin-bottom:9px}
+.catalogue-intro h2{font-size:31px;letter-spacing:-.025em;font-weight:550;margin-bottom:8px}
+.catalogue-intro p:last-child{font-size:14px;color:var(--muted);max-width:830px}
+.catalogue-count{display:flex;align-items:center;gap:13px;flex-shrink:0;color:var(--accent);border-left:1px solid var(--line);padding-left:25px}
+.catalogue-count strong{font-size:56px;font-weight:400;line-height:1}
+.catalogue-count span{font-size:11px;line-height:1.55;letter-spacing:.04em;text-transform:uppercase}
+.filters{display:flex;flex-wrap:wrap;gap:7px;padding:15px 0 22px;border-top:1px dashed var(--line)}
+.filters button{font-size:11px;min-height:30px;border-radius:2px;padding:5px 10px;color:var(--muted)}
+.filters button.active{border-color:var(--accent);color:var(--accent);background:var(--active)}
+.catalogue-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px 21px}
+.demo-card{display:block;text-align:left;padding:0;background:transparent;border:none;min-width:0;border-radius:0}
+.demo-card:hover{background:transparent}
+.thumbnail{position:relative;aspect-ratio:12/7;overflow:hidden;border:1px solid var(--line);background:#e7ede6;transition:border-color .15s}
+.demo-card:hover .thumbnail{border-color:var(--accent)}
+.thumbnail:after{content:'↗';position:absolute;right:9px;bottom:6px;color:#617b6b;font-size:21px}
+.card-text{padding:12px 0 0;display:grid;grid-template-columns:26px 1fr;gap:8px}
+.card-num{font-size:13px;color:var(--accent);font-weight:650;padding-top:2px}
+.card-title{font-size:14px;line-height:1.35;font-weight:650;margin-bottom:5px}
+.card-short{font-size:11px;line-height:1.55;color:var(--muted);font-weight:400}
+.card-group{display:block;margin-top:8px;font-size:9px;text-transform:uppercase;letter-spacing:.075em;color:var(--accent)}
+.catalogue-footer{display:flex;justify-content:space-between;gap:30px;margin-top:35px;padding-top:17px;border-top:1px dashed var(--line);font-size:11px;color:var(--muted)}
+.thumbnail .board-canvas,.thumbnail .board-labels{position:absolute}
+@media(min-width:1700px){.catalogue-grid{gap:30px}.card-title{font-size:16px}.card-short{font-size:12px}}
+@media(max-width:1150px){.catalogue-grid{gap:21px 16px}}
+@media(max-width:800px){.catalogue-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.catalogue-count{display:none}.catalogue-intro h2{font-size:27px}.catalogue-footer{flex-direction:column;gap:10px}.catalogue-intro p:last-child{font-size:13px}}
+@media(max-width:480px){.filters{gap:5px}.filters button{font-size:10px;padding:5px 7px}.catalogue-intro h2{font-size:24px}.catalogue-grid{gap:22px 12px}.card-title{font-size:12px}.card-short{font-size:10px}.card-text{grid-template-columns:20px 1fr;gap:4px}.card-group{font-size:8px}}
+@media print{.catalogue-grid{grid-template-columns:repeat(3,1fr)}}
+#catalogue{width:min(100%,112rem);margin-inline:auto}
+#catalogue{padding:26px 0 30px}
+.catalogue-intro{padding-bottom:18px}
+.catalogue-intro h2{font-size:27px;font-weight:600;text-transform:uppercase;color:var(--accent)}
+.catalogue-count strong{font-size:43px}
+.catalogue-count{border-left:1px dashed var(--accent)}
+.catalogue-grid{gap:25px 20px}
+.thumbnail{background:var(--board);border:1px dashed var(--accent)}
+.thumbnail:after{color:#b4cbb9}
+.demo-card:hover .thumbnail{outline:1px solid var(--accent);outline-offset:3px}
+.card-group{display:none}
+.card-title{font-size:14px;font-weight:650}
+.card-text{grid-template-columns:24px 1fr;padding-top:10px}
+.card-num{font-size:12px}
+.filters{border-top:1px dashed var(--accent);padding:13px 0 22px}
+.filters button{border:1px dotted var(--accent);font-size:11px}
+.filters button.active{border-style:solid}
+.catalogue-footer{border-top:1px dashed var(--accent)}
+@media(min-width:1700px){.card-title{font-size:16px}}
+@media(max-width:1150px){.catalogue-intro h2{font-size:24px}}
+@media(max-width:800px){.catalogue-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 12px}.catalogue-intro h2{font-size:22px}.catalogue-intro p:last-child{font-size:12px}}
+@media(max-width:480px){.card-title{font-size:12px}.card-short{font-size:10px}.catalogue-intro h2{font-size:21px}.card-text{grid-template-columns:19px 1fr;gap:4px}.filters button{font-size:10px}.catalogue-footer{font-size:10px}}
+#catalogue{width:min(100%,112rem);margin-inline:auto}
+.thumbnail{background-color:var(--board);background-image:var(--board-texture),linear-gradient(118deg,#14271e,#0b1511 78%);background-size:300px 300px,auto;background-blend-mode:soft-light,normal}

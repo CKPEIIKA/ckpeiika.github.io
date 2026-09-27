@@ -29,6 +29,7 @@ import {CHALK_FONT_STACK,strokeChalkPath2D as chalkStroke} from '../../lib/chalk
 import {POTENTIALS,potential,radialForce,effectivePotential,hsAngle,vssAngle,vssDcs,vhsDiameter,labFromRelative,mulberry32,sampleDisk,scatterEnsemble,criticalOrbit,solveTrajectory,hardSphereTrajectory,trajectoryAt,deflectionCurve,areaBinnedDcs} from './physics.js';
 import {CHAPTERS,setChapterLanguage} from './chapters.js';
 import {bindLabLanguage,withCommonTranslations} from '../lab-i18n.js';
+import {bindHelpDialog,bindKeys,renderKeyHelp} from '../keys.js';
 
 const i18n=bindLabLanguage(withCommonTranslations({
   en:{'page.documentTitle':'Binary collision · Chalkish','page.title':'Binary collision','nav.course':'course page','controls.showPrecision':'Show exact values','controls.hidePrecision':'Hide exact values','camera.volume':'Volume view','camera.plane':'Collision plane','camera.front':'View along incoming velocity','camera.projection':'Toggle projection','stage.play':'Play','stage.pause':'Pause','stage.rewind':'Return to start','stage.resetView':'Return to start','stage.enterFullscreen':'Enter fullscreen','stage.exitFullscreen':'Exit fullscreen','transport.timeline':'Timeline','transport.speed':'Playback speed','locale.label':'Language'},
@@ -533,10 +534,11 @@ function bind(){
   $('plot').addEventListener('pointerdown',e=>{pickPlot(e);$('plot').setPointerCapture(e.pointerId);});$('plot').addEventListener('pointermove',e=>{if(e.buttons===1)pickPlot(e);});
   $('boardFullscreenButton').onclick=()=>widgetFullscreen($('board'));$('plotFullscreenButton').onclick=()=>widgetFullscreen($('plotPanel'));
   document.addEventListener('fullscreenchange',syncWidgetFullscreen);syncCameraLabels();syncStaticCopy();syncWidgetFullscreen();i18n.onChange(()=>{setChapterLanguage(i18n.language);$('chapters').innerHTML=CHAPTERS.map((ch,i)=>`<button class="chapter-button" data-chapter="${i}" title="${ch.title.replace('<br>',' ')}"><span class="num">${String(i+1).padStart(2,'0')}</span><span>${ch.tab}</span></button>`).join('');updateText();syncCameraLabels();syncStaticCopy();syncControls();updateTransport();syncWidgetFullscreen();});
-  document.addEventListener('keydown',e=>{
-    if($('helpDialog').open||/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName))return;
-    if(e.key==='ArrowRight'){e.preventDefault();navigate(1,e.shiftKey);}if(e.key==='ArrowLeft'){e.preventDefault();navigate(-1,e.shiftKey);}if(e.code==='Space'){e.preventDefault();togglePlay();}if(e.key.toLowerCase()==='r')applyLesson(state.chapter,state.step);
-  });
+  // Shared keys (../keys.js): arrows move through lesson steps, Shift+arrow through sections.
+  const keyActions={play:()=>togglePlay(),reset:()=>applyLesson(state.chapter,state.step),previous:e=>navigate(-1,e.shiftKey),next:e=>navigate(1,e.shiftKey),help:()=>toggleHelp()};
+  const keyLabels={previous:['предыдущий шаг (Shift — раздел)','previous step (Shift: section)'],next:['следующий шаг (Shift — раздел)','next step (Shift: section)'],reset:['начать шаг заново','restart the step']};
+  const toggleHelp=bindHelpDialog($('helpDialog'),()=>renderKeyHelp($('helpDialog').querySelector('[data-key-help]'),i18n.language,keyActions,[],keyLabels));
+  bindKeys(keyActions);
   window.addEventListener('hashchange',()=>{const q=safeHash();if(q)applyLesson(q.c,q.s,q.restore);});
   document.addEventListener('visibilitychange',()=>{if(document.hidden){playing=false;updateTransport();}});
   window.addEventListener('pagehide',()=>{playing=false;cancelAnimationFrame(frameId);controls.dispose();renderer.dispose();plotObserver.disconnect();},{once:true});

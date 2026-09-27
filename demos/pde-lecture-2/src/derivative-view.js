@@ -8,7 +8,7 @@ import {
   Scene,
   TextLabel,
   chalkStyle,
-} from '../../lib/chalkish/src/index.js';
+} from '../../../lib/chalkish/src/index.js';
 
 const PANEL_CENTERS = [2.65, 0, -2.65];
 const PANEL_HALF_HEIGHT = 0.92;

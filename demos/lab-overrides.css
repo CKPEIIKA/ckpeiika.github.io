@@ -1,46 +1,3 @@
-@font-face {
-  font-family: "Neucha";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("../lib/chalkish/examples/assets/fonts/neucha-regular.ttf") format("truetype");
-}
-
-@font-face {
-  font-family: "Shantell Sans";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("../lib/chalkish/examples/assets/fonts/shantell-sans-regular.ttf") format("truetype");
-}
-
-:root {
-  color-scheme: light;
-  --site-background: #d8dde3;
-  --site-accent: #9f2d20;
-  --site-text: #24282c;
-  --site-rule: #9f2d20;
-  --font-chalk: "Neucha", "Shantell Sans", sans-serif;
-  --font-chalk-clean: "Shantell Sans", sans-serif;
-  --font-chalk-label: var(--font-chalk-clean);
-  --font-board-ui: "Open Sans", Arial, sans-serif;
-  --chalk-white: #f5f2e9;
-  --chalk-dim: #c4cbc6;
-  --chalk-yellow: #efd677;
-  --chalk-rule: #d8dde366;
-  --board-texture: url("../lib/chalkish/examples/assets/board-grain.png");
-  --chalk-transition-duration: 1200ms;
-  --chalk-rewrite-duration: 1600ms;
-}
-
-html.theme-dark {
-  color-scheme: dark;
-  --site-background: #181818;
-  --site-accent: #f1d8c0;
-  --site-text: #f1d8c0;
-  --site-rule: #f1d8c0;
-}
-
 *,
 *::before,
 *::after {
@@ -61,95 +18,6 @@ body {
 body::after,
 .stage-viewport::before {
   display: none;
-}
-
-.lab-header {
-  grid-template-columns: max-content minmax(0, 1fr) max-content;
-  gap: 1rem;
-  align-items: center;
-  padding: 0 0 0.25rem;
-  border-bottom: 1px dashed var(--site-rule);
-}
-
-.board-home,
-.locale-switch {
-  margin: 0;
-  color: var(--site-accent);
-  font-family: inherit;
-  font-size: 0.68rem;
-  font-weight: 700;
-  white-space: nowrap;
-  text-transform: uppercase;
-}
-
-.header-tools {
-  display: inline-flex;
-  gap: 0.65rem;
-  align-items: center;
-}
-
-.mobile-controls-toggle {
-  display: none;
-}
-
-.demo-theme-toggle {
-  display: grid;
-  width: 1.6rem;
-  height: 1.6rem;
-  padding: 0;
-  place-items: center;
-  border: 1px dotted var(--site-accent);
-  border-radius: 0;
-  background: transparent;
-  color: var(--site-accent);
-  cursor: pointer;
-  line-height: 1;
-}
-
-.board-home {
-  border-bottom: 1px dotted var(--site-accent);
-}
-
-.board-home:hover,
-.board-home:focus-visible,
-.demo-theme-toggle:hover,
-.demo-theme-toggle:focus-visible,
-.locale-switch a:hover,
-.locale-switch a:focus-visible {
-  background: var(--site-accent);
-  color: var(--site-background);
-  outline: 2px solid var(--site-accent);
-  outline-offset: 2px;
-}
-
-.locale-switch {
-  float: none;
-  gap: 0.4rem;
-}
-
-.locale-switch a {
-  border-bottom: 1px dotted var(--site-accent);
-  color: var(--site-accent);
-  text-decoration: none;
-}
-
-.locale-switch a[aria-current="page"] {
-  border-bottom-style: solid;
-  color: var(--site-text);
-  pointer-events: none;
-}
-
-.lab-header h1 {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  color: var(--site-accent);
-  font-family: inherit;
-  font-size: 1rem;
-  font-weight: 700;
-  line-height: 1.2;
-  text-shadow: 1px 1px 0 #000;
-  text-transform: uppercase;
 }
 
 .lab-layout {
@@ -256,8 +124,8 @@ html.theme-dark .lab-controls input:not([type="range"]) {
 }
 
 .checkbox-row input[type="checkbox"] {
-  width: 1rem;
-  min-height: 1rem;
+  width: 1.5rem;
+  min-height: 1.5rem;
   justify-self: end;
   accent-color: var(--site-accent);
 }
@@ -744,22 +612,9 @@ html.theme-dark .lab-controls input:not([type="range"]) {
 }
 
 @media (max-width: 540px) {
-  .lab-header {
-    gap: 0.5rem;
-  }
-
-  .course-label {
-    display: none;
-  }
-
   .lab-controls {
     max-height: none;
     overflow: visible;
-  }
-
-  .lab-header h1 {
-    font-size: 1rem;
-    white-space: nowrap;
   }
 
   .distribution-tabs {
@@ -800,73 +655,64 @@ html.theme-dark .lab-controls input:not([type="range"]) {
 
 }
 
+/* Phones: the stage fills about 70% of the screen and the controls scroll in a sheet
+   below it (about 30%). The bar between them hides the sheet (controls-sheet.js). */
 @media (max-width: 760px) {
-  .mobile-controls-toggle {
+  body {
     display: flex;
-    width: min(100%, 112rem);
-    min-height: 2.2rem;
-    margin: 0.35rem auto 0;
-    padding: 0.35rem 0.6rem;
-    align-items: center;
-    justify-content: space-between;
-    border: 1px dashed var(--site-accent);
-    border-radius: 0;
-    background: transparent;
-    color: var(--site-accent);
-    cursor: pointer;
-    font: 700 0.72rem/1.2 var(--font-board-ui);
-    text-transform: uppercase;
+    flex-direction: column;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+    padding-bottom: 0.35rem;
   }
 
-  .mobile-controls-toggle::after {
-    content: '＋';
-    font-size: 1rem;
-    line-height: 1;
-  }
-
-  .mobile-controls-toggle[aria-expanded="true"]::after {
-    content: '−';
-  }
-
-  .mobile-controls-toggle:hover,
-  .mobile-controls-toggle:focus-visible {
-    background: var(--site-accent);
-    color: var(--site-background);
-    outline: 2px solid var(--site-accent);
-    outline-offset: 2px;
+  main {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
   }
 
   .lab-layout {
+    flex: 1;
     grid-template-areas:
       "stage"
+      "toggle"
       "controls";
+    grid-template-rows: minmax(0, 7fr) auto minmax(0, 3fr);
+    height: auto;
+    min-height: 0;
+  }
+
+  .lab-layout.controls-collapsed {
+    grid-template-areas:
+      "stage"
+      "toggle";
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .lab-stage {
+    min-height: 0;
+  }
+
+  .sheet-toggle {
+    grid-area: toggle;
+    border-top: 0;
   }
 
   .lab-controls {
-    display: none;
-    max-height: none;
-    overflow: visible;
-  }
-
-  .lab-controls.mobile-controls-open {
-    display: grid;
-  }
-}
-
-@media (max-width: 540px) {
-  .lab-controls.mobile-controls-open {
     display: block;
+    max-height: none;
+    min-height: 0;
+    padding: 0.4rem 0.6rem 0.6rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 1px dashed var(--site-accent);
+    border-top: 0;
   }
-}
 
-[data-mobile-controls-label="hide"] {
-  display: none;
-}
-
-.mobile-controls-toggle[aria-expanded="true"] [data-mobile-controls-label="show"] {
-  display: none;
-}
-
-.mobile-controls-toggle[aria-expanded="true"] [data-mobile-controls-label="hide"] {
-  display: inline;
+  .lab-layout.controls-collapsed .lab-controls {
+    display: none;
+  }
 }

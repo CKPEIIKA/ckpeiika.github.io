@@ -8,18 +8,26 @@
 <link rel="stylesheet" href="../../assets/fonts/open-sans/open-sans.css">
 <link rel="stylesheet" href="../../lib/chalkish/examples/chalkboard-theme.css">
 <link rel="stylesheet" href="../../lib/chalkish/examples/reference-labs.css">
+<link rel="stylesheet" href="../shell.css">
 <link rel="stylesheet" href="../lab-overrides.css">
 <link rel="stylesheet" href="lab.css">
 </head>
 <body class="collision-lab">
-<header class="lab-header">
-  <a class="board-home" href="../../pages/physico-chemical-gas-dynamics-2026.html" aria-label="Вернуться к странице курса" data-i18n-aria-label="nav.course"><span aria-hidden="true">←</span></a>
-  <h1 data-i18n="page.title">Бинарное столкновение</h1>
-  <div class="header-tools">
-    <button class="demo-theme-toggle" type="button" data-theme-toggle aria-label="Включить светлую тему" title="Включить светлую тему">☾</button>
-    <nav class="locale-switch" data-locale-switch aria-label="Язык" data-i18n-aria-label="locale.label"><a href="?lang=en" data-lang="en" lang="en">EN</a><span aria-hidden="true">/</span><a href="?lang=ru" data-lang="ru" lang="ru">RU</a></nav>
-  </div>
-</header>
+<header class="demo-header">
+    <a class="demo-home" href="../../pages/physico-chemical-gas-dynamics-2026.html" aria-label="К странице курса" data-i18n-aria-label="nav.course">
+      <span aria-hidden="true">←</span> <span class="demo-home-label" data-i18n="nav.course">к странице курса</span>
+    </a>
+    <h1 data-i18n="page.title">Бинарное столкновение</h1>
+    <div class="demo-tools">
+      <button class="demo-help-toggle" type="button" data-help-toggle data-i18n-aria-label="page.help" data-i18n-title="page.help" aria-label="Справка" title="Справка">?</button>
+      <button class="demo-theme-toggle" type="button" data-theme-toggle aria-label="Включить тёмную тему">☾</button>
+      <nav class="demo-locale" data-locale-switch aria-label="Язык" data-i18n-aria-label="locale.label">
+        <a href="?lang=en" data-lang="en" lang="en">EN</a>
+        <span aria-hidden="true">/</span>
+        <a href="?lang=ru" data-lang="ru" lang="ru">RU</a>
+      </nav>
+    </div>
+  </header>
 <nav id="chapters" class="chapters" aria-label="Разделы лаборатории"></nav>
 <main class="workspace">
   <section class="board-column" aria-label="Визуализация и измерения">
@@ -63,7 +71,7 @@
     <div class="lesson-bottom chalk-rule-top"><button id="prevButton" title="Предыдущий шаг (←)" aria-label="Предыдущий шаг">‹</button><span id="pageCount"></span><button id="nextButton" class="primary" title="Следующий шаг (→)" aria-label="Следующий шаг">›</button></div>
   </aside>
 </main>
-<dialog id="helpDialog"><div class="dialog-heading"><h2>Соглашения и управление</h2><button id="closeHelp" aria-label="Закрыть">✕</button></div><div class="help-content">
+<dialog id="helpDialog"><div class="dialog-heading"><h2>Соглашения и управление</h2><button id="closeHelp" type="button" aria-label="Закрыть" data-help-close>✕</button></div><div class="help-content">
 <p>Во всех сценах <b>g = v₁ − v₂</b> направлена вдоль +x до столкновения. <b>b</b>: расстояние от центра взаимодействия до входящей асимптоты. <b>χ ∈ [0, π]</b>: угол между входящим и выходящим направлениями относительной скорости. <b>φ</b>: азимут плоскости столкновения, отсчитываемый от +y к +z вокруг +x.</p>
 <p>Для твёрдых сфер <b>d = R₁ + R₂</b>: расстояние между центрами при касании, а не радиус каждой молекулы. В относительной задаче нарисована сфера исключения радиуса d. Для Леннарда-Джонса ℓ₀: расстояние, где U = 0; минимум достигается при r = 2<sup>1/6</sup>ℓ₀.</p>
 <p>Динамические сцены с потенциалами показаны в приведённых единицах: ℓ₀ = ε = μ = 1. E = g²/2 задана на бесконечности. Энергия и момент количества движения сохраняются; частицы не теряют энергию и не остаются связанными после упругого столкновения.</p>
@@ -75,7 +83,7 @@
 <p><a href="https://sparta.github.io/doc/collide.html" target="_blank" rel="noopener">SPARTA: collide</a>: разграничение HS, VHS и VSS. G. A. Bird, <i>Molecular Gas Dynamics and the Direct Simulation of Gas Flows</i> (1994), §§ 2.6-2.7.</p>
 <p>Книжный контекст курса: М. Н. Коган, <i>Динамика разреженного газа</i>; G. M. Kremer, <i>An Introduction to the Boltzmann Equation and Transport Processes in Gases</i> (2010). Конкретные страницы не указываются без сверки издания.</p>
 <p class="smallprint">3D-модуль добавлен к Chalkish отдельным API и не изменяет существующее 2D-ядро. Лаборатория и модуль работают без внешних библиотек и сетевых запросов.</p>
-</div></dialog>
+<dl class="key-help" data-key-help></dl></div></dialog>
 <noscript><p class="noscript">Для лаборатории необходим JavaScript.</p></noscript>
 <script type="module" src="../theme.js"></script>
 <script type="module" src="app.js"></script>

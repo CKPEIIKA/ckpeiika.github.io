@@ -38,7 +38,8 @@ function isPublishedPage(file) {
   const extension = path.posix.extname(file).toLowerCase();
   if (!['.html', '.md', '.markdown'].includes(extension)) return false;
   if (['README.md', 'AGENTS.md'].includes(path.posix.basename(file))) return false;
-  return !file.split('/').some((part) => excludedPageDirs.has(part));
+  // Like Jekyll, folders starting with '_' (e.g. demos/_template) are never published.
+  return !file.split('/').some((part) => excludedPageDirs.has(part) || part.startsWith('_'));
 }
 
 function liquidTargets(value) {

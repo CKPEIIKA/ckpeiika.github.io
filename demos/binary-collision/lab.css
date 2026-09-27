@@ -10,7 +10,7 @@
 
 /* Desktop viewport layout, including a 1024 x 768 lecture projector. */
 @media(min-width:801px){
- html,body{height:100%;min-height:0}body{height:100dvh;overflow:hidden}.masthead,.chapters,.footer{flex-shrink:0}.workspace{flex:1;min-height:0;overflow:hidden}.board-column{height:100%;min-height:0}.board{height:auto;flex:1;min-height:200px}.transport,.plot-panel,.diagnostics{flex-shrink:0}.lesson{height:100%;min-height:0;overflow:hidden}.lesson-scroll{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent;padding-right:3px}.lesson-bottom{margin-top:0;flex-shrink:0;background:var(--bg)}.utilities{flex-shrink:0}.lesson-top{min-height:16px}
+ html,body{height:100%;min-height:0}body{height:100dvh;overflow:hidden}.demo-header,.masthead,.chapters,.footer{flex-shrink:0}.workspace{flex:1;min-height:0;overflow:hidden}.board-column{height:100%;min-height:0}.board{height:auto;flex:1;min-height:200px}.transport,.plot-panel,.diagnostics{flex-shrink:0}.lesson{height:100%;min-height:0;overflow:hidden}.lesson-scroll{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent;padding-right:3px}.lesson-bottom{margin-top:0;flex-shrink:0;background:var(--bg)}.utilities{flex-shrink:0}.lesson-top{min-height:16px}
 }
 .precision-control{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:12px 0;padding:10px 0;border-top:1px dashed var(--line)}.precision-control label{font-size:10px;color:var(--dim)}.precision-control input{width:100%;margin-top:5px;min-width:0;padding:5px 7px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:3px;font-size:12px;font-variant-numeric:tabular-nums}
 @media(max-width:800px){.lesson-scroll{overflow:visible}.precision-control{grid-column:1/-1}.lesson-top button{font-size:11px}.precision-control label{font-size:11px}}
@@ -30,16 +30,14 @@ h1,h2,.equations,.scene-readout strong{font-family:var(--font-chalk);font-weight
 body{background:#11191c;background-image:none;background-blend-mode:normal}
 .transport,.diagnostics{background:var(--panel)}
 .masthead{min-height:2.8rem;padding:.35rem .75rem;justify-content:flex-start}
-.board-home{display:inline-grid;place-items:center;width:1.75rem;height:1.75rem;color:var(--chalk-white);border:1px solid var(--chalk-rule);border-radius:var(--control-corner);font-family:var(--font-chalk);font-size:1.35rem;line-height:1;text-decoration:none}.board-home:hover,.board-home:focus-visible{border-color:var(--chalk-yellow);color:var(--chalk-yellow)}
 
 /* Shared Chalkish shell and typography. */
 :root{--bg:var(--site-background);--panel:var(--site-background);--ink:var(--chalk-white);--dim:var(--chalk-dim);--muted:#a4b3a5;--line:var(--chalk-rule);--accent:#72dce5;--gold:var(--chalk-yellow)}
 html,body{background:var(--site-background);color:var(--site-text)}body{padding:.55rem 1rem 1rem;background-image:none;font-family:var(--font-board-ui)}
-.lab-header{display:flex;width:100%;min-height:2.8rem;padding:0 0 .25rem;align-items:center;justify-content:space-between;gap:1rem;border-bottom:1px dashed var(--site-rule)}.lab-header h1{margin:0;padding:0;border:0;color:var(--site-text);font-family:var(--font-board-ui);font-size:1rem;font-weight:700;line-height:1.2;text-transform:uppercase}.header-tools{display:inline-flex;gap:.65rem;align-items:center}.board-home{display:inline-grid;width:auto;height:1.6rem;padding:0 .35rem;place-items:center;border:0;border-bottom:1px dotted var(--site-accent);border-radius:0;color:var(--site-accent);font-family:var(--font-board-ui);font-size:.68rem;font-weight:700;text-decoration:none;text-transform:uppercase}.board-home:hover,.board-home:focus-visible{background:var(--site-accent);color:var(--site-background);outline:2px solid var(--site-accent);outline-offset:2px}
 .chapters{border-color:var(--site-rule);background:var(--site-background)}.chapter-button{font-family:var(--font-chalk-label);color:var(--site-text)}.chapter-button.active{border-color:var(--site-accent);color:var(--site-text)}
 .board,.plot-panel,.lesson{border-color:var(--site-accent);border-radius:0;box-shadow:none}.lesson{color:var(--chalk-white);border-left:1px dashed var(--site-accent)}.transport,.diagnostics{background:var(--site-background);border-color:var(--site-accent)}
 .lesson h1,.lesson h2,.lesson .explanation,.lesson .observation,.lesson .equations,.lesson .control,.lesson .check-control,.lesson label,.lesson output,.lesson button{font-family:var(--font-chalk)}.lesson .control-heading{font-family:var(--font-chalk-label)}button,select,input{border-radius:0}.stage-icon{display:block;width:1.15rem;height:1.15rem;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.camera-bar button,.transport button,.lesson-top button,.control-heading button{display:grid;min-width:2.2rem;min-height:2.2rem;padding:.25rem;place-items:center;border:1px solid var(--chalk-rule);border-radius:0;background:transparent;color:var(--chalk-white)}.camera-bar button.active,.camera-bar button[aria-pressed="true"]{border-color:var(--chalk-yellow);background:#efd67718;color:var(--chalk-white)}.camera-bar button:hover,.camera-bar button:focus-visible,.transport button:hover,.transport button:focus-visible,.lesson-top button:hover,.lesson-top button:focus-visible,.control-heading button:hover,.control-heading button:focus-visible{border-color:var(--chalk-yellow);outline:2px solid #efd67740;outline-offset:1px}.widget-fullscreen{display:grid;place-items:center;padding:.25rem;border:1px solid var(--chalk-rule);border-radius:0}.widget-fullscreen .collapse-glyph{display:none}.widget-fullscreen[data-fullscreen="true"] .expand-glyph{display:none}.widget-fullscreen[data-fullscreen="true"] .collapse-glyph{display:block}.plot-heading .widget-fullscreen{min-width:2rem;min-height:2rem}.play-button .pause-glyph{display:none}.play-button[data-playing="true"] .play-glyph{display:none}.play-button[data-playing="true"] .pause-glyph{display:block}#exploreButton[aria-pressed="true"] .stage-icon{transform:rotate(180deg)}
-@media(max-width:800px){.lab-header{min-height:2.4rem}.lab-header h1{font-size:.85rem}.lesson{border-left:0;border-top:1px dashed var(--site-accent)}}
+@media(max-width:800px){.lesson{border-left:0;border-top:1px dashed var(--site-accent)}}
 
 .lesson h1{font-size:clamp(1.65rem,2.2vw,2.35rem);line-height:1.08;letter-spacing:0;margin:8px 0 14px}
 
@@ -47,33 +45,29 @@ html,body{background:var(--site-background);color:var(--site-text)}body{padding:
 :root{--bg:var(--site-background);--panel:var(--board-panel);--ink:var(--chalk-white);--dim:var(--chalk-dim);--line:var(--chalk-rule);--accent:var(--site-accent);--gold:var(--chalk-yellow)}
 html,body{background:var(--site-background)!important;color:var(--site-text)}
 body{background-image:none!important;font-family:var(--font-chalk)}
-.lab-header h1,.lab-header .board-home,.header-tools,.locale-switch,.demo-theme-toggle{font-family:var(--font-chalk-label)}
 .lesson h1,.lesson h2,.lesson .explanation,.lesson .observation,.lesson .equations,.lesson .control,.lesson .check-control,.lesson label,.lesson output,.lesson button,.plot-heading,.transport output{font-family:var(--font-chalk)}
 #playButton .play-glyph{display:block!important}#playButton .pause-glyph{display:none!important}#playButton[data-playing="true"] .play-glyph{display:none!important}#playButton[data-playing="true"] .pause-glyph{display:block!important}
 .widget-fullscreen .collapse-glyph{display:none}.widget-fullscreen[data-fullscreen="true"] .expand-glyph{display:none}.widget-fullscreen[data-fullscreen="true"] .collapse-glyph{display:block}
 
 /* Keep board controls dark in the light site theme, and use the loaded Chalkish face everywhere. */
 body,button,input,select,output,textarea,select option{font-family:var(--font-chalk)!important}
-.lab-header h1,.lab-header .board-home,.header-tools,.locale-switch,.demo-theme-toggle,.chapters,.chapter-button,.chapter-button .num{font-family:"Open Sans",Arial,sans-serif!important}
+.demo-theme-toggle,.chapters,.chapter-button,.chapter-button .num{font-family:"Open Sans",Arial,sans-serif!important}
 .transport,.lesson-bottom{background-color:var(--board-green);background-image:var(--board-texture),linear-gradient(118deg,#14271e,#0b1511 78%);background-size:300px 300px,auto;background-blend-mode:soft-light,normal;color:var(--chalk-white);border-color:var(--chalk-rule)}
 .lesson select,.lesson input:not([type="range"]),.precision-control input{background-color:var(--board-green);color:var(--chalk-white);border-color:var(--chalk-rule)}
 .transport select{background-color:var(--board-green);color:var(--chalk-white);border:1px solid var(--chalk-rule)}
 .lesson-bottom button.primary{background-color:transparent;color:var(--chalk-white);border:1px solid var(--chalk-rule)}
 .lesson-bottom button.primary:hover,.lesson-bottom button.primary:focus-visible{background-color:#efd67718;color:var(--chalk-yellow);border-color:var(--chalk-yellow)}
 
-.lab-header h1{font-weight:400!important;letter-spacing:.02em}
 .chapter-button{font-size:15px!important}
 .chapter-button .num{font-size:25px!important}
 .chapters{align-items:stretch!important}
 .chapter-button{display:flex!important;align-items:baseline!important;justify-content:flex-start!important;gap:6px!important;white-space:nowrap!important;line-height:1.1!important}
 .chapter-button *{font-size:15px!important;line-height:1.1!important;white-space:nowrap!important}
 .chapter-button .num{font-size:25px!important;line-height:1!important;flex:0 0 auto!important}
-.lab-header h1{display:none!important}
-.lab-header{display:contents!important}
-.lab-header .board-home{position:absolute!important;top:16px!important;left:16px!important;z-index:3!important}
-.lab-header .header-tools{position:absolute!important;top:14px!important;right:16px!important;z-index:3!important}
 .chapters{display:flex!important;flex-flow:row nowrap!important;align-items:center!important;overflow:hidden!important}
 .chapters{padding-left:72px!important;padding-right:126px!important;margin-top:0!important}
+/* Wide screens keep the full board height: the shared header sits over the chapter row. */
+@media(min-width:801px){.collision-lab .demo-header{display:contents}.collision-lab .demo-header h1,.collision-lab .demo-home-label{display:none}.collision-lab .demo-home{position:absolute;top:12px;left:16px;z-index:3}.collision-lab .demo-tools{position:absolute;top:14px;right:16px;z-index:3}}
 .chapters{display:grid!important;grid-template-columns:repeat(9,minmax(0,1fr))!important;gap:0!important;box-sizing:border-box!important}
 .chapter-button{flex:1 1 0!important;min-width:0!important;align-items:center!important;justify-content:center!important;overflow:hidden!important;line-height:1!important}
 .chapter-button>*{display:inline!important;width:auto!important;max-width:none!important;white-space:nowrap!important}
@@ -97,10 +91,10 @@ main :has(> .board){padding-top:0!important}
  body{padding:.8rem 2rem 1.5rem;font-size:20px}
  .workspace{max-width:3200px;grid-template-columns:minmax(0,1fr) 620px}
  .chapters{height:88px;padding-left:112px!important;padding-right:190px!important}
+ .collision-lab .demo-home{top:19px;left:28px;font-size:1rem}
+ .collision-lab .demo-tools{top:21px;right:28px}
  .chapters .chapter-button,.chapters .chapter-button *{font-size:20px!important}
  .chapters .chapter-button .num{font-size:38px!important}
- .lab-header .board-home{top:23px!important;left:28px!important;font-size:1rem}
- .lab-header .header-tools{top:21px!important;right:28px!important}
  .board-column{padding:30px 42px 14px}
  .lesson{padding:38px 44px 20px}
  .lesson h1{font-size:3.1rem;margin:14px 0 24px}
@@ -123,9 +117,6 @@ main :has(> .board){padding-top:0!important}
 }
 
 @media (max-width:800px){
- .lab-header{display:flex!important;position:relative!important;min-height:2.4rem;padding:0 0 .25rem!important;border-bottom:1px dashed var(--site-rule)}
- .lab-header .board-home,.lab-header .header-tools{position:static!important;top:auto!important;right:auto!important;left:auto!important}
- .lab-header .header-tools{margin-left:auto}
  .chapters{display:flex!important;width:calc(100% - 6.75rem)!important;height:54px!important;padding-left:3.25rem!important;padding-right:0!important;overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:none}
  .chapters::-webkit-scrollbar{display:none}
  .chapters .chapter-button{flex:0 0 auto!important;width:auto!important;min-width:8rem!important;padding-inline:.55rem!important;justify-content:flex-start!important;overflow:visible!important}
@@ -144,3 +135,6 @@ main :has(> .board){padding-top:0!important}
 }
 
 :root{--board-texture:url("../../lib/chalkish/examples/assets/board-grain.png")!important}
+/* Chromium resolves a url() held in a custom property against the stylesheet that reads it.
+   Chalkish's .chalk-surface reads --board-texture from lib/chalkish/examples/, so name the file here. */
+.chalk-surface{background-image:url("../../lib/chalkish/examples/assets/board-grain.png"),radial-gradient(ellipse at 29% 42%,#eef0e010 0 .35rem,transparent 14rem),radial-gradient(ellipse at 78% 67%,transparent 0 7rem,#eef0e00b 11rem,transparent 18rem),linear-gradient(118deg,#14271e,#0b1511 78%)}

@@ -1,4 +1,4 @@
-import { differentiateUniform1D } from '../../lib/chalkish/src/calculus.js';
+import { differentiateUniform1D } from '../../../lib/chalkish/src/calculus.js';
 
 export const DERIVATIVE_PRESETS = Object.freeze([
   'line',

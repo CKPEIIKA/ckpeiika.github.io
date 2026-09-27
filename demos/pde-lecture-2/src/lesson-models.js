@@ -1,4 +1,4 @@
-import { diffuse1D as diffuse, advanceWave1D as advanceWave, affineCharacteristic, nodalIntegral, advanceShallowWater, projectPeriodic, advanceScalar2D } from '../../lib/chalkish/src/pde.js';
+import { diffuse1D as diffuse, advanceWave1D as advanceWave, affineCharacteristic, nodalIntegral, advanceShallowWater, projectPeriodic, advanceScalar2D } from '../../../lib/chalkish/src/pde.js';
 
 const CURVE_SAMPLES = 161;
 const GAMMA = 1.4;

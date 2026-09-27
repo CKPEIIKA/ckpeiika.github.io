@@ -13,7 +13,7 @@ import {
   Scene,
   TextLabel,
   chalkStyle,
-} from '../../lib/chalkish/src/index.js';
+} from '../../../lib/chalkish/src/index.js';
 
 const COLORS = Object.freeze({
   white: '#eeeada', cyan: '#72dce5', yellow: '#efd677', red: '#ed8e79',

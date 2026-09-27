@@ -58,17 +58,18 @@ test('both demos are static ES-module frontends backed by the vendored library',
   }
 });
 
-test('mobile parameter panels are collapsed until explicitly opened', async () => {
+test('phone layout keeps the stage above a controls sheet that can be hidden', async () => {
   const [css, i18n, dsmc, dg] = await Promise.all([
     readFile(new URL('demos/lab-overrides.css', ROOT), 'utf8'),
     readFile(new URL('demos/lab-i18n.js', ROOT), 'utf8'),
     readFile(new URL('demos/dsmc/app.js', ROOT), 'utf8'),
     readFile(new URL('demos/dg-fvm/app.js', ROOT), 'utf8'),
   ]);
-  assert.match(css, /\.lab-layout\s*\{[\s\S]*grid-template-areas:\s*\n\s*"stage"\s*\n\s*"controls"/);
-  assert.match(css, /\.lab-controls\s*\{[\s\S]*display:\s*none/);
-  assert.match(css, /\.lab-controls\.mobile-controls-open\s*\{[\s\S]*display:\s*grid/);
+  assert.match(css, /\.lab-layout\s*\{[\s\S]*grid-template-areas:\s*\n\s*"stage"\s*\n\s*"toggle"\s*\n\s*"controls"/);
+  assert.match(css, /grid-template-rows:\s*minmax\(0, 7fr\) auto minmax\(0, 3fr\)/);
+  assert.match(css, /\.lab-layout\.controls-collapsed \.lab-controls\s*\{\s*display:\s*none/);
   assert.match(i18n, /export function bindMobileControls/);
+  assert.match(i18n, /bindControlsSheet/);
   assert.match(dsmc, /mobileControls\.sync\(\)/);
   assert.match(dg, /mobileControls\.sync\(\)/);
 });
@@ -131,8 +132,9 @@ test('DSMC plot is a localized right-edge tab with selectable contents', async (
 });
 
 test('stage controls stay outside the canvas and can collapse independently', async () => {
-  const [css, controls] = await Promise.all([
+  const [css, shell, controls] = await Promise.all([
     readFile(new URL('demos/lab-overrides.css', ROOT), 'utf8'),
+    readFile(new URL('demos/shell.css', ROOT), 'utf8'),
     readFile(new URL('lib/chalkish/examples/stage-controls.js', ROOT), 'utf8'),
   ]);
 
@@ -141,7 +143,7 @@ test('stage controls stay outside the canvas and can collapse independently', as
   assert.match(css, /\.stage-controls\s*\{[^}]*position:\s*static/s);
   assert.match(css, /\.stage-footer\s*\{[^}]*border:\s*0/s);
   assert.match(css, /\.stage-footer::before\s*\{[^}]*radial-gradient/s);
-  assert.match(css, /--board-texture:\s*url\("\.\.\/lib\/chalkish\/examples\/assets\/board-grain\.png"\)/);
+  assert.match(shell, /--board-texture:\s*url\("\.\.\/lib\/chalkish\/examples\/assets\/board-grain\.png"\)/);
   assert.match(css, /\.stage-footer\.stage-controls-hidden \.stage-controls\s*\{[^}]*max-width:\s*0/s);
   assert.match(css, /#diagnostics\s*\{[^}]*white-space:\s*nowrap/s);
   assert.match(css, /#diagnostics\s*\{[^}]*font-family:\s*var\(--font-chalk\)/s);

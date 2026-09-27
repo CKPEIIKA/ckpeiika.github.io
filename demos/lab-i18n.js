@@ -1,10 +1,11 @@
 import { rewriteChalkText } from '../lib/chalkish/examples/chalk-transition.js';
-
-const LANGUAGES = new Set(['en', 'ru']);
+import { bindControlsSheet } from './controls-sheet.js';
+import { bindLocaleSwitch, pageLanguage } from './locale.js';
 
 const COMMON = Object.freeze({
   en: Object.freeze({
     'locale.label': 'Language',
+    'page.help': 'Help',
     'nav.course': 'course page',
     'page.settings': 'Calculation settings',
     'page.showControls': 'Show parameters',
@@ -28,6 +29,7 @@ const COMMON = Object.freeze({
   }),
   ru: Object.freeze({
     'locale.label': 'Язык',
+    'page.help': 'Справка',
     'nav.course': 'к странице курса',
     'page.settings': 'Параметры расчёта',
     'page.showControls': 'Показать параметры',
@@ -58,14 +60,8 @@ export function withCommonTranslations(translations) {
   };
 }
 
-function initialLanguage() {
-  const requested = new URL(globalThis.location.href).searchParams.get('lang');
-  if (LANGUAGES.has(requested)) return requested;
-  return globalThis.navigator.language?.toLowerCase().startsWith('ru') ? 'ru' : 'en';
-}
-
 export function bindLabLanguage(translations) {
-  let language = initialLanguage();
+  let language = pageLanguage();
   const listeners = new Set();
 
   function translate(key) {
@@ -88,29 +84,13 @@ export function bindLabLanguage(translations) {
     for (const node of document.querySelectorAll('[data-i18n-content]')) {
       node.setAttribute('content', translate(node.dataset.i18nContent));
     }
-    for (const link of document.querySelectorAll('[data-lang]')) {
-      const active = link.dataset.lang === language;
-      if (active) link.setAttribute('aria-current', 'page');
-      else link.removeAttribute('aria-current');
-    }
     document.title = translate('page.documentTitle');
     for (const listener of listeners) listener(language);
   }
 
-  function setLanguage(next) {
-    if (!LANGUAGES.has(next) || next === language) return;
+  bindLocaleSwitch(() => language, (next) => {
     language = next;
-    const url = new URL(globalThis.location.href);
-    url.searchParams.set('lang', language);
-    globalThis.history.replaceState(null, '', url);
     apply({ animate: true });
-  }
-
-  document.querySelector('[data-locale-switch]')?.addEventListener('click', (event) => {
-    const link = event.target.closest('[data-lang]');
-    if (!link) return;
-    event.preventDefault();
-    setLanguage(link.dataset.lang);
   });
 
   apply();
@@ -129,35 +109,14 @@ export function bindLabLanguage(translations) {
 
 export function bindMobileControls({ translate }) {
   const toggle = document.querySelector('[data-mobile-controls-toggle]');
-  const controls = document.getElementById('lab-controls');
-  if (!toggle || !controls) {
+  const layout = document.querySelector('.lab-layout');
+  if (!toggle || !layout) {
     return Object.freeze({ sync() {}, dispose() {} });
   }
-
-  let open = false;
-  const media = globalThis.matchMedia?.('(max-width: 760px)') ?? null;
-
-  function sync() {
-    const mobile = media?.matches === true;
-    controls.classList.toggle('mobile-controls-open', !mobile || open);
-    toggle.setAttribute('aria-expanded', String(mobile ? open : true));
-    const key = mobile && open ? 'page.hideControls' : 'page.showControls';
-    const label = translate(key);
-    toggle.setAttribute('aria-label', label);
-    toggle.setAttribute('title', label);
-  }
-
-  toggle.addEventListener('click', () => {
-    open = !open;
-    sync();
+  const sheet = bindControlsSheet({
+    toggle,
+    root: layout,
+    label: (collapsed) => translate(collapsed ? 'page.showControls' : 'page.hideControls'),
   });
-  media?.addEventListener?.('change', sync);
-  sync();
-
-  return Object.freeze({
-    sync,
-    dispose() {
-      media?.removeEventListener?.('change', sync);
-    },
-  });
+  return Object.freeze({ sync: sheet.sync, dispose() {} });
 }

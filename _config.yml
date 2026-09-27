@@ -11,6 +11,10 @@ plugins:
 exclude:
   - AGENTS.md
   - README.md
+  - demos/README.md
+  - preview.sh
+  - Gemfile
+  - Gemfile.lock
   - package.json
   - scripts
   - test

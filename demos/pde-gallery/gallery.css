@@ -1,0 +1,185 @@
+/* Experiment layout shared by the PDE lecture galleries (Lectures 3-4).
+   Load after ../shell.css and ./catalogue.css, which provide the fonts, tokens, header and catalogue. */
+:root{--bg:var(--site-background);--paper:var(--site-panel);--panel:var(--site-panel);--ink:var(--site-text);--muted:var(--site-muted);--line:var(--site-accent);--accent:var(--site-accent);--active:#d7dde2;--board:#0d1712;--chalk:#f4f1e7;--yellow:#f0d477;--ui:var(--font-board-ui);font-family:var(--ui);color-scheme:light;--font-chalk-label:"Shantell Sans","Open Sans",system-ui,sans-serif;--board-green-deep:#0d1712;--board-texture:url("../../lib/chalkish/examples/assets/board-grain.png")}
+html.theme-dark{--active:#393329}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.48 var(--ui)}
+button,input,select{font:inherit}
+button,a,input,select,summary{-webkit-tap-highlight-color:transparent}
+button{color:inherit;border:1px solid var(--line);background:var(--paper);border-radius:3px;cursor:pointer;min-height:34px;padding:6px 12px}
+button:hover{border-color:var(--accent);background:var(--active)}
+button:disabled{opacity:.45;cursor:default}
+button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #41758a;outline-offset:3px}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+h1,h2,h3,p{margin:0}
+button.primary{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+[hidden]{display:none!important}
+body.lab-active{height:100dvh;overflow:hidden;display:flex;flex-direction:column}
+#demo-view{display:flex;flex-direction:column;min-height:0;flex:1;padding:0 2.1vw 13px}
+.demo-toolbar{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:12px 0;flex:none}
+.demo-heading{display:flex;align-items:center;gap:13px;min-width:0}
+.demo-number{background:var(--accent);color:var(--bg);padding:3px 7px;font-size:20px;line-height:1.35;font-variant-numeric:tabular-nums}
+.demo-section{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:2px}
+.demo-heading h2{font-size:19px;line-height:1.3;font-weight:550}
+.demo-navigation{display:flex;gap:6px;flex:none}
+.demo-navigation button{width:35px;height:35px;font-size:24px;line-height:1;padding:0}
+.lab-layout{display:grid;grid-template-columns:clamp(250px,25vw,345px) minmax(0,1fr);gap:15px;min-height:0;flex:1}
+.controls-panel{background:var(--panel);border:1px solid var(--line);overflow-y:auto;padding:17px 17px 22px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.panel-label{font-size:10px;letter-spacing:.11em;color:var(--accent);font-weight:700;margin:0 0 13px}
+.control{margin-bottom:16px}
+.control label{font-size:12px;display:block;line-height:1.35;margin-bottom:7px}
+.control-row{display:flex;align-items:center;gap:10px}
+.control input[type=range]{width:100%;min-width:40px;accent-color:var(--accent);cursor:pointer}
+.control input[type=number]{width:75px;min-width:65px;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:2px;padding:3px 5px;font:12px var(--ui);font-variant-numeric:tabular-nums}
+.control select{width:100%;padding:7px 6px;font-size:12px;border:1px solid var(--line);border-radius:2px;background:var(--paper);color:var(--ink)}
+.preset-label{margin-top:20px;margin-bottom:10px}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.presets button{font-size:11px;min-height:29px;text-align:left;padding:5px 8px}
+.defaults-button{font-size:10px;padding:2px 0;margin-top:8px;border:0;background:transparent;color:var(--muted);min-height:24px}
+.defaults-button:hover{background:transparent;text-decoration:underline}
+.inquiry{margin-top:18px;padding:14px 0;border-top:1px dashed var(--line);border-bottom:1px dashed var(--line)}
+.inquiry h3{font-size:13px;color:var(--accent);margin-bottom:7px;font-weight:650}
+.inquiry p{font-size:12px;line-height:1.65}
+details{border-bottom:1px dashed var(--line);padding:11px 0}
+summary{font-size:12px;font-weight:550;cursor:pointer}
+details p{font-size:11px;line-height:1.7;margin-top:9px;color:var(--muted)}
+#demo-sources a{display:block;font-size:10px;line-height:1.6;margin-top:9px}
+.lab-main{display:flex;flex-direction:column;min-height:0;min-width:0;background:var(--board);border:1px solid #33473a;overflow:hidden}
+.equation{flex:none;background:#152019;color:var(--chalk);font:18px/1.6 Georgia,"Times New Roman",serif;min-height:59px;padding:11px 20px;border-bottom:1px dashed #425043;overflow-wrap:anywhere;text-align:center}
+.equation sup,.equation sub{font-size:.7em}
+.stage{position:relative;min-height:240px;flex:1;overflow:hidden;background:var(--board);outline-offset:-3px;touch-action:manipulation}
+.board-canvas,.board-labels{position:absolute;inset:0;width:100%;height:100%;display:block}
+.board-labels{pointer-events:none}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));flex:none;border-top:1px dashed #364d3f;background:#111e17;min-height:61px}
+.metric{padding:10px 13px;border-right:1px dashed #33483b;min-width:0}
+.metric:last-child{border-right:0}
+.metric-label{display:block;font:10px/1.4 var(--ui);color:#a6b8ad;margin-bottom:5px;overflow-wrap:anywhere}
+.metric-value{display:block;font:17px/1.2 var(--ui);font-variant-numeric:tabular-nums;color:var(--yellow);white-space:normal;overflow-wrap:anywhere}
+.playback{display:flex;align-items:center;justify-content:space-between;gap:10px;flex:none;padding:10px 12px;background:var(--panel);border-top:1px solid var(--line)}
+.playback-left,.playback-right{display:flex;align-items:center;gap:6px}
+.playback button{min-height:31px;font-size:11px;padding:5px 9px;white-space:nowrap}
+.speed-label{display:flex;align-items:center;gap:5px;font-size:9px;color:var(--muted);padding-left:7px}
+.speed-label input{width:65px;accent-color:var(--accent)}
+.speed-label output{font-size:10px;font-variant-numeric:tabular-nums;min-width:20px}
+.status-line{display:flex;justify-content:space-between;gap:13px;background:var(--panel);color:var(--muted);padding:0 12px 7px;font-size:9px;flex:none;min-height:20px}
+.status-line .warning{color:#d07961}
+.stage:fullscreen{width:100vw;height:100vh}
+#demo-view:fullscreen{background:var(--bg);padding:0 20px 20px;height:100vh}
+@media(min-width:1700px){.lab-layout{grid-template-columns:350px minmax(0,1fr)}}
+@media(max-width:1150px){.lab-layout{gap:10px;grid-template-columns:250px minmax(0,1fr)}.controls-panel{padding:13px}.equation{font-size:16px;padding:8px 13px;min-height:48px}.playback{padding:7px;gap:5px}.speed-label input{width:42px}.metric{padding:8px}.metric-value{font-size:14px}.playback button{font-size:10px;padding:5px 7px}.speed-label{padding-left:0}.demo-heading h2{font-size:17px}}
+@media(max-width:800px){.lab-layout{display:flex;flex-direction:column;min-height:auto}.lab-main{order:0;min-height:auto;flex:none}.controls-panel{order:1;overflow:visible;flex:none;display:block}.stage{aspect-ratio:1000/610;min-height:0;flex:none;width:100%}body.lab-active{height:auto;min-height:100dvh;overflow:visible;display:block}#demo-view{padding:0 3vw 20px}.demo-toolbar{position:relative}.demo-section{font-size:8px}.demo-heading h2{font-size:15px}.demo-number{font-size:16px}.demo-navigation{gap:3px}.demo-navigation button{width:29px;height:31px}.metrics{min-height:58px}.metric-label{font-size:8px}.metric-value{font-size:12px}.playback{flex-wrap:wrap}.speed-label input{width:50px}.equation{font-size:15px}.controls-panel #controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 18px}.panel-label{font-size:11px}.inquiry p,details p{font-size:12px}.status-line{font-size:9px}}
+@media(max-width:480px){.equation{font-size:13px;padding:7px}.speed-label{display:none}.metric{padding:7px 5px}.metric-value{font-size:10px}.metrics{min-height:54px}.status-line{flex-wrap:wrap;gap:3px}.demo-toolbar{gap:8px}.demo-heading{gap:7px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+@media print{.controls-panel,.playback,.status-line,.demo-navigation{display:none}.lab-active{height:auto!important;overflow:visible!important}.lab-layout{display:block}.stage{height:115mm}.lab-main{break-inside:avoid}}
+/* Match the currently deployed Lecture 3 shell; no shared files are overwritten. */
+body{min-width:18rem;min-height:100vh;padding:.55rem 1rem 1rem}
+body:after{display:none}
+#demo-view{width:min(100%,112rem);margin-inline:auto}
+body.lab-active{padding-bottom:.7rem}
+#demo-view{padding:0}
+.demo-toolbar{padding:.45rem 0;border-bottom:1px dashed var(--accent);margin-bottom:.5rem}
+.demo-section{display:none}
+.demo-heading h2{text-transform:uppercase;color:var(--accent);font-weight:600;font-size:18px}
+.demo-number{font-size:17px}
+.demo-navigation button{border:1px dotted var(--accent);border-radius:0;width:31px;height:31px;font-size:22px}
+.lab-layout{gap:12px;grid-template-columns:minmax(240px,21%) minmax(0,1fr)}
+.controls-panel{border:1px dashed var(--accent);border-radius:0;padding:.75rem}
+.control{margin-bottom:15px}
+.control label{font-size:11px}
+.control input[type=number]{width:68px;font-size:11px}
+.control select{font-size:11px}
+.presets button{font-size:10px;border:1px dotted var(--accent);border-radius:0}
+.panel-label{font-size:10px}
+.inquiry{margin-top:14px}
+.inquiry p{font-size:11px;line-height:1.6}
+.inquiry h3{font-size:12px}
+details p{font-size:11px}
+.lab-main{border:2px dashed var(--accent);background:var(--board)}
+.equation{font-family:var(--font-chalk);font-size:18px;min-height:45px;padding:6px 10px;background:#132219;border-bottom:1px dashed #627762}
+.stage-viewport{position:relative;flex:1;min-height:0;display:flex;overflow:hidden;background:var(--board)}
+.stage{flex:1;min-height:0;width:100%;height:100%;touch-action:pan-y}
+.board-canvas,.board-labels{inset:0}
+.metrics{min-height:52px;background:#111e17}
+.metric{padding:7px 9px}
+.metric-label{font-size:10px}
+.metric-value{font-size:15px;font-family:var(--font-chalk-label)}
+.playback{background:#111c15;color:var(--chalk);border-top:1px dashed #627762;padding:6px 9px}
+.playback button{background:#101411;color:var(--chalk);border-color:#e9eed575;border-radius:0}
+.playback button:hover{background:#193022;color:var(--yellow)}
+.playback button.primary{background:#273d2b}
+.speed-label{color:#adbaae}
+.status-line{background:#111c15;color:#9fb4a7;min-height:24px;padding:4px 9px 7px;font-size:9px}
+.status-line .warning{color:#efaa85}
+
+.equation,.metrics,.stage,.playback{background-image:radial-gradient(ellipse at 29% 42%,#eef0e008,transparent 65%)}
+@media(min-width:1700px){.lab-layout{grid-template-columns:320px minmax(0,1fr)}}
+@media(max-width:1150px){.equation{font-size:16px}.demo-heading h2{font-size:16px}.metric-value{font-size:13px}.lab-layout{grid-template-columns:240px minmax(0,1fr)}}
+@media(max-width:800px){body{padding:.5rem .55rem 1rem}.lab-layout{display:flex;flex-direction:column;min-height:auto}.lab-main{order:0;flex:none}.controls-panel{order:1}.stage-viewport{display:block;flex:none;overflow:hidden}.stage{min-width:0;width:100%;height:auto;aspect-ratio:1000/610;flex:none;touch-action:pan-y}.equation{font-size:15px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.metric{border-bottom:1px dashed #33483b}.metric-label{font-size:10px}.metric-value{font-size:14px}.status-line{flex-wrap:wrap;font-size:10px}.playback{flex-wrap:wrap}.demo-heading h2{font-size:14px}.demo-number{font-size:16px}.inquiry p,details p{font-size:12px}.controls-panel #controls{grid-template-columns:repeat(2,minmax(0,1fr))}.control label{font-size:12px}.panel-label{font-size:11px}.control select{font-size:12px;min-height:38px}}
+@media(max-width:480px){.demo-heading h2{font-size:13px}.demo-toolbar{align-items:flex-start}.demo-navigation{gap:3px}.demo-navigation button{width:28px;height:29px}.speed-label{display:none}.equation{font-size:14px}.control input[type=number]{width:58px;min-width:58px}}
+@media print{.stage-viewport{overflow:visible}.stage{min-width:0;width:100%;height:115mm}.status-line{display:none}}
+.mobile-board-hint{display:none;background:#132219;color:#bac9be;font:11px system-ui,sans-serif;padding:6px 9px;border-bottom:1px dashed #627762}
+@media(max-width:800px){.mobile-board-hint{display:block}}
+.docs-dialog{width:min(900px,92vw);max-height:86vh;overflow:auto;padding:20px;background:var(--paper);color:var(--ink);border:1px dashed var(--accent)}
+.docs-dialog::backdrop{background:#0009}
+.docs-dialog button{float:right;border:1px solid currentColor;background:transparent;color:inherit;padding:4px 10px;font-size:20px}
+.docs-dialog pre{white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.65 system-ui,sans-serif;margin:20px 0}
+.docs-dialog h2{font-size:18px;margin:0;padding-right:35px}
+body{min-width:18rem;padding:.55rem 1rem 1rem;font-family:var(--font-board-ui)}
+#demo-view{width:min(100%,112rem);margin-inline:auto}
+.lab-main,.stage,.equation,.metrics,.playback,.status-line{background-color:var(--board);background-image:var(--board-texture),linear-gradient(118deg,#14271e,#0b1511 78%);background-size:300px 300px,auto;background-blend-mode:soft-light,normal}
+.equation{font-family:var(--font-chalk);text-shadow:.03em 0 #fff2,-.02em .01em #fff1}
+.metric-value{font-family:var(--font-chalk-clean)}
+@media(max-width:800px){body{padding:.5rem .55rem 1rem}.lab-active{height:auto!important;min-height:100dvh;overflow:visible!important;display:block}#demo-view{padding:0 0 1rem}.lab-layout{display:flex;flex-direction:column;min-height:auto}.lab-main{order:0;min-height:auto;flex:none}.controls-panel{order:1;overflow:visible;flex:none}.stage-viewport{display:block;overflow:hidden;flex:none}.stage{min-width:0;width:100%;height:auto;aspect-ratio:1000/610;flex:none}.mobile-board-hint{display:none!important}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.metric{border-bottom:1px dashed #33483b}.playback{flex-wrap:wrap}.demo-toolbar{gap:8px;padding:.45rem 0}.demo-heading h2{font-size:15px}.demo-number{font-size:16px}}
+@media(max-width:480px){.demo-heading h2{font-size:13px}.demo-navigation{gap:3px}.demo-navigation button{width:28px;height:29px}.equation{font-size:14px}.metric{padding:7px 5px}.metric-value{font-size:12px}}
+@media(max-width:1150px){body.lab-active{height:auto;min-height:100dvh;overflow:visible;display:block}#demo-view{padding:0 3vw 20px}.lab-layout{display:flex;flex-direction:column;min-height:auto;flex:initial}.lab-main{order:0;min-height:auto;min-width:0;flex:none}.stage-viewport{display:block;flex:none;overflow:hidden}.stage{min-width:0;width:100%;height:auto;aspect-ratio:1000/610;flex:none;touch-action:pan-y}.controls-panel{order:1;overflow:visible;flex:none;display:block}}
+
+/* Phones: an open experiment fills the screen. The board takes about 70% of the height and the
+   controls sit in a scrolling sheet below (about 30%); the bar between them hides the sheet.
+   body.lab-active and !important outrank the older stacked mobile rules above. */
+@media(max-width:760px){
+ body.lab-active{height:100dvh!important;min-height:0!important;overflow:hidden!important;display:flex!important;flex-direction:column;padding-bottom:.35rem}
+ .lab-active #demo-view{flex:1;min-height:0;display:flex;flex-direction:column;padding:0}
+ .lab-active .demo-toolbar{flex:none;margin-bottom:.3rem;padding:.3rem 0}
+ .lab-active .lab-layout{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,7fr) auto minmax(0,3fr);gap:0}
+ .lab-active .lab-layout.controls-collapsed{grid-template-rows:minmax(0,1fr) auto}
+ .lab-active .lab-main{grid-row:1;order:0;min-height:0;display:flex;flex-direction:column}
+ .lab-active .stage-viewport{flex:1;min-height:0;display:flex;overflow:hidden}
+ .lab-active .stage{flex:1;min-height:0;height:auto;aspect-ratio:auto}
+ .lab-active .equation{flex:none;min-height:0;padding:4px 8px;font-size:13px;line-height:1.35}
+ .lab-active .mobile-board-hint{display:none!important}
+ .lab-active .metrics{flex:none;display:flex;min-height:0;overflow-x:auto;scrollbar-width:none}
+ .lab-active .metric{flex:1 0 auto;min-width:5.5rem;padding:4px 7px;border-bottom:0}
+ .lab-active .metric-label{font-size:10px}
+ .lab-active .metric-value{font-size:12px}
+ .lab-active .playback{flex:none;flex-wrap:nowrap;padding:4px 6px;gap:4px}
+ .lab-active .playback button{min-height:30px;padding:3px 8px;font-size:11px}
+ .lab-active .speed-label{min-width:0}
+ .lab-active .status-line{flex:none;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding:3px 8px;font-size:10px}
+ .lab-active .sheet-toggle{grid-row:2;border-top:0}
+ .lab-active .controls-panel{grid-row:3;order:1;display:block;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:.55rem .6rem .7rem;border-top:0}
+ .lab-active .controls-collapsed .controls-panel{display:none}
+ .lab-active .controls-panel #controls{gap:0 12px}
+ .lab-active .control{margin-bottom:9px}
+}
+
+
+/* Live experiments (scenes drawn by the lecture itself, e.g. Lecture 2). */
+.equation-caption{flex:none;padding:0 10px 6px;background:var(--board);color:#b9c7bd;font:13px/1.4 var(--font-chalk)}
+.stage>canvas.live-canvas{position:absolute;inset:0;display:block;width:100%!important;height:100%!important;touch-action:none}
+.stage>canvas.live-canvas.is-drawing{cursor:crosshair}
+.control-help{display:block;margin-top:4px;color:var(--muted);font-size:11px;line-height:1.35}
+.control-toggle{display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:10px}
+.control-toggle label{margin-bottom:0}
+.control-toggle input[type=checkbox]{width:22px;height:22px;margin:0;accent-color:var(--accent)}
+.control-toggle .control-help{grid-column:1/-1}
+#tool[aria-pressed=true]{border-color:var(--yellow);color:var(--yellow)}
+@media(max-width:760px){.lab-active .equation-caption{font-size:11px;padding:0 8px 4px}}
+/* Readability and touch floor for every gallery lecture: text at least 10px,
+   controls at least 24px tall (WCAG 2.2 target size). Keep new rules above this block. */
+.status-line,.speed-label{font-size:10px}
+.presets button,.defaults-button{font-size:11px;min-height:26px}
+.control input[type=range],.speed-label input[type=range]{min-height:24px}
+.control input[type=number],.control select{min-height:26px}
+summary{min-height:24px;padding-block:3px}
+#demo-sources a{display:flex;align-items:center;min-height:24px}

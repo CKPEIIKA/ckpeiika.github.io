@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createLessonModel, solveEulerStarState, sampleEulerRiemann } from '../demos/pde-lecture-2/lesson-models.js';
-import { bindLessonView } from '../demos/pde-lecture-2/lesson-views.js';
+import { createLessonModel, solveEulerStarState, sampleEulerRiemann } from '../demos/pde-lecture-2/src/lesson-models.js';
+import { bindLessonView } from '../demos/pde-lecture-2/src/lesson-views.js';
 
 const advance = (model, time) => {
   for (let t = 0; t < time - 1e-10; t += 1 / 120) model.step(Math.min(1 / 120, time - t));

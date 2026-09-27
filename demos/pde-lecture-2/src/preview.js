@@ -9,20 +9,12 @@ import {
   Scene,
   chalkStyle,
   mount,
-} from '../../lib/chalkish/src/index.js';
+} from '../../../lib/chalkish/src/index.js';
 
 const PALETTES = Object.freeze({
   board: Object.freeze({
     background: '#0d1611', primary: '#eeeada', cyan: '#72dce5',
     yellow: '#efd677', red: '#ed8e79', grid: '#d8dfd0', frame: '#e5ead584',
-  }),
-  paper: Object.freeze({
-    background: '#d8dde3', primary: '#24282c', cyan: '#3f6268',
-    yellow: '#7c6620', red: '#9f2d20', grid: '#7a8288', frame: '#9f2d20',
-  }),
-  'paper-dark': Object.freeze({
-    background: '#181818', primary: '#f1d8c0', cyan: '#9bc7ca',
-    yellow: '#efd677', red: '#ef8f7c', grid: '#a8aaa5', frame: '#f1d8c0',
   }),
 });
 

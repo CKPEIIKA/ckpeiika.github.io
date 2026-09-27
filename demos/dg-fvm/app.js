@@ -20,6 +20,7 @@ import {
   rewriteChalkText,
 } from '../../lib/chalkish/examples/chalk-transition.js';
 import { bindLabLanguage, bindMobileControls, withCommonTranslations } from '../lab-i18n.js';
+import { bindHelpDialog, bindKeys, renderKeyHelp } from '../keys.js';
 import { RingHistory } from '../lab-parity.js';
 
 const i18n = bindLabLanguage(withCommonTranslations({
@@ -166,7 +167,6 @@ const nodes = Object.freeze({
   bodyRadius: required('body-radius'),
   gamma: required('gamma'),
   renderQuality: required('render-quality'),
-  help: required('help'),
   helpDialog: required('help-dialog'),
   analysisCanvas: required('analysis-stage'),
   analysisTabs: required('analysis-tabs'),
@@ -715,30 +715,32 @@ nodes.nextAnalysis.addEventListener('click', () => {
 nodes.toggleAnalysis.addEventListener('click', () => {
   setAnalysisVisible(!analysisVisible);
 });
-nodes.help.addEventListener('click', () => nodes.helpDialog.showModal());
+function selectCase(index) {
+  nodes.caseId.selectedIndex = index;
+  nodes.caseId.dispatchEvent(new Event('change'));
+}
 
-document.addEventListener('keydown', (event) => {
-  if (event.target instanceof HTMLInputElement
-      || event.target instanceof HTMLSelectElement
-      || event.target instanceof HTMLTextAreaElement) return;
-  const key = event.key.toLowerCase();
-  if (key === ' ') {
-    event.preventDefault();
-    nodes.pause.click();
-  } else if (key === 's') nodes.step.click();
-  else if (key === 'r') nodes.reset.click();
-  else if (key === 'h') nodes.helpDialog.open ? nodes.helpDialog.close() : nodes.helpDialog.showModal();
-  else if (['1', '2', '3', '4'].includes(key)) {
-    nodes.caseId.selectedIndex = Number(key) - 1;
-    nodes.caseId.dispatchEvent(new Event('change'));
-  } else if (key === '[' || key === ']') {
-    const direction = key === ']' ? 1 : -1;
-    const options = [...nodes.degree.options].filter((option) => !option.disabled);
-    const index = options.indexOf(nodes.degree.selectedOptions[0]);
-    nodes.degree.value = options[(index + direction + options.length) % options.length].value;
-    nodes.degree.dispatchEvent(new Event('change'));
-  }
+function shiftDegree(direction) {
+  const options = [...nodes.degree.options].filter((option) => !option.disabled);
+  const index = options.indexOf(nodes.degree.selectedOptions[0]);
+  nodes.degree.value = options[(index + direction + options.length) % options.length].value;
+  nodes.degree.dispatchEvent(new Event('change'));
+}
+
+const keyActions = {
+  play: () => nodes.pause.click(),
+  step: () => nodes.step.click(),
+  reset: () => nodes.reset.click(),
+  help: () => toggleHelp(),
+};
+const extraKeys = [
+  { keys: ['1', '2', '3', '4'], label: '1 / 2 / 3 / 4', text: ['расчётный случай', 'test case'], run: (event) => selectCase(Number(event.key) - 1) },
+  { keys: ['[', ']', 'х', 'ъ'], label: '[ / ]', text: ['степень полинома', 'polynomial degree'], run: (event) => shiftDegree(']ъ'.includes(event.key) ? 1 : -1) },
+];
+const toggleHelp = bindHelpDialog(nodes.helpDialog, () => {
+  renderKeyHelp(nodes.helpDialog.querySelector('[data-key-help]'), i18n.language, keyActions, extraKeys);
 });
+bindKeys(keyActions, extraKeys);
 
 i18n.onChange(() => {
   syncCase();

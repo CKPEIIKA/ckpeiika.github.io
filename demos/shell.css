@@ -1,0 +1,252 @@
+/* Shared page shell for every chalkboard demo: site tokens and the header.
+   Load after the Chalkish example stylesheets and before page-specific CSS.
+   Pages style their own content; only this file styles .demo-header. */
+
+@font-face {
+  font-family: "Neucha";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../lib/chalkish/examples/assets/fonts/neucha-regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Shantell Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../lib/chalkish/examples/assets/fonts/shantell-sans-regular.woff2") format("woff2");
+}
+
+:root {
+  color-scheme: light;
+  --site-background: #d8dde3;
+  --site-panel: #e5e9ed;
+  --site-accent: #9f2d20;
+  --site-text: #24282c;
+  --site-muted: #4d5358;
+  --site-rule: #9f2d20;
+  --board: #0d1611;
+  --chalk: #f5f2e9;
+  --chalk-white: #f5f2e9;
+  --chalk-dim: #c4cbc6;
+  --chalk-yellow: #efd677;
+  --chalk-rule: #d8dde366;
+  --font-chalk: "Neucha", "Shantell Sans", sans-serif;
+  --font-chalk-clean: "Shantell Sans", sans-serif;
+  --font-chalk-label: var(--font-chalk-clean);
+  --font-board-ui: "Open Sans", Arial, sans-serif;
+  --board-texture: url("../lib/chalkish/examples/assets/board-grain.png");
+  --chalk-transition-duration: 1200ms;
+  --chalk-rewrite-duration: 1600ms;
+}
+
+html.theme-dark {
+  color-scheme: dark;
+  --site-background: #181818;
+  --site-panel: #232323;
+  --site-accent: #f1d8c0;
+  --site-text: #f1d8c0;
+  --site-muted: #c6b9ad;
+  --site-rule: #f1d8c0;
+}
+
+/* The page is plain; only boards carry the chalk texture. This overrides the full-page
+   chalkboard body of lib/chalkish/examples/chalkboard-theme.css on every demo. */
+body {
+  background-color: var(--site-background);
+  background-image: none;
+}
+
+body::after {
+  display: none;
+}
+
+.demo-header {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr) max-content;
+  gap: 1rem;
+  align-items: center;
+  width: min(100%, 112rem);
+  margin: 0 auto;
+  padding: 0 0 0.25rem;
+  border-bottom: 1px dashed var(--site-rule);
+  font-family: var(--font-board-ui);
+  line-height: 1.5;
+}
+
+.demo-header h1 {
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: var(--site-accent);
+  font: 700 1rem/1.2 var(--font-board-ui);
+  letter-spacing: 0;
+  text-overflow: ellipsis;
+  text-shadow: 1px 1px 0 #000;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.demo-home,
+.demo-locale {
+  margin: 0;
+  color: var(--site-accent);
+  font-family: var(--font-board-ui);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+.demo-home,
+.demo-locale a {
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  border-bottom: 1px dotted var(--site-accent);
+  color: var(--site-accent);
+  text-decoration: none;
+}
+
+/* 24px touch targets (WCAG 2.2) without making the header taller. */
+.demo-home,
+.demo-locale a {
+  min-width: 24px;
+  justify-content: center;
+}
+
+.demo-tools,
+.demo-locale {
+  display: inline-flex;
+  align-items: center;
+}
+
+.demo-tools {
+  gap: 0.65rem;
+}
+
+.demo-locale {
+  gap: 0.4rem;
+}
+
+.demo-locale a[aria-current="page"] {
+  border-bottom-style: solid;
+  color: var(--site-text);
+  pointer-events: none;
+}
+
+.demo-theme-toggle,
+.demo-help-toggle {
+  display: grid;
+  width: 1.6rem;
+  height: 1.6rem;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  place-items: center;
+  border: 1px dotted var(--site-accent);
+  border-radius: 0;
+  background: transparent;
+  color: var(--site-accent);
+  cursor: pointer;
+  font: 400 1rem/1 var(--font-board-ui);
+}
+
+.demo-home:hover,
+.demo-home:focus-visible,
+.demo-theme-toggle:hover,
+.demo-theme-toggle:focus-visible,
+.demo-help-toggle:hover,
+.demo-help-toggle:focus-visible,
+.demo-locale a:hover,
+.demo-locale a:focus-visible {
+  background: var(--site-accent);
+  color: var(--site-background);
+  outline: 2px solid var(--site-accent);
+  outline-offset: 2px;
+}
+
+@media (min-width: 2400px) {
+  .demo-header {
+    width: min(100%, 132rem);
+  }
+}
+
+@media (max-width: 760px) {
+  .demo-header {
+    gap: 0.55rem;
+  }
+
+  .demo-header h1 {
+    font-size: 0.82rem;
+  }
+
+  .demo-home-label {
+    display: none;
+  }
+
+  .demo-tools {
+    gap: 0.4rem;
+  }
+}
+
+/* Phone bar between a demo and its controls sheet (see controls-sheet.js). Hidden on wider screens. */
+.sheet-toggle {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .sheet-toggle {
+    display: block;
+    width: 100%;
+    min-height: 2rem;
+    margin: 0;
+    padding: 0.25rem 0.6rem;
+    border: 1px dashed var(--site-accent);
+    border-radius: 0;
+    background: var(--site-panel);
+    color: var(--site-accent);
+    cursor: pointer;
+    font: 700 0.68rem/1.2 var(--font-board-ui);
+    letter-spacing: 0.04em;
+    text-align: left;
+    text-transform: uppercase;
+  }
+
+  .sheet-toggle:focus-visible {
+    outline: 2px solid var(--site-accent);
+    outline-offset: -3px;
+  }
+}
+
+/* Keyboard list inside every help dialog (keys.js renderKeyHelp). */
+.key-help {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.35rem 0.9rem;
+  margin: 0.6rem 0 0;
+}
+
+.key-help dt,
+.key-help dd {
+  margin: 0;
+}
+
+.key-help kbd {
+  display: inline-block;
+  min-width: 1.6rem;
+  padding: 0.05rem 0.35rem;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  font: 700 0.75rem/1.4 var(--font-board-ui);
+  text-align: center;
+}
+
+@media print {
+  .demo-tools {
+    display: none;
+  }
+}

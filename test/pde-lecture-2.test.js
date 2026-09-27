@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-import { PDE_DEMOS } from '../demos/pde-lecture-2/catalog.js';
+import { PDE_DEMOS } from '../demos/pde-lecture-2/src/pde-demos.js';
 import {
   BalanceLessonModel,
   CurveLessonModel,
@@ -11,8 +11,8 @@ import {
   ShallowWaterLessonModel,
   createLessonModel,
   solveEulerStarState,
-} from '../demos/pde-lecture-2/lesson-models.js';
-import { LESSON_SPECS } from '../demos/pde-lecture-2/lesson-specs.js';
+} from '../demos/pde-lecture-2/src/lesson-models.js';
+import { LESSON_SPECS } from '../demos/pde-lecture-2/src/lesson-specs.js';
 
 function finiteArray(values, allowGaps = false) {
   return values.some(Number.isFinite) && [...values].every(value => Number.isFinite(value) || (allowGaps && Number.isNaN(value)));
@@ -113,32 +113,48 @@ test('pressure correction leaves a small finite divergence', () => {
   assert.ok(maximum < 1e-5, `max divergence ${maximum}`);
 });
 
-test('lecture page routes every card to an interactive module without server paths', async () => {
-  const [html, app, shell, controls, toolbar, preview, course] = await Promise.all([
+test('lecture page runs every visible lesson on the shared gallery without server paths', async () => {
+  const [html, app, labs, preview, gallery, course] = await Promise.all([
     readFile(new URL('../demos/pde-lecture-2/index.html', import.meta.url), 'utf8'),
-    readFile(new URL('../demos/pde-lecture-2/app.js', import.meta.url), 'utf8'),
-    readFile(new URL('../demos/pde-lecture-2/pde-shell.js', import.meta.url), 'utf8'),
-    readFile(new URL('../demos/pde-lecture-2/lesson-demo.js', import.meta.url), 'utf8'),
-    readFile(new URL('../demos/pde-lecture-2/pde-toolbar.js', import.meta.url), 'utf8'),
-    readFile(new URL('../demos/pde-lecture-2/preview.js', import.meta.url), 'utf8'),
+    readFile(new URL('../demos/pde-lecture-2/src/app.js', import.meta.url), 'utf8'),
+    readFile(new URL('../demos/pde-lecture-2/src/labs.js', import.meta.url), 'utf8'),
+    readFile(new URL('../demos/pde-lecture-2/src/preview.js', import.meta.url), 'utf8'),
+    readFile(new URL('../demos/pde-gallery/gallery.js', import.meta.url), 'utf8'),
     readFile(new URL('../pages/cfd2026.md', import.meta.url), 'utf8'),
   ]);
   assert.match(html, /\.\.\/\.\.\/pages\/cfd2026\.html/);
   assert.match(html, /name="robots" content="noindex, nofollow"/);
   assert.doesNotMatch(html, /(?:src|href)="\//);
-  assert.match(app, /mountLessonDemo\(shell, entry, language, savedLesson\)/);
-  assert.doesNotMatch(app + shell, /mountConceptRecord|module will be added|будет добавлен/);
-  assert.match(controls, /createLessonModel\(entry\.id\)/);
-  assert.match(controls, /model\.step\(/);
-  assert.match(shell, /board\.append\(concept, stage, stageFooter, notice\)/);
-  assert.match(toolbar, /requestFullscreen/);
-  assert.match(toolbar, /0\.25, 0\.5, 1, 2/);
+  assert.match(html, /<script type="module" src="\.\/src\/app\.js"><\/script>/);
+  assert.match(app, /startGallery\(/);
+  assert.match(app, /mountPdePreview\(/);
+  assert.match(labs, /createLessonModel\(id\)/);
+  assert.match(labs, /model\.step\(/);
+  assert.match(gallery, /requestFullscreen/);
   assert.match(preview, /removeProperty\('width'\)/);
   assert.match(course, /\/demos\/pde-lecture-2\/'\s*\|\s*relative_url/);
+
+  const { default: catalog } = await import('../demos/pde-lecture-2/src/catalog.js');
+  const visible = PDE_DEMOS.filter((entry) => entry.hidden !== true);
+  assert.deepEqual(catalog.demos.map((d) => d.id), visible.map((e) => e.id));
+  for (const demo of catalog.demos.filter((d) => d.id !== 'derivatives')) {
+    assert.deepEqual(demo.controls.map((c) => c.key), LESSON_SPECS[demo.id].controls.map((c) => c.name), demo.id);
+    assert.equal(demo.presets.length, LESSON_SPECS[demo.id].presets.length, demo.id);
+  }
+});
+
+test('lesson readouts become [label, value] metrics', async () => {
+  const { readoutStats } = await import('../demos/pde-lecture-2/src/labs.js');
+  assert.deepEqual(readoutStats('t 0.20 · min 0.000 · ⟨u⟩ 0.160'), [['t', '0.20'], ['min', '0.000'], ['⟨u⟩', '0.160']]);
+  assert.deepEqual(readoutStats('Pe = ∞ · t 0.20'), [['Pe', '∞'], ['t', '0.20']]);
+  assert.deepEqual(readoutStats('max |∇·u| 0.00e+0'), [['max |∇·u|', '0.00e+0']]);
+  assert.deepEqual(readoutStats('∇²φ = 0 · ∂φ/∂t = 0'), [['∇²φ', '0'], ['∂φ/∂t', '0']]);
+  for (const empty of ['', undefined, null]) assert.deepEqual(readoutStats(empty), []);
+  assert.deepEqual(readoutStats('single'), [['single', '']]);
 });
 
 test('field chalkification is stable and does not add per-frame random noise', async () => {
-  const view = await readFile(new URL('../demos/pde-lecture-2/lesson-views.js', import.meta.url), 'utf8');
+  const view = await readFile(new URL('../demos/pde-lecture-2/src/lesson-views.js', import.meta.url), 'utf8');
   assert.match(view, /function chalkifyField/);
   assert.match(view, /Math\.imul/);
   assert.doesNotMatch(view, /Math\.random/);

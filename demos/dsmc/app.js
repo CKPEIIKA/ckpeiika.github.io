@@ -11,6 +11,7 @@ import {
   rewriteChalkText,
 } from '../../lib/chalkish/examples/chalk-transition.js';
 import { bindLabLanguage, bindMobileControls, withCommonTranslations } from '../lab-i18n.js';
+import { bindHelpDialog, bindKeys, renderKeyHelp } from '../keys.js';
 import {
   RingHistory,
   makeReplayDocument,
@@ -210,7 +211,6 @@ const nodes = Object.freeze({
   exportReplay: required('export-replay'),
   importReplay: required('import-replay'),
   replayFile: required('replay-file'),
-  help: required('help'),
   helpDialog: required('help-dialog'),
   distributionTabs: required('distribution-tabs'),
   distributionTabLabel: required('distribution-tab-label'),
@@ -728,21 +728,19 @@ nodes.replayFile.addEventListener('change', async () => {
     nodes.replayFile.value = '';
   }
 });
-nodes.help.addEventListener('click', () => nodes.helpDialog.showModal());
-
-document.addEventListener('keydown', (event) => {
-  if (event.target instanceof HTMLInputElement
-      || event.target instanceof HTMLSelectElement
-      || event.target instanceof HTMLTextAreaElement) return;
-  const key = event.key.toLowerCase();
-  if (key === ' ') {
-    event.preventDefault();
-    nodes.pause.click();
-  } else if (key === 's') nodes.step.click();
-  else if (key === 'r') nodes.reset.click();
-  else if (key === 'n') nodes.newSeed.click();
-  else if (key === 'h') nodes.helpDialog.open ? nodes.helpDialog.close() : nodes.helpDialog.showModal();
+const keyActions = {
+  play: () => nodes.pause.click(),
+  step: () => nodes.step.click(),
+  reset: () => nodes.reset.click(),
+  help: () => toggleHelp(),
+};
+const extraKeys = [
+  { keys: ['g', 'п'], label: 'G', text: ['новое случайное зерно', 'new random seed'], run: () => nodes.newSeed.click() },
+];
+const toggleHelp = bindHelpDialog(nodes.helpDialog, () => {
+  renderKeyHelp(nodes.helpDialog.querySelector('[data-key-help]'), i18n.language, keyActions, extraKeys);
 });
+bindKeys(keyActions, extraKeys);
 
 i18n.onChange(() => {
   localizeCanvas({ animate: true });

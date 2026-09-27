@@ -4,7 +4,7 @@ import test from 'node:test';
 import {
   DERIVATIVE_PRESETS,
   DerivativeMicroscopeModel,
-} from '../demos/pde-lecture-2/derivative-model.js';
+} from '../demos/pde-lecture-2/src/derivative-model.js';
 
 test('derivative presets remain finite and share stable buffers', () => {
   const model = new DerivativeMicroscopeModel();
