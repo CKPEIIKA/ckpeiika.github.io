@@ -487,14 +487,6 @@ function safeHash(){
   const c=Number(q.get('chapter')),s=Number(q.get('step'));return {c:Number.isFinite(c)?clamp(Math.floor(c)-1,0,8):0,s:Number.isFinite(s)?clamp(Math.floor(s||1)-1,0,2):0,restore};
 }
 function stateHash(){const q=new URLSearchParams({chapter:state.chapter+1,step:state.step+1});for(const key of ['model','b','E','phi','n','mass','width','time','count','seed','alpha','omega','collisionModel','plotMode'])q.set(key,String(state[key]));for(const k of ['compare','wrongSampling','explore'])if(state[k])q.set(k,'1');return '#'+q.toString();}
-function download(filename,content,type='text/csv;charset=utf-8'){const blob=new Blob([content],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);}
-function exportCSV(){
-  const meta=`# Binary collision laboratory; reduced units: length=l0, energy=epsilon, reduced mass=1\n# state=${JSON.stringify(state)}\n# source=original numerical calculation; no experimental data\n`;
-  if(state.chapter>=7){const h=measuredHistogram(),rows=['index,b_over_l0,phi_rad,chi_rad,cos_chi,gx_unit,gy_unit,gz_unit,cos_chi_bin_0_based,arrived'];ensemble.hits.forEach((p,i)=>rows.push([i,p.b,p.phi,p.chi,p.mu,...p.dir,Math.min(17,Math.floor((p.mu+1)*9)),i<h.N?1:0].join(',')));download('collision-ensemble.csv',meta+`# d_over_dref=${dsmcDiameter()}; alpha=${dsmcAlpha()}; seed=${state.seed}\n`+rows.join('\n')+'\n');}
-  else if(state.chapter===6){const rows=['b_over_l0,theta_signed_rad,chi_polar_rad,rmin_over_l0,status',...curve.map(p=>[p.b,p.theta,p.chi,p.rmin,p.status].join(','))];download('scattering-function.csv',meta+rows.join('\n')+'\n');}
-  else {const rows=['t_reduced,x_over_l0,y_over_l0,vx_reduced,vy_reduced,E_over_epsilon,L_reduced',...result.samples.map(p=>{const r=Math.hypot(p.x,p.y),U=result.model==='hs'?0:potential(r,result.model,result.n),E=(p.vx*p.vx+p.vy*p.vy)/2+U,L=p.x*p.vy-p.y*p.vx;return [p.t,p.x,p.y,p.vx,p.vy,E,L].join(',');})];download('relative-trajectory.csv',meta+`# status=${result.status}; chi_rad=${result.chi}; max_relative_energy_error=${result.errorE}\n`+rows.join('\n')+'\n');}
-  $('actionStatus').textContent='CSV сохранён';setTimeout(()=>$('actionStatus').textContent='',2200);
-}
 function applyPreset(name){
   state.model='lj';state.compare=false;state.time=.61;
   if(name==='weak'){state.E=2;state.b=2.5;}
