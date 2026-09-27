@@ -1,121 +1,222 @@
-/* === Global Styles === */
+/* Site pages: a deliberately early-2000s hand-made look (Pantone 484 red on blue-grey,
+   shouted headings with a hard shadow, dashed rules, pipe-separated nav, a marquee),
+   set for comfortable reading. Colours match the demos' tokens in demos/shell.css. */
+
 :root {
-  --bg-color: #D8DDE3;    /* Softer gray */
-  --accent-color: #9F2D20; /* Pantone 484C */
+  --bg-color: #d8dde3;
+  --ink: #24282c;
+  --muted: #4d5358;
+  --accent-color: #9f2d20; /* Pantone 484 C */
+  --panel: #e5e9ed;
+  color-scheme: light;
+}
+
+/* Dark theme: remembered by site-theme.js (html.theme-dark); the checkbox alone still works
+   without JavaScript. */
+html.theme-dark body,
+body:has(#site-theme-toggle:checked) {
+  --bg-color: #181818;
+  --ink: #e4dbd1;
+  --muted: #c6b9ad;
+  --accent-color: #f1d8c0;
+  --panel: #232323;
+  color-scheme: dark;
 }
 
 body {
-  font-family: "Open Sans", Arial, sans-serif;
+  max-width: 68ch;
+  margin: 0 auto;
+  padding: 1.25rem 1.25rem 2rem;
   background-color: var(--bg-color);
-  color: var(--accent-color);
-  margin: 0;
-  padding: 20px;
-  max-width: 72ch;   /* column width */
-  margin-left: auto;  /* center horizontally */
-  margin-right: auto;
-  line-height: 1.65;
+  color: var(--ink);
+  font: 400 clamp(1rem, 0.94rem + 0.3vw, 1.0625rem) / 1.65 "Open Sans", Arial, sans-serif;
 }
 
 main > * + * {
   margin-top: 1rem;
 }
 
-/* === Header / Title === */
-h1, h2, h3 {
-  color: var(--accent-color);
-  text-transform: uppercase;
-  text-shadow: 1px 1px 0 #000;
+/* === Headings: the site's signature === */
+h1,
+h2,
+h3 {
+  margin: 1.8em 0 0.6em;
+  padding-bottom: 0.2em;
   border-bottom: 2px dashed var(--accent-color);
-  padding-bottom: 5px;
-  margin-bottom: 15px;
+  color: var(--accent-color);
+  line-height: 1.2;
+  text-shadow: 1px 1px 0 #000;
+  text-transform: uppercase;
 }
 
+h1 {
+  margin-top: 0.4em;
+  font-size: clamp(1.55rem, 1.1rem + 2vw, 2.1rem);
+  overflow-wrap: anywhere;
+}
+
+h2 {
+  font-size: 1.3rem;
+}
+
+h3 {
+  font-size: 1.05rem;
+}
+
+/* === Links: bold red, dotted underline, inverted on hover (as in 2003) === */
 a {
   color: var(--accent-color);
-  text-decoration: none;
-  font-weight: bold;
-  border-bottom: 1px dotted var(--bg-color);
+  font-weight: 700;
+  text-decoration: underline dotted;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
 }
 
 a:hover {
-  color: var(--bg-color);
   background-color: var(--accent-color);
-  text-decoration: underline;
+  color: var(--bg-color);
+  text-decoration: none;
+}
+
+a:focus-visible,
+.theme-toggle-input:focus-visible + .theme-toggle {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 3px;
 }
 
 a[href^="http"]:not([href*="ckpeiika.github.io"])::after {
   content: " ↗";
-  font-weight: normal;
+  font-weight: 400;
 }
 
-/* === Navigation === */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+hr {
+  border: 0;
+  border-top: 1px dashed var(--accent-color);
+}
+
+blockquote {
+  margin: 1rem 0;
+  padding: 0.4rem 1rem;
+  border-left: 3px solid var(--accent-color);
+  background: var(--panel);
+}
+
+code {
+  padding: 0 0.2em;
+  border: 1px dotted var(--accent-color);
+  font-size: 0.9em;
+}
+
+/* === Navigation: one line of pipes, the current page shown inverted === */
 .nav-inline {
-  margin: 15px 0 25px;
-  font-size: 0.95rem;
-  text-transform: uppercase;
+  margin: 0.6rem 0 1.6rem;
+  font-size: 0.82rem;
   letter-spacing: 0.03em;
-  }
+  text-transform: uppercase;
+}
 
 .nav-inline p {
   margin: 0;
+  line-height: 2;
+}
+
+.nav-inline a {
+  display: inline-block;
+  min-height: 24px;
+  padding: 0 0.15em;
+  text-decoration: none;
+}
+
+.nav-inline a[aria-current="page"] {
+  background: var(--accent-color);
+  color: var(--bg-color);
 }
 
 .theme-toggle {
   display: inline-block;
-  background: transparent;
+  min-height: 24px;
+  padding: 0 9px;
   border: 1px dotted currentColor;
   color: var(--accent-color);
   font: inherit;
+  font-weight: 700;
   cursor: pointer;
-  text-decoration: underline;
-  padding: 4px 9px;
-  transition: color .15s ease, background-color .15s ease, border-color .15s ease;
+}
+
+.theme-toggle:hover {
+  border-color: var(--accent-color);
+  background: var(--accent-color);
+  color: var(--bg-color);
 }
 
 .theme-toggle-input {
   position: absolute;
   width: 1px;
   height: 1px;
-  padding: 0;
   margin: -1px;
+  padding: 0;
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
 }
 
-.theme-toggle-input:focus-visible + .theme-toggle {
-  outline: 2px solid var(--accent-color);
-  outline-offset: 3px;
-}
-
 .theme-dark-label {
   display: none;
 }
 
+html.theme-dark .theme-light-label,
 body:has(#site-theme-toggle:checked) .theme-light-label {
   display: none;
 }
 
+html.theme-dark .theme-dark-label,
 body:has(#site-theme-toggle:checked) .theme-dark-label {
   display: inline;
 }
 
-.theme-toggle:hover {
-  color: var(--bg-color);
-  background: var(--accent-color);
-  border-color: var(--accent-color);
+/* === Home: what is on the site === */
+.site-map {
+  display: grid;
+  gap: 0.2rem 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
 }
 
+.site-map h2 {
+  margin-top: 1.2em;
+}
+
+.site-map ul {
+  margin: 0;
+  padding-left: 1.1em;
+}
+
+.site-map li + li {
+  margin-top: 0.45em;
+}
+
+.site-map li span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.92em;
+}
+
+/* === Buttons and boxes === */
 .download-btn {
   display: inline-block;
   padding: 6px 12px;
   border: 1px solid var(--accent-color);
-  color: #fff;
   background: var(--accent-color);
+  color: var(--bg-color);
   font-size: 0.9rem;
-  text-transform: uppercase;
   letter-spacing: 0.02em;
+  text-decoration: none;
+  text-transform: uppercase;
 }
 
 .download-btn:hover {
@@ -123,115 +224,53 @@ body:has(#site-theme-toggle:checked) .theme-dark-label {
   color: var(--accent-color);
 }
 
-.page-toc {
-  border: 1px dashed var(--accent-color);
-  background: rgba(0, 0, 0, 0.15);
-  padding: 10px 15px;
-  margin: 20px 0;
-  cursor: default;
-}
-
-.page-toc__summary {
-  font-weight: bold;
-  text-transform: uppercase;
-  cursor: pointer;
-  list-style: none;
-  outline: none;
-}
-
-.page-toc[open] .page-toc__summary {
-  margin-bottom: 10px;
-}
-
-.page-toc__summary::marker,
-.page-toc__summary::-webkit-details-marker {
-  display: none;
-}
-
-.page-toc__summary::before {
-  content: "▼";
-  display: inline-block;
-  margin-right: 8px;
-  font-size: 0.8em;
-  transform: rotate(-90deg);
-  transition: transform 0.2s ease;
-}
-
-.page-toc[open] .page-toc__summary::before {
-  transform: rotate(0deg);
-}
-
-.page-toc__list {
-  list-style: none;
-  padding-left: 0;
-  margin: 0;
-}
-
-.page-toc__item {
-  margin: 5px 0;
-}
-
-.page-toc__item--h3 {
-  margin-left: 15px;
-  font-size: 0.95em;
-}
-
-.footer-links {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 25px;
-}
-
-.site-meta {
-  margin-top: 30px;
-  font-size: 0.9rem;
-  text-align: center;
-}
-
-body.theme-dark {
-  --bg-color: #181818;
-  --accent-color: #F1D8C0;
-  background-color: var(--bg-color);
-  color: var(--accent-color);
-}
-body.theme-dark a {
-  border-bottom-color: rgba(255, 255, 255, 0.4);
-}
-
-body:has(#site-theme-toggle:checked) {
-  --bg-color: #181818;
-  --accent-color: #F1D8C0;
-  background-color: var(--bg-color);
-  color: var(--accent-color);
-  color-scheme: dark;
-}
-
-body:has(#site-theme-toggle:checked) a {
-  border-bottom-color: rgba(255, 255, 255, 0.4);
+.demo-callout {
+  padding: 14px 16px;
+  border: 2px dashed var(--accent-color);
+  background: var(--panel);
 }
 
 table {
   width: 100%;
-  border-collapse: collapse;
   margin: 20px 0;
-  background: rgba(255, 255, 255, 0.1);
+  border-collapse: collapse;
+  background: var(--panel);
 }
 
-th, td {
-  border: 1px solid var(--accent-color);
+th,
+td {
   padding: 6px 8px;
+  border: 1px solid var(--accent-color);
   text-align: left;
   vertical-align: top;
 }
 
 th {
-  background: rgba(159, 45, 32, 0.1);
-  text-transform: uppercase;
+  color: var(--accent-color);
   font-size: 0.9em;
+  text-transform: uppercase;
 }
 
 tbody tr:nth-child(even) {
-  background: rgba(0, 0, 0, 0.075);
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* === Footer === */
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+  margin-top: 2.5rem;
+  padding-top: 0.8rem;
+  border-top: 2px dashed var(--accent-color);
+}
+
+.site-meta {
+  margin-top: 1.2rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: center;
 }
 
 /* === Hacky 2000s effects === */
@@ -248,47 +287,66 @@ tbody tr:nth-child(even) {
 .marquee {
   width: 100%;
   overflow: hidden;
-  white-space: nowrap;
-  box-sizing: border-box;
   border-top: 2px solid var(--accent-color);
   border-bottom: 2px solid var(--accent-color);
   color: var(--accent-color);
-  font-weight: bold;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .marquee span {
   display: inline-block;
   padding-left: 100%;
-  animation: marquee 12s linear infinite;
+  animation: marquee 18s linear infinite;
+}
+
+@keyframes marquee {
+  to {
+    transform: translate(-100%, 0);
+  }
 }
 
 .hero-image {
-  border: 2px dashed var(--accent-color);
-  padding: 20px;
   margin-bottom: 20px;
+  padding: 20px;
+  border: 2px dashed var(--accent-color);
   text-align: center;
 }
 
 .hero-image img {
-  max-width: 100%;
-  height: auto;
   display: block;
   margin: 0 auto;
 }
 
 .page-status {
-  text-align: center;
+  color: var(--accent-color);
   font-size: 1.1rem;
+  font-weight: 700;
+  text-align: center;
 }
 
-@keyframes marquee {
-  0% { transform: translate(0, 0); }
-  100% { transform: translate(-100%, 0); }
+/* Visitors who ask for less motion get a still marquee (wrapping) and a steady sign. */
+@media (prefers-reduced-motion: reduce) {
+  .blink,
+  .marquee span {
+    animation: none;
+  }
+
+  .marquee {
+    white-space: normal;
+  }
+
+  .marquee span {
+    padding-left: 0;
+  }
 }
 
+@media (max-width: 480px) {
+  body {
+    padding-inline: 1rem;
+  }
 
-.demo-callout {
-  border: 2px dashed var(--accent-color);
-  padding: 14px 16px;
-  background: rgba(255, 255, 255, 0.08);
+  .nav-inline {
+    font-size: 0.78rem;
+  }
 }

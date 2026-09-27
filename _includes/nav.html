@@ -1,12 +1,12 @@
-<nav class="nav-inline">
+<nav class="nav-inline" aria-label="Разделы сайта">
   <p>
-    <a href="{{ '/index.html' | relative_url }}">🏠 Главная</a>
+    <a href="{{ '/index.html' | relative_url }}"{% if page.url == '/' or page.url == '/index.html' %} aria-current="page"{% endif %}>🏠 Главная</a>
     {% assign menu_paths = "pages/resources.md,pages/eucken.md,pages/cfd2026.md,pages/physico-chemical-gas-dynamics-2026.md,pages/ml2026.md" | split: "," %}
     {% for menu_path in menu_paths %}
       {% assign p = site.pages | where: "path", menu_path | first %}
       {% if p %}
         {% unless p.nav_exclude %}
-          | <a href="{{ p.url | relative_url }}">{{ p.nav_label | default: p.title }}</a>
+          | <a href="{{ p.url | relative_url }}"{% if p.url == page.url %} aria-current="page"{% endif %}>{{ p.nav_label | default: p.title }}</a>
         {% endunless %}
       {% endif %}
     {% endfor %}

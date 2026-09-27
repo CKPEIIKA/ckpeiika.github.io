@@ -7,6 +7,8 @@ layout: null
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Индивидуальные задания по машинному обучению: общая задача 0 и варианты задачи 1.">
+<script src="../demos/theme-init.js"></script>
+<script src="../site-theme.js" defer></script>
 <script>window.MathJax={tex:{inlineMath:[["\\(","\\)"]],displayMath:[["\\[","\\]"]]},options:{skipHtmlTags:["script","noscript","style","textarea","pre","code"]},startup:{typeset:false}};</script>
 <script>
 document.addEventListener("DOMContentLoaded", async () => {
@@ -113,11 +115,11 @@ dialog::backdrop{background:#10141a88}.modal{padding:20px;max-height:90vh;overfl
 .ml-topbar .theme-toggle{display:inline-block;padding:4px 9px;border:1px dotted var(--accent);background:transparent;color:var(--accent);font:700 11px "Open Sans",Arial,sans-serif;cursor:pointer}
 #site-theme-toggle:focus-visible+.theme-toggle{outline:2px solid var(--accent);outline-offset:3px}
 #site-theme-toggle+.theme-toggle .theme-dark-label{display:none}
-body:has(#site-theme-toggle:checked) #site-theme-toggle+.theme-toggle .theme-light-label{display:none}
-body:has(#site-theme-toggle:checked) #site-theme-toggle+.theme-toggle .theme-dark-label{display:inline}
-body:has(#site-theme-toggle:checked){--bg:#181818;--panel:#232323;--line:#F1D8C0;--text:#F1D8C0;--muted:#C6B9AD;--accent:#F1D8C0;--ok:#A8C68F;color-scheme:dark}
-body:has(#site-theme-toggle:checked) .tablewrap th{background:#f1d8c018}
-body:has(#site-theme-toggle:checked) .gost{background:#f1d8c010}
+:is(html.theme-dark body,body:has(#site-theme-toggle:checked)) #site-theme-toggle+.theme-toggle .theme-light-label{display:none}
+:is(html.theme-dark body,body:has(#site-theme-toggle:checked)) #site-theme-toggle+.theme-toggle .theme-dark-label{display:inline}
+:is(html.theme-dark body,body:has(#site-theme-toggle:checked)){--bg:#181818;--panel:#232323;--line:#F1D8C0;--text:#F1D8C0;--muted:#C6B9AD;--accent:#F1D8C0;--ok:#A8C68F;color-scheme:dark}
+:is(html.theme-dark body,body:has(#site-theme-toggle:checked)) .tablewrap th{background:#f1d8c018}
+:is(html.theme-dark body,body:has(#site-theme-toggle:checked)) .gost{background:#f1d8c010}
 .ml-topbar .theme-toggle:hover{background:var(--accent);color:var(--bg);border-color:var(--accent)}
 @media(max-width:700px){
   body{padding:10px}

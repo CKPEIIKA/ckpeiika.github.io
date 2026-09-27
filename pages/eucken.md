@@ -11,7 +11,7 @@ nav_label: "📄 О поправке Эйкена"
 В 1913 году выходит статья Эйкена в журнале Physical Zeitschrift: "Über das Wärmeleitvermögen, die spezifische Wärme und die innere Reibung der Gase", посвященная поправке к коэффициенту теплопроводности для газов.
 
 Для данной статьи доступен параллельный перевод с немецкого:
-[📄 Перевод с немецкого](/papers/eucken.pdf)
+[📄 Перевод с немецкого]({{ '/papers/eucken.pdf' | relative_url }})
 
 ![Арнольд Эйкен (фото с Википедии)](https://upload.wikimedia.org/wikipedia/commons/e/e9/Arnold_Eucken.jpg)
 
