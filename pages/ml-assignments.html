@@ -1,174 +1,17 @@
 ---
-layout: null
+layout: standalone
+title: "ML 2026: индивидуальные задания"
+head_title: Индивидуальные задания — ML 2026
+description: "Индивидуальные задания по машинному обучению: общая задача 0 и варианты задачи 1."
+nav_parent: pages/ml2026.md
+math: true
+stylesheets:
+  - /assets/css/ml-assignments.css
+scripts:
+  - /assets/js/ml-assignments.js
 ---
-<!doctype html>
-<html lang="ru">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Индивидуальные задания по машинному обучению: общая задача 0 и варианты задачи 1.">
-<script src="../demos/theme-init.js"></script>
-<script src="../site-theme.js" defer></script>
-<script>window.MathJax={tex:{inlineMath:[["\\(","\\)"]],displayMath:[["\\[","\\]"]]},options:{skipHtmlTags:["script","noscript","style","textarea","pre","code"]},startup:{typeset:false}};</script>
-<script>
-document.addEventListener("DOMContentLoaded", async () => {
-  const formulas = document.querySelectorAll(".formula");
-  for (const formula of formulas) {
-    formula.dataset.plainFormula = formula.textContent;
-    formula.classList.add("mathjax-source");
-    formula.textContent = `\\(${formula.textContent}\\)`;
-  }
-  try {
-    await window.MathJax.startup.promise;
-    await window.MathJax.typesetPromise();
-  } catch (error) {
-    for (const formula of formulas) {
-      formula.classList.remove("mathjax-source");
-      formula.textContent = formula.dataset.plainFormula;
-      delete formula.dataset.plainFormula;
-    }
-    console.error("MathJax could not typeset assignment formulas.", error);
-  }
-});
-</script>
-<script defer src="../vendor/mathjax/es5/tex-mml-chtml.js"></script>
 <noscript><style>.mathjax-source{display:none}</style></noscript>
-<title>Индивидуальные задания — ML 2026</title>
-<link rel="icon" type="image/png" href="../hero.png">
-<link rel="stylesheet" href="../assets/fonts/open-sans/open-sans.css">
-<link rel="stylesheet" href="../style.css">
-<style>
-:root{--bg:#f5f6f8;--panel:#fff;--line:#d9dde3;--text:#17191d;--muted:#6c737d;--accent:#205da6;--ok:#25653d}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:15px/1.48 system-ui,-apple-system,"Segoe UI",sans-serif}
-.wrap{width:min(1120px,calc(100% - 28px));margin:auto;padding:36px 0 60px}
-h1{margin:0 0 6px;font-size:32px;letter-spacing:-.02em}
-.intro{color:var(--muted);margin:0 0 22px}
-.tablewrap{overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px}
-table{width:100%;border-collapse:collapse;min-width:780px}
-th,td{padding:11px 13px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);text-align:center}
-th:last-child,td:last-child{border-right:0} tbody tr:last-child td{border-bottom:0}
-th{background:#eef1f4;font-size:13px} th:first-child,td:first-child{text-align:left;width:140px}
-.student{font:700 14px ui-monospace,SFMono-Regular,Menlo,monospace}
-.task,.task0{border:0;background:transparent;color:var(--accent);font:700 14px inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
-.closed{color:#a6abb2;font-size:21px} .legend{margin-top:10px;color:var(--muted);font-size:13px}
-dialog{width:min(790px,calc(100% - 28px));max-height:90vh;border:0;border-radius:12px;padding:0;box-shadow:0 24px 80px #0005}
-dialog::backdrop{background:#10141a77} .modal{padding:24px;max-height:90vh;overflow:auto}
-.head{display:flex;justify-content:space-between;gap:20px} h2{margin:0;font-size:24px}
-.meta{color:var(--muted);margin-top:3px} .closebtn{flex:none;width:34px;height:34px;border:1px solid var(--line);background:#fff;border-radius:7px;font-size:20px;cursor:pointer}
-.desc{margin-top:18px;line-height:1.6} .block{margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}
-.block h3{font-size:15px;margin:0 0 9px} .block ol,.block ul{margin:0;padding-left:22px} .block li{margin:6px 0}
-.dataset{color:var(--muted)} a{color:var(--accent)} .verified{display:inline-block;margin-top:12px;color:var(--ok);font-size:13px;font-weight:700}
-.gost{padding:10px 12px;background:#f0f3f6;border-radius:8px}
-</style>
-<style>
-:root{--bg:#D8DDE3;--panel:#E8ECEF;--line:#9F2D20;--text:#24282C;--muted:#4D5358;--accent:#9F2D20;--ok:#42674A;color-scheme:light}
-body.theme-dark{--bg:#181818;--panel:#232323;--line:#F1D8C0;--text:#F1D8C0;--muted:#C6B9AD;--accent:#F1D8C0;--ok:#A8C68F;color-scheme:dark}
-body{box-sizing:border-box;width:100%;max-width:none;margin:0;padding:16px;background:var(--bg);color:var(--text);font:15px/1.65 "Open Sans",Arial,sans-serif}
-.ml-site-strip{width:min(100%,112rem);margin:0 auto 16px;padding:0 0 8px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px dashed var(--accent);text-transform:uppercase;font-size:12px}
-.ml-site-strip a{color:var(--accent);font-weight:700;text-decoration:none;border-bottom:1px dotted var(--accent)}
-.ml-site-strip .theme-toggle{padding:4px 9px;border:1px dotted var(--accent);border-radius:0;background:transparent;color:var(--accent);font:700 11px "Open Sans",Arial,sans-serif;cursor:pointer}
-.wrap{width:min(112rem,100%);margin:0 auto;padding:8px 0 36px}
-h1,h2,h3{color:var(--accent);font-family:"Open Sans",Arial,sans-serif;text-transform:uppercase;text-shadow:1px 1px 0 #000;border-bottom:2px dashed var(--accent);padding-bottom:5px}
-h1{margin:0 0 8px;font-size:clamp(22px,3vw,32px);letter-spacing:.015em}
-h2{margin:20px 0 8px;font-size:17px}
-.intro,.legend,.meta,.dataset{color:var(--muted)}
-.roster-block{margin:18px 0 26px;padding:0 0 18px;border-bottom:1px dashed var(--accent)}
-.roster-block h2{margin-top:0}
-.roster-block p{margin:8px 0 12px}
-.roster-wrap{max-width:100%;overflow-x:auto}
-.roster{width:auto;min-width:0;border-collapse:collapse;background:transparent}
-.roster th,.roster td{padding:6px 12px;border:1px solid var(--accent);text-align:left;white-space:nowrap}
-.roster th{background:#9f2d2014;font-size:12px;text-transform:uppercase}
-body.theme-dark .roster th{background:#f1d8c018}
-.tablewrap{overflow:auto;background:var(--panel);border:1px dashed var(--accent);border-radius:0}
-.tablewrap table{min-width:780px;background:transparent}
-.tablewrap th,.tablewrap td{padding:9px 10px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);color:var(--text)}
-.tablewrap th{background:#9f2d2014;font-size:12px;text-transform:uppercase}
-body.theme-dark .tablewrap th{background:#f1d8c018}
-.student{font:700 13px "Open Sans",Arial,sans-serif}
-.task,.task0{border:0;background:transparent;color:var(--accent);font:700 13px "Open Sans",Arial,sans-serif;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
-.task:hover,.task0:hover{background:var(--accent);color:var(--bg)}
-.task0.completed{color:var(--ok);text-decoration:none;white-space:nowrap}
-.task0.completed:hover{background:var(--ok);color:var(--bg)}
-.task.completed::after{content:" ✓"}
-.task-done{color:var(--ok);font-size:18px;font-weight:700}
-.submission-note{margin:-12px 0 22px;padding:9px 12px;border-left:3px solid var(--accent);color:var(--text);font-size:14px}
-.submission-note code{padding:2px 4px;border:1px dashed var(--accent);color:var(--text)}
-.closed{color:var(--muted);font-size:18px}.legend{margin-top:10px;font-size:12px}
-dialog{width:min(790px,calc(100% - 28px));max-height:90vh;border:1px dashed var(--accent);border-radius:0;padding:0;background:var(--panel);color:var(--text);box-shadow:0 16px 50px #0004}
-dialog::backdrop{background:#10141a88}.modal{padding:20px;max-height:90vh;overflow:auto}.head{display:flex;justify-content:space-between;gap:16px}
-.head h2{margin:0;font-size:20px}.closebtn{flex:none;width:36px;height:36px;border:1px solid var(--accent);background:var(--panel);color:var(--accent);border-radius:0;font:20px "Open Sans",Arial,sans-serif;cursor:pointer}
-.desc{margin-top:16px;line-height:1.65}.block{margin-top:18px;padding-top:14px;border-top:1px dashed var(--accent)}.block h3{font-size:14px;margin:0 0 8px}.block li{margin:6px 0}
-.verified{color:var(--ok)}.gost{padding:10px 12px;background:#9f2d2010;border-radius:0}body.theme-dark .gost{background:#f1d8c010}
-.ml-topbar p{display:flex;align-items:center;justify-content:space-between;width:100%;margin:0}
-@media(max-width:700px){body{padding:10px}.wrap{padding-top:4px}.roster{width:100%}.roster th,.roster td{padding:6px 8px;font-size:12px}.tablewrap{overflow-x:auto}.modal{padding:15px}}
-</style>
-<style>
-.assignment-detail{margin:12px 0;border:1px dashed var(--accent);background:var(--panel)}
-.assignment-detail>summary{padding:12px 14px;color:var(--accent);font-weight:700;cursor:pointer}
-.assignment-detail[open]>summary{border-bottom:1px dashed var(--accent)}
-.assignment-content{padding:12px 16px}
-.assignment-content>p:first-child{margin-top:0}
-.formula{font-family:Georgia,"Times New Roman",serif;white-space:nowrap}
-.theme-toggle-input{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-.ml-topbar .theme-toggle{display:inline-block;padding:4px 9px;border:1px dotted var(--accent);background:transparent;color:var(--accent);font:700 11px "Open Sans",Arial,sans-serif;cursor:pointer}
-#site-theme-toggle:focus-visible+.theme-toggle{outline:2px solid var(--accent);outline-offset:3px}
-#site-theme-toggle+.theme-toggle .theme-dark-label{display:none}
-:is(html.theme-dark body,body:has(#site-theme-toggle:checked)) #site-theme-toggle+.theme-toggle .theme-light-label{display:none}
-:is(html.theme-dark body,body:has(#site-theme-toggle:checked)) #site-theme-toggle+.theme-toggle .theme-dark-label{display:inline}
-:is(html.theme-dark body,body:has(#site-theme-toggle:checked)){--bg:#181818;--panel:#232323;--line:#F1D8C0;--text:#F1D8C0;--muted:#C6B9AD;--accent:#F1D8C0;--ok:#A8C68F;color-scheme:dark}
-:is(html.theme-dark body,body:has(#site-theme-toggle:checked)) .tablewrap th{background:#f1d8c018}
-:is(html.theme-dark body,body:has(#site-theme-toggle:checked)) .gost{background:#f1d8c010}
-.ml-topbar .theme-toggle:hover{background:var(--accent);color:var(--bg);border-color:var(--accent)}
-@media(max-width:700px){
-  body{padding:10px}
-  .ml-site-strip{gap:8px;flex-wrap:wrap}
-  .ml-topbar p{gap:8px}
-  .wrap{padding:4px 0 22px}
-  .roster-wrap{overflow-x:auto}
-  .roster{width:100%;table-layout:fixed}
-  .roster th,.roster td{padding:6px 5px;white-space:normal;overflow-wrap:anywhere}
-  .tablewrap{overflow:visible;border:0;background:transparent}
-  .tablewrap table,.tablewrap tbody{display:block;width:100%;min-width:0}
-  .tablewrap thead{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-  .tablewrap tbody tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin:0 0 8px;border:1px dashed var(--line);background:var(--panel)}
-  .tablewrap tbody td{display:flex;min-width:0;flex-direction:column;align-items:flex-start;gap:3px;padding:7px 8px;border:0;border-right:1px solid var(--line);white-space:normal;overflow-wrap:anywhere}
-  .tablewrap tbody td:first-child{grid-column:1/-1;border-bottom:1px dashed var(--line);font-weight:700}
-  .tablewrap tbody td:nth-child(2n+1){border-right:0}
-  .tablewrap tbody td::before{font-size:9px;line-height:1.2;color:var(--muted);text-transform:uppercase}
-  .tablewrap tbody td:nth-child(1)::before{content:"Студент"}
-  .tablewrap tbody td:nth-child(2)::before{content:"Задача 0 · 16.09.2026"}
-  .tablewrap tbody td:nth-child(3)::before{content:"Задача 1 · 23.09.2026"}
-  .tablewrap tbody td:nth-child(4)::before{content:"Задача 2"}
-  .tablewrap tbody td:nth-child(5)::before{content:"Задача 3"}
-  .tablewrap tbody td:nth-child(6)::before{content:"Задача 4"}
-  .tablewrap tbody td:nth-child(7)::before{content:"Задача 5"}
-  .tablewrap tbody td:nth-child(8)::before{content:"Задача 6"}
-  .tablewrap tbody td:nth-child(9)::before{content:"Курсовая работа"}
-  .task,.task0{max-width:100%;white-space:normal;overflow-wrap:anywhere;text-align:left}
-  .intro,.submission-note,.assignment-content{overflow-wrap:anywhere}
-  .assignment-content{padding:10px 12px}
-  .assignment-content ol{padding-left:20px}
-  .assignment-detail>summary{padding:10px 12px;line-height:1.4}
-  .head{align-items:flex-start;gap:8px}
-  .head h2{font-size:17px;overflow-wrap:anywhere}
-  .closebtn{flex:none}
-}
-@media(max-width:420px){
-  .roster th,.roster td{padding:5px 3px;font-size:10px;line-height:1.35}
-  .tablewrap tbody td{padding:6px 7px;font-size:12px}
-  .tablewrap tbody td::before{font-size:8px}
-  .task,.task0{font-size:11px}
-}
-</style>
-</head>
-<body>
-<a id="top"></a>
-<nav class="nav-inline ml-topbar"><p><a href="./ml2026.html" aria-label="Назад">← Назад</a><input class="theme-toggle-input" type="checkbox" id="site-theme-toggle"><label class="theme-toggle" for="site-theme-toggle"><span class="theme-light-label">Мне светло</span><span class="theme-dark-label">Мне темно</span></label></p></nav>
-<main class="ml-assignment-page">
-<div class="wrap">
-<h1>Индивидуальные задания</h1>
+<section class="roster-section">
 <p class="intro">Можно использовать нейросети, агентов, чит-коды, джиннов, уличную магию.</p>
 <p class="submission-note"><strong>Как сдать:</strong> приложите ZIP-архив вида <code>stxxxxx_номерзадания.zip</code> (например, <code>st117157_0.zip</code>) или отправьте ссылку на GitHub.</p>
 <div class="tablewrap"><table>
@@ -176,43 +19,43 @@ dialog::backdrop{background:#10141a88}.modal{padding:20px;max-height:90vh;overfl
 <tbody>
 {% for student in site.data.ml_students %}
 <tr{% if student.row_id != '' %} id="{{ student.row_id | escape }}"{% endif %}{% if student.row_class != '' %} class="{{ student.row_class | escape }}"{% endif %}>
-  <td class="student">{{ student.student_id | escape }}</td>
+  <td class="student" data-label="Студент">{{ student.student_id | escape }}</td>
   {% if student.task0_status == 'completed' %}
-  <td><a class="task0 completed" href="#task-0" aria-label="Ознакомительная работа выполнена">✓ Выполнена</a></td>
+  <td data-label="Задача 0 · 16.09.2026"><a class="task0 completed" href="#task-0" aria-label="Ознакомительная работа выполнена">✓ Выполнена</a></td>
   {% elsif student.task0_status == 'closed' %}
-  <td class="closed">×</td>
+  <td class="closed" data-label="Задача 0 · 16.09.2026">×</td>
   {% else %}
-  <td><a class="task0" href="#task-0">Ознакомительная</a></td>
+  <td data-label="Задача 0 · 16.09.2026"><a class="task0" href="#task-0">Ознакомительная</a></td>
   {% endif %}
   {% if student.task1_status == 'closed' or student.task1_variant == '' %}
-  <td class="closed">×</td>
+  <td class="closed" data-label="Задача 1 · 23.09.2026">×</td>
   {% else %}
-  <td><a class="task{% if student.task1_status == 'completed' %} completed{% endif %}" href="#variant-{{ student.task1_variant | escape }}">{{ student.task1_title | escape }}</a></td>
+  <td data-label="Задача 1 · 23.09.2026"><a class="task{% if student.task1_status == 'completed' %} completed{% endif %}" href="#variant-{{ student.task1_variant | escape }}">{{ student.task1_title | escape }}</a></td>
   {% endif %}
   {% for task_number in (2..6) %}
     {% assign status_key = 'task' | append: task_number | append: '_status' %}
     {% assign task_status = student[status_key] %}
     {% if task_status == 'completed' %}
-  <td class="task-done">✓ Выполнена</td>
+  <td class="task-done" data-label="Задача {{ task_number }}">✓ Выполнена</td>
     {% elsif task_status == 'closed' %}
-  <td class="closed">×</td>
+  <td class="closed" data-label="Задача {{ task_number }}">×</td>
     {% else %}
-  <td><a class="task" href="#task-{{ task_number }}">Задача {{ task_number }}</a></td>
+  <td data-label="Задача {{ task_number }}"><a class="task" href="#task-{{ task_number }}">Задача {{ task_number }}</a></td>
     {% endif %}
   {% endfor %}
   {% if student.coursework_status == 'completed' %}
-  <td class="task-done">✓ Выполнена</td>
+  <td class="task-done" data-label="Курсовая работа">✓ Выполнена</td>
   {% elsif student.coursework_status == 'unassigned' or student.coursework_status == 'closed' %}
-  <td class="closed" aria-label="Курсовая работа пока не назначена">—</td>
+  <td class="closed" data-label="Курсовая работа" aria-label="Курсовая работа пока не назначена">—</td>
   {% else %}
-  <td><a class="task" href="#coursework">Курсовая работа</a></td>
+  <td data-label="Курсовая работа"><a class="task" href="#coursework">Курсовая работа</a></td>
   {% endif %}
 </tr>
 {% endfor %}
 </tbody>
 </table></div>
-<div class="legend">Задача 0 общая для всех студентов; × — задачи 2–6 пока закрыты, — в столбце курсовой работы означает, что тема ещё не назначена.</div>
-</div>
+<p class="legend">Задача 0 общая для всех студентов; × — задачи 2–6 пока закрыты, — в столбце курсовой работы означает, что тема ещё не назначена.</p>
+</section>
 
 
 <details id="task-0" class="assignment-detail"><summary>Задача 0 — ознакомительная работа</summary><div class="assignment-content">
@@ -275,18 +118,3 @@ dialog::backdrop{background:#10141a88}.modal{padding:20px;max-height:90vh;overfl
 <details id="variant-23" class="assignment-detail"><summary>Тепловая динамика помещения <span class="meta">· вариант 23</span></summary><div class="assignment-content"><p class="dataset"><strong>Набор данных:</strong> <a href="https://archive.ics.uci.edu/dataset/274/sml2010">UCI SML2010</a></p><p>Предскажите температуру воздуха в одном выбранном помещении дома SML2010 по погодным данным, солнечному излучению и состоянию систем здания.</p><div class="block"><h3>Проверка модели</h3><p>Использовать последовательные обучающий, проверочный и тестовый временные интервалы. Случайное разбиение допускается только как демонстрация чрезмерно оптимистичной оценки.</p></div><div class="block"><h3>Исследовательский вопрос</h3><p>Сравнить случайное и временное разбиения и объяснить, почему при временно коррелированных данных случайная оценка качества оказывается завышенной.</p></div><div class="block"><h3>Что включить в работу</h3><ol><li>Описать происхождение набора данных, физический смысл целевой величины и входных переменных, указать единицы измерения и до обучения сформулировать не менее двух проверяемых физических гипотез.</li><li>Построить простую базовую модель и модель МНК. Затем сравнить их с физически мотивированной линейной постановкой, полиномиальной регрессией и регуляризованными линейными моделями.</li><li>Привести MAE, RMSE и R² для обучающей, кросс-валидационной и тестовой оценок; показать зависимость ошибки проверки от сложности модели или силы регуляризации и указать признаки недообучения либо переобучения.</li><li>Построить график «измеренное — предсказанное» и график остатков; проверить, нет ли в остатках систематической зависимости от прогноза или ключевого физического параметра.</li><li>Оценить устойчивость важных коэффициентов с помощью повторной кросс-валидации или бутстрэп-процедуры: знак, порядок величины, чувствительность к коррелированным признакам.</li><li>Выполнить предусмотренную для варианта проверку на отложенном физическом режиме, объекте, временном интервале или диапазоне параметров и сравнить её с обычной интерполяционной оценкой.</li></ol></div><div class="block"><h3>Признаки</h3><p>Использовать исходные признаки и только лаги 1, 2 и 3 шага для температуры помещения, наружной температуры и солнечного излучения. Большой набор авторегрессионных признаков не строить.</p></div></div></details>
 <details id="variant-24" class="assignment-detail"><summary>Переходный процесс сервопривода <span class="meta">· вариант 24</span></summary><div class="assignment-content"><p class="dataset"><strong>Набор данных:</strong> <a href="https://archive.ics.uci.edu/dataset/87/servo">UCI Servo</a></p><p>Предскажите время нарастания переходного процесса сервосистемы по двум коэффициентам усиления и двум дискретным вариантам механической передачи.</p><div class="block"><h3>Проверка модели</h3><p>Из-за 167 наблюдений использовать повторную или вложенную кросс-валидацию.</p></div><div class="block"><h3>Исследовательский вопрос</h3><p>Получить устойчивую низкоразмерную аппроксимацию и указать область параметров, где она перестаёт описывать сильно нелинейный отклик.</p></div><div class="block"><h3>Что включить в работу</h3><ol><li>Описать происхождение набора данных, физический смысл целевой величины и входных переменных, указать единицы измерения и до обучения сформулировать не менее двух проверяемых физических гипотез.</li><li>Построить простую базовую модель и модель МНК. Затем сравнить их с физически мотивированной линейной постановкой, полиномиальной регрессией и регуляризованными линейными моделями.</li><li>Привести MAE, RMSE и R² для обучающей, кросс-валидационной и тестовой оценок; показать зависимость ошибки проверки от сложности модели или силы регуляризации и указать признаки недообучения либо переобучения.</li><li>Построить график «измеренное — предсказанное» и график остатков; проверить, нет ли в остатках систематической зависимости от прогноза или ключевого физического параметра.</li><li>Оценить устойчивость важных коэффициентов с помощью повторной кросс-валидации или бутстрэп-процедуры: знак, порядок величины, чувствительность к коррелированным признакам.</li><li>Выполнить предусмотренную для варианта проверку на отложенном физическом режиме, объекте, временном интервале или диапазоне параметров и сравнить её с обычной интерполяционной оценкой.</li></ol></div><div class="block"><h3>Признаки</h3><p>Признаки motor и screw кодировать как категории. Сравнить исходную целевую величину и log(y), квадраты коэффициентов усиления и их взаимодействие. Из-за малого объёма данных третью степень без необходимости не использовать.</p></div></div></details>
 <details id="variant-25" class="assignment-detail"><summary>Солнечные вспышки <span class="meta">· вариант 25</span></summary><div class="assignment-content"><p class="dataset"><strong>Набор данных:</strong> <a href="https://archive.ics.uci.edu/dataset/89/solar+flare">UCI Solar Flare</a></p><p>Используйте число солнечных вспышек класса C, возникающих в активной области в последующие 24 часа, как числовую целевую величину. Эта задача специально показывает ограничения обычной линейной регрессии для счётных неотрицательных данных.</p><div class="block"><h3>Проверка модели</h3><p>В качестве основной выборки использовать более тщательно исправленный файл flare.data2; все преобразования выполнять только внутри обучающих частей кросс-валидации.</p></div><div class="block"><h3>Исследовательский вопрос</h3><p>По отрицательным прогнозам, остаткам и зависимости дисперсии от среднего показать, какие предпосылки линейной регрессии нарушаются и насколько помогают преобразования целевой величины.</p></div><div class="block"><h3>Что включить в работу</h3><ol><li>Описать происхождение набора данных, физический смысл целевой величины и входных переменных, указать единицы измерения и до обучения сформулировать не менее двух проверяемых физических гипотез.</li><li>Построить простую базовую модель и модель МНК. Затем сравнить их с физически мотивированной линейной постановкой, полиномиальной регрессией и регуляризованными линейными моделями.</li><li>Привести MAE, RMSE и R² для обучающей, кросс-валидационной и тестовой оценок; показать зависимость ошибки проверки от сложности модели или силы регуляризации и указать признаки недообучения либо переобучения.</li><li>Построить график «измеренное — предсказанное» и график остатков; проверить, нет ли в остатках систематической зависимости от прогноза или ключевого физического параметра.</li><li>Оценить устойчивость важных коэффициентов с помощью повторной кросс-валидации или бутстрэп-процедуры: знак, порядок величины, чувствительность к коррелированным признакам.</li><li>Выполнить предусмотренную для варианта проверку на отложенном физическом режиме, объекте, временном интервале или диапазоне параметров и сравнить её с обычной интерполяционной оценкой.</li></ol></div><div class="block"><h3>Признаки</h3><p>Категориальные признаки кодировать бинарными индикаторами (one-hot). Сравнить модели для y, √y и log(1+y); не трактовать категориальные коды как непрерывные числа.</p></div></div></details>
-
-
-
-</main>
-<p class="footer-links"><a href="../index.html">⬅ Обратно на главную</a><a href="#top">↑ Наверх</a></p>
-<script>
-document.addEventListener("click", event => {
-  const link = event.target.closest("a.task, a.task0");
-  if (!link || !link.hash) return;
-  const details = document.getElementById(link.hash.slice(1));
-  if (details instanceof HTMLDetailsElement) details.open = true;
-});
-</script>
-</body>
-</html>

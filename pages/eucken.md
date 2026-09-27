@@ -13,5 +13,8 @@ nav_label: "📄 О поправке Эйкена"
 Для данной статьи доступен параллельный перевод с немецкого:
 [📄 Перевод с немецкого]({{ '/papers/eucken.pdf' | relative_url }})
 
-![Арнольд Эйкен (фото с Википедии)](https://upload.wikimedia.org/wikipedia/commons/e/e9/Arnold_Eucken.jpg)
+<figure class="portrait">
+  <img src="{{ '/assets/images/arnold-eucken.jpg' | relative_url }}" width="560" height="848" alt="Арнольд Эйкен в студенческой шапке, около 1905 года">
+  <figcaption>Арнольд Эйкен, около 1905 года. Фото: неизвестный автор, «Einst und Jetzt», общественное достояние (<a href="https://commons.wikimedia.org/wiki/File:Arnold_Eucken.jpg">Wikimedia Commons</a>).</figcaption>
+</figure>
 

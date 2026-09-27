@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+{% include head.html %}
+</head>
+<!-- Wide pages built around a table or tool (e.g. pages/ml-assignments.html): the site's
+     header, navigation, theme and footer, with the full width for content. Page CSS and JS
+     come from files listed in front matter (stylesheets:, scripts:), never inline. -->
+<body class="layout-standalone">
+{% include site-header.html %}
+<main>
+{{ content }}
+</main>
+{% include site-footer.html %}
+</body>
+</html>

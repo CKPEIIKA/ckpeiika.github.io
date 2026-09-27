@@ -1,0 +1,217 @@
+/* ML 2026 assignments (pages/ml-assignments.html, _layouts/standalone.html).
+   Colours come from the site tokens in style.css, so light/dark follow the site theme. */
+
+main {
+  --ok: #42674a;
+}
+
+html.theme-dark main,
+body:has(#site-theme-toggle:checked) main {
+  --ok: #a8c68f;
+}
+
+.intro,
+.legend,
+.meta,
+.dataset {
+  color: var(--muted);
+}
+
+.legend {
+  margin-top: 0.6rem;
+  font-size: 0.85rem;
+}
+
+.submission-note {
+  padding: 0.55rem 0.8rem;
+  border-left: 3px solid var(--accent-color);
+  font-size: 0.95rem;
+}
+
+/* Roster: one row per student, one column per task. */
+.tablewrap {
+  overflow-x: auto;
+  border: 1px dashed var(--accent-color);
+  background: var(--panel);
+}
+
+.tablewrap table {
+  min-width: 780px;
+  margin: 0;
+  background: transparent;
+}
+
+.tablewrap th,
+.tablewrap td {
+  padding: 9px 10px;
+  border: 0;
+  border-right: 1px solid var(--accent-color);
+  border-bottom: 1px solid var(--accent-color);
+  text-align: center;
+  vertical-align: middle;
+}
+
+.tablewrap th:first-child,
+.tablewrap td:first-child {
+  text-align: left;
+}
+
+.tablewrap th:last-child,
+.tablewrap td:last-child {
+  border-right: 0;
+}
+
+.tablewrap tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.tablewrap th {
+  font-size: 0.8rem;
+}
+
+.student {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.task,
+.task0 {
+  font-size: 0.9rem;
+}
+
+.task0.completed {
+  color: var(--ok);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.task0.completed:hover {
+  background: var(--ok);
+  color: var(--bg-color);
+}
+
+.task.completed::after {
+  content: " ✓";
+}
+
+.task-done {
+  color: var(--ok);
+  font-weight: 700;
+}
+
+.closed {
+  color: var(--muted);
+}
+
+/* Task texts: one expandable block per task and variant. */
+.assignment-detail {
+  margin: 12px 0;
+  border: 1px dashed var(--accent-color);
+  background: var(--panel);
+}
+
+.assignment-detail > summary {
+  padding: 10px 14px;
+  color: var(--accent-color);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.assignment-detail[open] > summary {
+  border-bottom: 1px dashed var(--accent-color);
+}
+
+.assignment-content {
+  padding: 12px 16px;
+  overflow-wrap: anywhere;
+}
+
+.assignment-content > p:first-child {
+  margin-top: 0;
+}
+
+.desc {
+  margin-top: 12px;
+}
+
+.block {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--accent-color);
+}
+
+.block h3 {
+  margin: 0 0 8px;
+  border: 0;
+  font-size: 0.95rem;
+}
+
+.block li {
+  margin: 6px 0;
+}
+
+.formula {
+  font-family: Georgia, "Times New Roman", serif;
+  white-space: nowrap;
+}
+
+/* Phones: each student becomes a card; cells are labelled from data-label. */
+@media (max-width: 700px) {
+  .tablewrap {
+    overflow: visible;
+    border: 0;
+    background: transparent;
+  }
+
+  .tablewrap table,
+  .tablewrap tbody {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .tablewrap thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  .tablewrap tbody tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 0 0 8px;
+    border: 1px dashed var(--accent-color);
+    background: var(--panel);
+  }
+
+  .tablewrap tbody td {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    padding: 7px 8px;
+    border: 0;
+    text-align: left;
+    overflow-wrap: anywhere;
+  }
+
+  .tablewrap tbody td:first-child {
+    grid-column: 1 / -1;
+    border-bottom: 1px dashed var(--accent-color);
+  }
+
+  .tablewrap tbody td::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: 0.7rem;
+    font-weight: 400;
+    text-transform: uppercase;
+  }
+
+  .assignment-content {
+    padding: 10px 12px;
+  }
+}

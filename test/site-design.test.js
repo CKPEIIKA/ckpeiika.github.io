@@ -6,16 +6,39 @@ const ROOT = new URL('../', import.meta.url);
 const read = (path) => readFile(new URL(path, ROOT), 'utf8');
 
 test('site pages remember the theme shared with the demos', async () => {
-  const [layout, nav, script, assignments] = await Promise.all([
-    read('_layouts/default.html'), read('_includes/nav.html'), read('site-theme.js'), read('pages/ml-assignments.html'),
+  const [head, defaultLayout, standalone, nav, script] = await Promise.all([
+    read('_includes/head.html'), read('_layouts/default.html'), read('_layouts/standalone.html'),
+    read('_includes/nav.html'), read('site-theme.js'),
   ]);
-  for (const html of [layout, assignments]) {
-    assert.match(html, /demos\/theme-init\.js/);
-    assert.match(html, /site-theme\.js"? defer|site-theme\.js' \| relative_url \}\}" defer/);
+  assert.match(head, /demos\/theme-init\.js/);
+  assert.match(head, /site-theme\.js' \| relative_url \}\}" defer/);
+  for (const layout of [defaultLayout, standalone]) {
+    assert.match(layout, /\{% include head\.html %\}/);
+    assert.match(layout, /\{% include site-header\.html %\}/);
+    assert.match(layout, /\{% include site-footer\.html %\}/);
   }
   assert.match(nav, /id="site-theme-toggle"/, 'the checkbox still works without JavaScript');
   assert.match(script, /localStorage\.setItem\('site-theme'/, 'same key as demos/theme.js');
   assert.match(nav, /aria-current="page"/, 'the navigation marks the current page');
+});
+
+test('standalone pages keep their code in files listed in front matter', async () => {
+  const pages = (await readdir(new URL('pages/', ROOT))).filter((name) => /\.(md|html)$/.test(name));
+  let count = 0;
+  for (const name of pages) {
+    const source = await read(`pages/${name}`);
+    if (!/^layout: standalone$/m.test(source)) continue;
+    count += 1;
+    const body = source.replace(/<noscript>[\s\S]*?<\/noscript>/g, '');
+    assert.doesNotMatch(body, /<script|<style/, `${name}: no inline script or style`);
+    for (const [, file] of source.matchAll(/^\s+- (\/[\w/.-]+\.(?:css|js))$/gm)) {
+      await read(file.slice(1)); // throws if the listed file is missing
+    }
+  }
+  assert.ok(count >= 1);
+  const roster = await read('pages/ml-assignments.html');
+  const cells = roster.match(/<td\b[^>]*>/g);
+  assert.ok(cells.every((cell) => /data-label="/.test(cell)), 'every roster cell labels itself on phones');
 });
 
 test('decorative motion stops for visitors who ask for less motion', async () => {

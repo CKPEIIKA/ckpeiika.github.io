@@ -4,8 +4,9 @@ import test from 'node:test';
 
 const root = new URL('../', import.meta.url);
 
-test('the default layout uses local Open Sans and local MathJax', async () => {
-  const layout = await readFile(new URL('_layouts/default.html', root), 'utf8');
+test('the site layouts use local Open Sans and local MathJax', async () => {
+  // Both layouts share this head (_layouts/default.html and _layouts/standalone.html).
+  const layout = await readFile(new URL('_includes/head.html', root), 'utf8');
   assert.match(layout, /assets\/fonts\/open-sans\/open-sans\.css/);
   assert.match(layout, /vendor\/mathjax\/es5\/tex-mml-chtml\.js/);
   assert.doesNotMatch(layout, /cdn\.jsdelivr\.net|fonts\.googleapis\.com/);

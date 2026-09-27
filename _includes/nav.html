@@ -6,7 +6,7 @@
       {% assign p = site.pages | where: "path", menu_path | first %}
       {% if p %}
         {% unless p.nav_exclude %}
-          | <a href="{{ p.url | relative_url }}"{% if p.url == page.url %} aria-current="page"{% endif %}>{{ p.nav_label | default: p.title }}</a>
+          | <a href="{{ p.url | relative_url }}"{% if p.url == page.url or p.path == page.nav_parent %} aria-current="page"{% endif %}>{{ p.nav_label | default: p.title }}</a>
         {% endunless %}
       {% endif %}
     {% endfor %}
