@@ -1,1 +1,4 @@
-serve-local.sh
+# Local Jekyll preview output (./preview.sh)
+_site/
+.jekyll-cache/
+.jekyll-metadata
