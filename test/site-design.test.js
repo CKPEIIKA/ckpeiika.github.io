@@ -11,7 +11,12 @@ test('site pages remember the theme shared with the demos', async () => {
     read('_includes/nav.html'), read('site-theme.js'),
   ]);
   assert.match(head, /demos\/theme-init\.js/);
-  assert.match(head, /site-theme\.js' \| relative_url \}\}" defer/);
+  assert.match(head, /site-theme\.js' \| relative_url \}\}\?v=\{\{ v \}\}" defer/);
+  // Versioned CSS/JS links, so a browser never pairs new HTML with an old cached stylesheet.
+  for (const link of head.match(/(?:href|src)="\{\{ [^}]*\.(?:css|js)'? \| relative_url \}\}[^"]*"/g)) {
+    if (/open-sans\.css|theme-init\.js|mathjax/.test(link)) continue;
+    assert.match(link, /\?v=\{\{ v \}\}"$/, link);
+  }
   for (const layout of [defaultLayout, standalone]) {
     assert.match(layout, /\{% include head\.html %\}/);
     assert.match(layout, /\{% include site-header\.html %\}/);

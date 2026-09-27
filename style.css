@@ -36,10 +36,10 @@ main > * + * {
   margin-top: 1rem;
 }
 
-/* _layouts/standalone.html: the site chrome around a wide table or tool; running text inside
-   keeps a readable measure. */
+/* _layouts/standalone.html: the site chrome around a wide table or tool. Wider than the
+   text pages, but still one glance across; running text inside keeps a readable measure. */
 body.layout-standalone {
-  max-width: min(112rem, 100%);
+  max-width: 80rem;
 }
 
 .layout-standalone main > :is(p, ul, ol, details, h2, h3) {

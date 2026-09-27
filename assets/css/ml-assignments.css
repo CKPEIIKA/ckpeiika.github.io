@@ -36,7 +36,6 @@ body:has(#site-theme-toggle:checked) main {
 }
 
 .tablewrap table {
-  min-width: 780px;
   margin: 0;
   background: transparent;
 }
@@ -44,6 +43,7 @@ body:has(#site-theme-toggle:checked) main {
 .tablewrap th,
 .tablewrap td {
   padding: 9px 10px;
+  overflow-wrap: anywhere;
   border: 0;
   border-right: 1px solid var(--accent-color);
   border-bottom: 1px solid var(--accent-color);

@@ -1,14 +1,15 @@
 <meta charset="UTF-8">
+{% comment %} ?v=build time: browsers fetch fresh CSS/JS after every build or preview save. {% endcomment %}{% assign v = site.time | date: '%s' %}
 <meta name="viewport" content="width=device-width, initial-scale=1">
 {% if page.description %}<meta name="description" content="{{ page.description | escape }}">
 {% endif %}<title>{{ page.head_title | default: page.title }}</title>
 <link rel="icon" type="image/png" href="{{ '/hero.png' | relative_url }}">
 <script src="{{ '/demos/theme-init.js' | relative_url }}"></script>
-<script src="{{ '/site-theme.js' | relative_url }}" defer></script>
+<script src="{{ '/site-theme.js' | relative_url }}?v={{ v }}" defer></script>
 <link rel="stylesheet" href="{{ '/assets/fonts/open-sans/open-sans.css' | relative_url }}">
-<link rel="stylesheet" href="{{ '/style.css' | relative_url }}">
-{% for sheet in page.stylesheets %}<link rel="stylesheet" href="{{ sheet | relative_url }}">
-{% endfor %}{% for script in page.scripts %}<script src="{{ script | relative_url }}" defer></script>
+<link rel="stylesheet" href="{{ '/style.css' | relative_url }}?v={{ v }}">
+{% for sheet in page.stylesheets %}<link rel="stylesheet" href="{{ sheet | relative_url }}?v={{ v }}">
+{% endfor %}{% for script in page.scripts %}<script src="{{ script | relative_url }}?v={{ v }}" defer></script>
 {% endfor %}{% if page.math %}
 <script>
   window.MathJax = {
