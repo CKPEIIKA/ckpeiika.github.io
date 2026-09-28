@@ -25,8 +25,8 @@ function binaryCopy(locale, key) {
 }
 
 import {Vec3,Camera3D,Scene3D,ChalkRenderer3D,OrbitControls3D,clamp} from '../../lib/chalkish/src/collision-3d.js';
-import {CHALK_FONT_STACK,CHALK_NUMBER_FONT_STACK,strokeChalkPath2D as chalkStroke} from '../../lib/chalkish/src/chalk.js';
-import {formatTick,niceTicks} from '../../lib/chalkish/src/ticks.js';
+import {formatTick,niceBounds,niceTicks} from '../../lib/chalkish/src/ticks.js';
+import {PlotBoard} from './plot-board.js';
 import {POTENTIALS,potential,radialForce,effectivePotential,hsAngle,vssAngle,vssDcs,vhsDiameter,labFromRelative,mulberry32,sampleDisk,scatterEnsemble,criticalOrbit,solveTrajectory,hardSphereTrajectory,trajectoryAt,deflectionCurve,areaBinnedDcs} from './physics.js';
 import {CHAPTERS,setChapterLanguage} from './chapters.js';
 import {bindLabLanguage,withCommonTranslations} from '../lab-i18n.js';
@@ -46,8 +46,8 @@ const trajectoryCache=new Map(),curveCache=new Map(),ensembleCache=new Map();let
 const camera=new Camera3D({yaw:-.36,pitch:.24,zoom:1.12,target:[0,.22,0]}),scene=new Scene3D();
 const renderer=new ChalkRenderer3D($('stage'),{camera,background:C.bg,onLayout:()=>{dirty=true;}});
 const controls=new OrbitControls3D($('stage'),camera,()=>{manualCamera=true;viewMode='free';updateCameraButtons();dirty=true;},pickStage);
-const plotContext=$('plot').getContext('2d',{alpha:false});
-const plotObserver=new ResizeObserver(()=>{const r=$('plot').getBoundingClientRect(),d=Math.min(2,devicePixelRatio||1);$('plot').width=Math.round(r.width*d);$('plot').height=Math.round(r.height*d);dirty=true;});plotObserver.observe($('plot'));
+// The quantitative plot is a Chalkish board (plot-board.js): cached axes and data, live markers.
+const plotBoard=new PlotBoard($('plot'),{onResize:()=>{dirty=true;}});
 // Plot captions in the page language.
 const tr=(ru,en)=>document.documentElement.lang==='en'?en:ru;
 const fmt=(x,n=2)=>Number.isFinite(x)?x.toFixed(n).replace(/\.00$/,'').replace(/(\.\d)0$/,'$1'):'?';
@@ -326,10 +326,9 @@ function drawStage(){
   if(c===8)readout([['модель',state.collisionModel.toUpperCase()],['d / dref',fmt(dsmcDiameter(),3),'cyan'],['α',fmt(dsmcAlpha(),2),'gold']]);
 }
 
-function plotCanvas(){
-  const c=plotContext,w=$('plot').clientWidth,h=$('plot').clientHeight,d=Math.min(2,devicePixelRatio||1);
-  c.setTransform(d,0,0,d,0,0);c.globalAlpha=1;c.fillStyle=C.bg;c.fillRect(0,0,w,h);c.lineWidth=1;c.font=`10px ${CHALK_FONT_STACK}`;c.textBaseline='alphabetic';c.setLineDash([]);return {c,w,h};
-}
+// Each chapter describes its plot in CSS pixels on the Chalkish plot board; axes() draws into
+// the board's 'axes' layer, data goes to 'data', and whatever moves every frame to dynamic().
+function plotCanvas(){const {w,h}=plotBoard.begin(C.bg);return {c:plotBoard,w,h};}
 // An even split is kept when its step is already round (0…180° by 30°); otherwise, e.g.
 // 0…1.15 in five, the ticks move to round values (lib/chalkish/src/ticks.js).
 function axisTicks(min,max,count){
@@ -341,38 +340,54 @@ function axisTicks(min,max,count){
 function axes({xmin=0,xmax=1,ymin=0,ymax=1,xlabel='',ylabel='',xticks=5,yticks=3}={}){
   const p=plotCanvas(),{c,w,h}=p,l=45,r=w-21,t=23,b=h-30;
   const X=x=>l+(x-xmin)/(xmax-xmin)*(r-l),Y=y=>b-(y-ymin)/(ymax-ymin)*(b-t);
-  c.strokeStyle=C.line;c.fillStyle=C.muted;c.lineWidth=.65;
-  const grid=(x0,y0,x1,y1)=>{c.globalAlpha=.5;c.beginPath();c.moveTo(x0,y0);c.lineTo(x1,y1);chalkStroke(c);c.globalAlpha=1;};
-  for(const x of [xmin,xmax])grid(X(x),t,X(x),b);
-  for(const y of [ymin,ymax])grid(l,Y(y),r,Y(y));
-  c.font=`10px ${CHALK_NUMBER_FONT_STACK}`; // tick numbers: decimal points stay visible
-  for(const {value,label} of axisTicks(xmin,xmax,xticks)){const px=X(value);if(Math.abs(px-l)>.5&&Math.abs(px-r)>.5)grid(px,t,px,b);c.textAlign='center';c.fillText(label,px,b+16);}
-  for(const {value,label} of axisTicks(ymin,ymax,yticks)){const py=Y(value);if(Math.abs(py-t)>.5&&Math.abs(py-b)>.5)grid(l,py,r,py);c.textAlign='right';c.fillText(label,l-8,py+3);}
-  c.font=`10px ${CHALK_FONT_STACK}`;c.textAlign='left';c.fillStyle=C.dim;c.fillText(ylabel,9,13);c.textAlign='right';c.fillText(xlabel,r,h-5);c.textAlign='left';
+  c.layer('axes',()=>{
+    // Faint grid: the light stroke (chalk texture is invisible at this width), cheap to rebuild when the scale changes.
+    const grid=(x0,y0,x1,y1)=>c.line([x0,y0,x1,y1],{color:C.line,width:.65,alpha:.5,light:true});
+    for(const x of [xmin,xmax])grid(X(x),t,X(x),b);
+    for(const y of [ymin,ymax])grid(l,Y(y),r,Y(y));
+    // Tick numbers in the number font: decimal points stay visible.
+    for(const {value,label} of axisTicks(xmin,xmax,xticks)){const px=X(value);if(Math.abs(px-l)>.5&&Math.abs(px-r)>.5)grid(px,t,px,b);c.text(px,b+16,label,{color:C.muted,align:'center',family:'number'});}
+    for(const {value,label} of axisTicks(ymin,ymax,yticks)){const py=Y(value);if(Math.abs(py-t)>.5&&Math.abs(py-b)>.5)grid(l,py,r,py);c.text(l-8,py+3,label,{color:C.muted,align:'right',family:'number'});}
+    c.text(9,13,ylabel,{color:C.dim});c.text(r,h-5,xlabel,{color:C.dim,align:'right'});
+  });
   const g={...p,l,r,t,b,X,Y,xmin,xmax,ymin,ymax};plotGeometry=g;return g;
 }
-function plotLine(g,points,color=C.gold,width=1.8,dash=[],alpha=1,maxJump=Infinity){
-  const {c,X,Y,l,r,t,b}=g;c.save();c.beginPath();c.rect(l,t,r-l,b-t);c.clip();c.strokeStyle=color;c.lineWidth=width;c.globalAlpha=alpha;c.setLineDash(dash);c.beginPath();let pen=false,old=null;
-  for(const [x,y]of points){if(!Number.isFinite(x)||!Number.isFinite(y)){pen=false;old=null;continue;}if(old&&Math.abs(y-old[1])>maxJump)pen=false;const px=X(x),py=Y(y);if(pen)c.lineTo(px,py);else c.moveTo(px,py);pen=true;old=[x,y];}chalkStroke(c);c.restore();
+// A data line cut at the plot frame; a gap (NaN) or a jump larger than maxJump lifts the pen.
+function plotLine(g,points,color=C.gold,width=1.8,dash=[],alpha=1,maxJump=Infinity,light=false){
+  const {c,X,Y,l,r,t,b}=g,runs=[];let run=[],old=null;
+  for(const [x,y]of points){if(!Number.isFinite(x)||!Number.isFinite(y)){runs.push(run);run=[];old=null;continue;}if(old&&Math.abs(y-old[1])>maxJump){runs.push(run);run=[];}run.push(X(x),Y(y));old=[x,y];}
+  runs.push(run);
+  c.clip({minX:l,maxX:r,minY:t,maxY:b},()=>{for(const p of runs)if(p.length>=4)c.line(p,{color,width,dash,alpha,light});});
 }
-function plotMarker(g,x,y,color=C.gold){if(x<g.xmin||x>g.xmax||y<g.ymin||y>g.ymax)return;const {c,X,Y}=g;c.save();c.strokeStyle=color;c.globalAlpha=.4;c.setLineDash([3,4]);c.beginPath();c.moveTo(X(x),g.t);c.lineTo(X(x),g.b);chalkStroke(c);c.globalAlpha=1;c.setLineDash([]);c.fillStyle=C.bg;c.lineWidth=2;c.beginPath();c.arc(X(x),Y(y),4.5,0,TAU);c.fill();chalkStroke(c);c.restore();}
-function legend(g,entries){let x=g.r-entries.reduce((sum,[name])=>sum+g.c.measureText(name).width+38,0);const y=13;for(const [name,color,dash]of entries){g.c.strokeStyle=color;g.c.lineWidth=1.6;g.c.setLineDash(dash||[]);g.c.beginPath();g.c.moveTo(x,y-3);g.c.lineTo(x+15,y-3);chalkStroke(g.c);g.c.setLineDash([]);g.c.fillStyle=C.dim;g.c.textAlign='left';g.c.fillText(name,x+21,y);x+=g.c.measureText(name).width+38;}}
+function plotMarker(g,x,y,color=C.gold){if(x<g.xmin||x>g.xmax||y<g.ymin||y>g.ymax)return;const {c,X,Y}=g;c.dynamic(()=>{c.line([X(x),g.t,X(x),g.b],{color,width:1,dash:[3,4],alpha:.4});c.circle(X(x),Y(y),4.5,{fill:C.bg,color,width:2});});}
+function legend(g,entries){const {c}=g;let x=g.r-entries.reduce((sum,[name])=>sum+c.measure(name)+38,0);const y=13;for(const [name,color,dash]of entries){c.line([x,y-3,x+15,y-3],{color,width:1.6,dash:dash||null});c.text(x+21,y,name,{color:C.dim});x+=c.measure(name)+38;}}
+// Histogram bars from the axis to each value, filled and outlined; the outlines (and any
+// extra segments, e.g. error bars) are one light segment layer: bars change during playback.
+function plotBars(g,edges,values,color,fillAlpha,strokeAlpha,extra=[]){
+  const {c}=g,outline=[];
+  values.forEach((value,i)=>{const x=g.X(edges[i])+1,w=g.X(edges[i+1])-g.X(edges[i])-2,y=g.Y(value),h=g.b-y;c.fillRect(x,y,w,h,color,fillAlpha);outline.push(x,y,x+w,y,x+w,y,x+w,y+h,x+w,y+h,x,y+h,x,y+h,x,y);});
+  c.segments([...outline,...extra],{color,width:1,alpha:strokeAlpha,light:true});
+}
 function plotTwoBody(){
   const m1=state.mass,M=m1+1,lab=state.step===0;
   const track=which=>result.view.map((s,i)=>{const R=lab?[m1/M*(-5+result.g*s.t),m1/M*state.b]:[0,0],q=labFromRelative([s.x,s.y],[s.vx,s.vy],m1,1,R);return [(s.t-result.view[0].t)/(result.view.at(-1).t-result.view[0].t),which==='r'?s.x:which==='cm'?R[0]:q[which][0]];});
   if(state.step===2){const g=axes({xmin:0,xmax:1,ymin:-5,ymax:5,xlabel:tr('t / tкон','t / tend'),ylabel:'x / d'});plotLine(g,track('r'),C.gold);plotMarker(g,state.time,trajectoryAt(result,state.time).x);$('plotTitle').textContent=tr('Относительное положение','Relative position');$('plotHint').textContent='x = x₁ − x₂';return;}
   const one=track('r1'),two=track('r2'),cm=track('cm'),vals=[...one,...two].map(x=>x[1]),ymin=Math.floor(Math.min(...vals)),ymax=Math.ceil(Math.max(...vals));
   const g=axes({xmin:0,xmax:1,ymin,ymax:ymax===ymin?ymax+1:ymax,xlabel:tr('t / tкон','t / tend'),ylabel:'x / d'});
-  plotLine(g,one,C.gold);plotLine(g,two,C.cyan);plotLine(g,cm,C.dim,1,[4,4]);plotLine(g,[[state.time,ymin],[state.time,ymax]],C.dim,1,[3,5],.7);legend(g,[['x₁',C.gold],['x₂',C.cyan],['X',C.dim,[4,4]]]);
+  plotLine(g,one,C.gold);plotLine(g,two,C.cyan);plotLine(g,cm,C.dim,1,[4,4]);g.c.dynamic(()=>plotLine(g,[[state.time,ymin],[state.time,ymax]],C.dim,1,[3,5],.7));legend(g,[['x₁',C.gold],['x₂',C.cyan],['X',C.dim,[4,4]]]);
   $('plotTitle').textContent=tr('Центр масс движется равномерно','The center of mass moves uniformly');$('plotHint').textContent=lab?tr('лабораторная система','laboratory frame'):tr('система центра масс','center-of-mass frame');
 }
 function plotCylinder(){
-  const {c,w,h}=plotCanvas(),x=w<520?78:101,y=h/2-1,r=Math.min(h*.34,52),ph=state.phi*DEG,t=clamp(state.time,0,1),progress=t*t*(3-2*t),shownB=state.step===1?state.b*progress:state.b;
-  c.fillStyle=C.cyan;c.globalAlpha=.05;c.beginPath();c.arc(x,y,r,0,TAU);c.fill();c.globalAlpha=.75;c.strokeStyle=C.cyan;c.lineWidth=1.2;chalkStroke(c);
-  if(state.step===2&&progress>0){c.fillStyle=C.gold;c.globalAlpha=.12;c.beginPath();c.moveTo(x,y);c.arc(x,y,r,-PI/2,-PI/2+TAU*progress);c.closePath();c.fill();c.globalAlpha=.65;c.strokeStyle=C.gold;c.lineWidth=1;c.beginPath();c.moveTo(x,y);c.lineTo(x+r*Math.cos(-PI/2+TAU*progress),y+r*Math.sin(-PI/2+TAU*progress));chalkStroke(c);}
-  c.strokeStyle=C.line;c.lineWidth=1;c.setLineDash([3,4]);c.beginPath();c.moveTo(x-r*1.3,y);c.lineTo(x+r*1.5,y);c.moveTo(x,y-r*1.3);c.lineTo(x,y+r*1.3);chalkStroke(c);c.setLineDash([]);c.globalAlpha=1;
-  const px=x+r*shownB*Math.sin(ph),py=y-r*shownB*Math.cos(ph);c.strokeStyle=C.gold;c.lineWidth=2;c.beginPath();c.moveTo(x,y);c.lineTo(px,py);chalkStroke(c);c.fillStyle=shownB<1?C.gold:C.red;c.beginPath();c.arc(px,py,4.2,0,TAU);c.fill();c.font=`italic 17px ${CHALK_FONT_STACK}`;c.fillText('b',x+(px-x)*.5+6,y+(py-y)*.5);c.font=`10px ${CHALK_FONT_STACK}`;c.fillStyle=C.muted;c.textAlign='center';c.fillText(binaryCopy(document.documentElement.lang === "en" ? "en" : "ru", "viewAlongG"),x,h-8);c.textAlign='left';
-  const tx=w<520?168:220;c.font=`19px ${CHALK_FONT_STACK}`;c.fillStyle=shownB<1?C.gold:C.red;c.fillText(shownB<1?binaryCopy(document.documentElement.lang === "en" ? "en" : "ru", "centerInside"):'Центр вне цилиндра',tx,49);c.font=`12px ${CHALK_FONT_STACK}`;c.fillStyle=C.dim;c.fillText(`b / d = ${fmt(shownB,3)} ${shownB<1?'<':'≥'} 1`,tx,74);c.font=`13px ${CHALK_FONT_STACK}`;c.fillText('σT = πd²',tx,101);c.font=`10px ${CHALK_FONT_STACK}`;c.fillStyle=C.muted;if(w>520)c.fillText(binaryCopy(document.documentElement.lang === "en" ? "en" : "ru", "circleArea"),tx,121);
+  const {c,w,h}=plotCanvas(),x=w<520?78:101,y=h/2-1,r=Math.min(h*.34,52),ph=state.phi*DEG,t=clamp(state.time,0,1),progress=t*t*(3-2*t),shownB=state.step===1?state.b*progress:state.b,lang=document.documentElement.lang==='en'?'en':'ru',tx=w<520?168:220;
+  c.circle(x,y,r,{fill:C.cyan,alpha:.05});c.circle(x,y,r,{color:C.cyan,width:1.2,alpha:.75});
+  c.line([x-r*1.3,y,x+r*1.5,y],{color:C.line,width:1,dash:[3,4],alpha:.7});c.line([x,y-r*1.3,x,y+r*1.3],{color:C.line,width:1,dash:[3,4],alpha:.7});
+  c.text(x,h-8,binaryCopy(lang,'viewAlongG'),{color:C.muted,align:'center'});c.text(tx,101,'σT = πd²',{size:13,color:C.dim});if(w>520)c.text(tx,121,binaryCopy(lang,'circleArea'),{color:C.muted});
+  c.dynamic(()=>{
+    if(state.step===2&&progress>0){const a0=-PI/2,a1=a0+TAU*progress,pts=[x,y];for(let k=0;k<=48;k++){const a=a0+(a1-a0)*k/48;pts.push(x+r*Math.cos(a),y+r*Math.sin(a));}c.polygon(pts,C.gold,.12);c.line([x,y,x+r*Math.cos(a1),y+r*Math.sin(a1)],{color:C.gold,width:1,alpha:.65});}
+    const px=x+r*shownB*Math.sin(ph),py=y-r*shownB*Math.cos(ph),inside=shownB<1;
+    c.line([x,y,px,py],{color:C.gold,width:2});c.circle(px,py,4.2,{fill:inside?C.gold:C.red});c.text(x+(px-x)*.5+6,y+(py-y)*.5,'b',{size:17,italic:true,color:inside?C.gold:C.red});
+    c.text(tx,49,inside?binaryCopy(lang,'centerInside'):tr('Центр вне цилиндра','Center outside the cylinder'),{size:19,color:inside?C.gold:C.red});c.text(tx,74,`b / d = ${fmt(shownB,3)} ${inside?'<':'≥'} 1`,{size:12,color:C.dim});
+  });
   plotGeometry={type:'disk',x,y,r,w,h};$('plotTitle').textContent=tr('Поперечное сечение','Cross section');$('plotHint').textContent=tr('щелчок по кругу меняет b и φ','click the circle to change b and φ');
 }
 function plotHardSphere(){
@@ -385,7 +400,7 @@ function plotSolidAngle(){
 }
 function plotMapping(){
   const g=axes({xmin:0,xmax:1,ymin:-1,ymax:1,xlabel:'(b / d)²',ylabel:'cos χ',xticks:4,yticks:2}),[lo,hi]=ringBounds();
-  g.c.fillStyle=C.cyan;g.c.globalAlpha=.1;g.c.fillRect(g.X(lo*lo),g.t,g.X(hi*hi)-g.X(lo*lo),g.b-g.t);g.c.globalAlpha=1;
+  g.c.fillRect(g.X(lo*lo),g.t,g.X(hi*hi)-g.X(lo*lo),g.b-g.t,C.cyan,.1);
   plotLine(g,[[0,-1],[1,1]],C.gold,2);plotMarker(g,state.b*state.b,2*state.b*state.b-1);
   $('plotTitle').textContent=tr('Равные площади → равные телесные углы','Equal areas → equal solid angles');$('plotHint').textContent='HS: cos χ = 2(b/d)² − 1';
 }
@@ -393,7 +408,7 @@ function plotPotential(){
   const ymax=Math.max(3,state.E*1.3),g=axes({xmin:.55,xmax:3.6,ymin:-1.35,ymax,xlabel:'r / ℓ₀',ylabel:'U / ε',xticks:5,yticks:3}),entries=[['U',C.gold]];
   const evaluate=(model,eff=false)=>Array.from({length:360},(_,i)=>{const r=.55+3.05*i/359;if((model==='hs'||model==='sutherland')&&r<1)return [r,NaN];return [r,eff?effectivePotential(r,{...params(),model}):potential(r,model,state.n)];});
   if(state.model==='hs'||state.model==='sutherland'){
-    g.c.fillStyle=C.dim;g.c.globalAlpha=.06;g.c.fillRect(g.l,g.t,g.X(1)-g.l,g.b-g.t);g.c.globalAlpha=1;plotLine(g,[[1,g.ymin],[1,g.ymax]],C.dim,1.2,[3,4]);
+    g.c.fillRect(g.l,g.t,g.X(1)-g.l,g.b-g.t,C.dim,.06);plotLine(g,[[1,g.ymin],[1,g.ymax]],C.dim,1.2,[3,4]);
   }
   if(state.compare)for(const [i,res]of compareResults.entries())plotLine(g,evaluate(res.model),[C.purple,C.red,C.dim,C.cyan][i%4],1,[],.5);
   plotLine(g,evaluate(state.model),C.gold,2);
@@ -406,9 +421,7 @@ function plotPotential(){
 function plotDeflection(){
   if(state.plotMode==='dcs'){
     const measure=areaBinnedDcs(curve,30),upper=Math.max(.35,...measure.dcs)*1.18,g=axes({xmin:-1,xmax:1,ymin:0,ymax:upper,xlabel:'cos χ',ylabel:'(dσ/dΩ) / ℓ₀²',xticks:4,yticks:3});
-    for(let i=0;i<measure.dcs.length;i++){
-      const a=-1+2*i/measure.dcs.length,b=-1+2*(i+1)/measure.dcs.length,y=measure.dcs[i];g.c.fillStyle=C.cyan;g.c.globalAlpha=.22;g.c.fillRect(g.X(a)+1,g.Y(y),g.X(b)-g.X(a)-2,g.b-g.Y(y));g.c.globalAlpha=.85;g.c.strokeStyle=C.cyan;g.c.lineWidth=1;g.c.strokeRect(g.X(a)+1,g.Y(y),g.X(b)-g.X(a)-2,g.b-g.Y(y));g.c.globalAlpha=1;
-    }
+    plotBars(g,Array.from({length:measure.dcs.length+1},(_,i)=>-1+2*i/measure.dcs.length),measure.dcs,C.cyan,.22,.85);
     const limit=curve.at(-1).b;$('plotTitle').textContent=tr('Сечение: сумма всех ветвей','Cross section: the sum of all branches');$('plotHint').textContent=`b ≤ ${fmt(limit)} ℓ₀ · ${tr('конечные интервалы Ω','finite Ω intervals')}`;return;
   }
   const finite=curve.filter(p=>Number.isFinite(p.theta)),min=Math.min(-.001,...finite.map(p=>p.theta/DEG),result.theta/DEG),ymin=Math.max(-720,Math.floor(min/90)*90),ymax=180;
@@ -430,31 +443,35 @@ function measuredHistogram(){
 function plotSampling(){
   const N=Math.floor(state.count*state.time),d=dsmcDiameter(),values=ensemble.hits.slice(0,N).map(h=>clamp(h.b/d,0,1)).sort((a,b)=>a-b),g=axes({xmin:0,xmax:1,ymin:0,ymax:1.05,xlabel:'b / d',ylabel:'F(b)',xticks:4,yticks:4}),en=document.documentElement.lang==='en';
   plotLine(g,Array.from({length:101},(_,i)=>{const x=i/100;return [x,x*x];}),C.gold,1.8);
-  if(values.length){const empirical=[[0,0],...values.map((x,i)=>[x,(i+1)/values.length]),[1,1]];plotLine(g,empirical,state.wrongSampling?C.red:C.cyan,1.6);}
+  if(values.length){const empirical=[[0,0],...values.map((x,i)=>[x,(i+1)/values.length]),[1,1]];g.c.dynamic(()=>plotLine(g,empirical,state.wrongSampling?C.red:C.cyan,1.6,[],1,Infinity,true));}
   if(state.wrongSampling)plotLine(g,[[0,0],[1,1]],C.red,1,[4,4],.55);
   legend(g,[[en?'area law':'по площади',C.gold],[en?'sample':'выборка',state.wrongSampling?C.red:C.cyan]]);
   $('plotTitle').textContent=en?'Impact-parameter sampling':'Выборка прицельного параметра';$('plotHint').textContent=`N = ${N} · b / d = √U`;
 }
 function plotEnsemble(){
-  const hist=measuredHistogram(),alpha=dsmcAlpha(),max=Math.max(.3*hist.d*hist.d,...hist.dcs.map((v,i)=>v+hist.err[i]),vssDcs(0,hist.d,alpha))*1.16,en=document.documentElement.lang==='en';
+  // The y range grows with the sample in round steps, so the axes do not jitter every frame.
+  const hist=measuredHistogram(),alpha=dsmcAlpha(),max=niceBounds(0,Math.max(.3*hist.d*hist.d,...hist.dcs.map((v,i)=>v+hist.err[i]),vssDcs(0,hist.d,alpha))*1.08,3)[1],en=document.documentElement.lang==='en';
   const g=axes({xmin:-1,xmax:1,ymin:0,ymax:max,xlabel:en?'cos χ  (back ← → forward)':'cos χ  (назад ← → вперёд)',ylabel:state.chapter===8?'(dσ/dΩ) / dref²':'(dσ/dΩ) / d²',xticks:4,yticks:3});
-  for(let i=0;i<hist.bins;i++){
-    const a=-1+2*i/hist.bins,b=-1+2*(i+1)/hist.bins,mid=(a+b)/2,value=hist.dcs[i],color=state.wrongSampling?C.red:C.cyan;
-    g.c.fillStyle=color;g.c.globalAlpha=.23;g.c.fillRect(g.X(a)+1,g.Y(value),g.X(b)-g.X(a)-2,g.b-g.Y(value));g.c.globalAlpha=.82;g.c.strokeStyle=color;g.c.lineWidth=1;g.c.strokeRect(g.X(a)+1,g.Y(value),g.X(b)-g.X(a)-2,g.b-g.Y(value));
-    const lo=g.Y(Math.max(0,value-hist.err[i])),hi=g.Y(value+hist.err[i]),x=g.X(mid);g.c.beginPath();g.c.moveTo(x,lo);g.c.lineTo(x,hi);g.c.moveTo(x-2.5,lo);g.c.lineTo(x+2.5,lo);g.c.moveTo(x-2.5,hi);g.c.lineTo(x+2.5,hi);chalkStroke(g.c);g.c.globalAlpha=1;
-  }
-  plotLine(g,Array.from({length:160},(_,i)=>{const mu=-1+2*i/159;return [mu,vssDcs(Math.acos(mu),hist.d,alpha)];}),C.gold,1.8);
-  legend(g,[[en?'sample':'выборка',state.wrongSampling?C.red:C.cyan],[en?'analytic':'аналитика',C.gold]]);
+  const color=state.wrongSampling?C.red:C.cyan;
+  // The sample grows during playback: bars and error bars are redrawn every frame.
+  g.c.dynamic(()=>{
+    const edges=Array.from({length:hist.bins+1},(_,i)=>-1+2*i/hist.bins),errors=[];
+    // The statistical error bar of each bin: ±√n in its count.
+    hist.dcs.forEach((value,i)=>{const lo=g.Y(Math.max(0,value-hist.err[i])),hi=g.Y(value+hist.err[i]),x=g.X((edges[i]+edges[i+1])/2);errors.push(x,lo,x,hi,x-2.5,lo,x+2.5,lo,x-2.5,hi,x+2.5,hi);});
+    plotBars(g,edges,hist.dcs,color,.23,.82,errors);
+  });
+  // The analytic curve and the legend stay above the growing histogram.
+  g.c.layer('top',()=>{plotLine(g,Array.from({length:160},(_,i)=>{const mu=-1+2*i/159;return [mu,vssDcs(Math.acos(mu),hist.d,alpha)];}),C.gold,1.8);legend(g,[[en?'sample':'выборка',color],[en?'analytic':'аналитика',C.gold]]);});
   $('plotTitle').textContent=state.wrongSampling?(en?'Nonuniform beam: biased estimate':'Неоднородный пучок: статистика искажена'):(en?'Equal-solid-angle bins':'Распределение по равным телесным углам');$('plotHint').textContent=`N = ${hist.N} · ΔΩ = 4π/${hist.bins}`;
 }
 function plotNormalization(){
   const hist=measuredHistogram(),target=PI*hist.d*hist.d,en=document.documentElement.lang==='en';let sum=0;
   const points=[[-1,0],...hist.dcs.map((value,i)=>{sum+=value*hist.omega;return [-1+2*(i+1)/hist.bins,target?sum/target:0];})],max=Math.max(1.12,...points.map(point=>point[1]*1.06)),g=axes({xmin:-1,xmax:1,ymin:0,ymax:max,xlabel:'cos χ',ylabel:'Σσk / σT',xticks:4,yticks:4});
-  plotLine(g,[[-1,1],[1,1]],C.dim,1,[5,4],.75);plotLine(g,points,state.wrongSampling?C.red:C.gold,2);if(points.length>1)plotMarker(g,1,points.at(-1)[1],state.wrongSampling?C.red:C.gold);
+  plotLine(g,[[-1,1],[1,1]],C.dim,1,[5,4],.75);g.c.dynamic(()=>plotLine(g,points,state.wrongSampling?C.red:C.gold,2,[],1,Infinity,true));if(points.length>1)plotMarker(g,1,points.at(-1)[1],state.wrongSampling?C.red:C.gold);
   legend(g,[[en?'cumulative estimate':'накопленная оценка',state.wrongSampling?C.red:C.gold],[en?'target σT':'уровень σT',C.dim,[5,4]]]);
   $('plotTitle').textContent=en?'Cross-section normalization':'Нормировка полного сечения';$('plotHint').textContent=`N = ${hist.N} · Σσk / σT = ${fmt(target?sum/target:0,4)}`;
 }
-function drawPlot(){const c=state.chapter;if(c===0)plotTwoBody();else if(c===1)plotCylinder();else if(c===2)plotHardSphere();else if(c===3)plotSolidAngle();else if(c===4)plotMapping();else if(c===5)plotPotential();else if(c===6)plotDeflection();else if(c===7&&state.step===0)plotSampling();else if(c===7&&state.step===2)plotNormalization();else plotEnsemble();}
+function drawPlot(){const c=state.chapter;if(c===0)plotTwoBody();else if(c===1)plotCylinder();else if(c===2)plotHardSphere();else if(c===3)plotSolidAngle();else if(c===4)plotMapping();else if(c===5)plotPotential();else if(c===6)plotDeflection();else if(c===7&&state.step===0)plotSampling();else if(c===7&&state.step===2)plotNormalization();else plotEnsemble();plotBoard.end();}
 function updateDiagnostics(){
   const c=state.chapter;
   if(c===5||c===6){$('diagnosticLeft').textContent=result.model==='hs'?'HS: аналитическое отражение':`ΔE/E ≤ ${scientific(result.errorE)} · ΔL/max(1,|L|) ≤ ${scientific(result.errorL)}`;$('diagnosticRight').innerHTML=result.status==='ok'?`rmin / ℓ₀ = ${fmt(result.rmin,4)} · ${result.model==='hs'?'точная геометрия':result.accepted+' шагов RK5(4)'}`:`<span class="warn">Расчёт не завершён: ${result.status}</span>`;}
@@ -553,6 +570,4 @@ function bind(){
 }
 // A small read-only test/debug interface; it contains no private or remote data.
 window.collisionLab={getState:()=>({...state,playing}),getDiagnostics:()=>({status:result?.status,errorE:result?.errorE,errorL:result?.errorL,chi:result?.chi,theta:result?.theta,rmin:result?.rmin}),go:(c,s=0)=>applyLesson(c,s),set:(key,value)=>setParameter(key,value),redraw:()=>{dirty=true;}};
-// The plot canvas uses the number font for ticks; a canvas does not fetch it, so ask and redraw.
-document.fonts?.load(`10px ${CHALK_NUMBER_FONT_STACK}`,'0.5').then(()=>{dirty=true;},error=>console.error('Plot number font could not be loaded.',error));
 bind();const restored=safeHash();applyLesson(restored?.c||0,restored?.s||0,restored?.restore||null);frameId=requestAnimationFrame(tick);

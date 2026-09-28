@@ -93,6 +93,10 @@ So the demos draw around it:
    subtree kept as a bitmap until something in it, the camera, the canvas or the fonts
    change — a moving marker over a cached chalk plot costs 2.4 ms, and a curve changing every
    frame (rough stroke) over cached axes 4.2 ms. `PlotAxes` caches itself by default.
+   - [x] Binary collision's plot panel is a Chalkish board (`demos/binary-collision/plot-board.js`):
+     cached axes/data/top layers rebuilt only when their content changes, a dynamic layer for
+     markers and growing histograms (one segment layer for bar outlines and error bars).
+     Playback costs the same as the former hand-written canvas; still chapters are cached.
 6. **Export.** PNG/SVG of a board state, short video capture for slides (not needed now).
 
 The hidden lecture `demos/chalkish-reference/` shows every primitive above in its own
