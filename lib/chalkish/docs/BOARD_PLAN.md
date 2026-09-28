@@ -89,5 +89,8 @@ So the demos draw around it:
      gallery's `matrix()` does the same on Ink boards (Lecture 4 SBP).
 6. **Export.** PNG/SVG of a board state, short video capture for slides (not needed now).
 
+The hidden lecture `demos/chalkish-reference/` shows every primitive above in its own
+experiment, built from library calls only; it is the example to point to.
+
 After steps 1–2 the gallery's `board.js` becomes a thin layer over Chalkish objects; then
 Lecture 2, the DSMC/DG-FV views and binary collision move their plots onto the same `Plot`.

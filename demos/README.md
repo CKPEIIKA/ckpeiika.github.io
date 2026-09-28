@@ -88,6 +88,17 @@ operators); put numbers in with `fmtTex(value)` and words with `\text{…}`, e.g
 ``String.raw`u^{n+1}_i = ${fmtTex(v)}` ``. The tests parse every formula of every preset. Thumbnails keep only text between y = 70 and y = 520, so put
 essential labels there and the title at the top.
 
+## Reference: every Chalkish primitive in use
+
+`demos/chalkish-reference/` is a hidden lecture (not linked from the site, `noindex`) with one
+experiment per group of primitives: formulas (`MathLabel`), plots (`PlotFrame`, `PlotAxes`,
+`niceTicks`), animation (`Write`, `Transform`, `FadeIn`, `Indicate`, `Unwrite`), layout
+(`arrange`, `nextTo`, `Panel`), picking and dragging (`hitTest`, `bindPointerDrag`), fields
+(`contourSegments`, `VectorField`, `traceStreamlines`) and data (`MatrixGrid`,
+`HistoryBuffer`). `src/panes.js` builds each board from library calls only; copy from it.
+A page can stay out of the navigation on purpose with
+`<meta name="site-listing" content="unlisted">` plus `noindex` (the site tests check both).
+
 ## Behaviour every demo shares
 
 - **Language:** `?lang=ru|en`, otherwise the browser language. Every visible string exists in both.

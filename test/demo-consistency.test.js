@@ -147,6 +147,7 @@ test('every gallery lecture is the same page shell around its own catalogue', as
   const shell = (html) => html
     .replace(/<meta name="description" content="[^"]*">/, '')
     .replace(/\n[ \t]*<meta name="robots" content="[^"]*">/, '')
+    .replace(/\n[ \t]*<meta name="site-listing" content="[^"]*">/, '')
     .replace(/<title>[^<]*<\/title>/, '')
     .replace(/<h1 id="page-title">[^<]*<\/h1>/, '')
     .replace(/<h2 id="catalogue-title">[^<]*<\/h2>/, '')

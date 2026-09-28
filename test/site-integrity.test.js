@@ -214,8 +214,16 @@ async function inspectSite() {
       }
     }
   }
-  const orphans = pages.filter((page) => page !== '404.html' && !reachable.has(page));
-  return { broken, orphans };
+  // A page may opt out of the site's navigation on purpose (a hidden reference, a draft):
+  // <meta name="site-listing" content="unlisted"> or front matter `unlisted: true`.
+  const unlisted = [];
+  for (const page of pages) {
+    const source = await readFile(path.join(root, page), 'utf8');
+    if (/<meta name="site-listing" content="unlisted">/.test(source) || /^---[\s\S]*?^unlisted:\s*true\s*$[\s\S]*?^---/m.test(source)) unlisted.push({ page, source });
+  }
+  const hidden = new Set(unlisted.map(({ page }) => page));
+  const orphans = pages.filter((page) => page !== '404.html' && !reachable.has(page) && !hidden.has(page));
+  return { broken, orphans, unlisted };
 }
 
 const report = await inspectSite();
@@ -226,4 +234,10 @@ test('all local links and asset references resolve', () => {
 
 test('all published pages are reachable from the home page or site navigation', () => {
   assert.equal(report.orphans.length, 0, `Orphan pages:\n${report.orphans.join('\n')}`);
+});
+
+test('unlisted pages keep out of search engines too', () => {
+  for (const { page, source } of report.unlisted) {
+    assert.match(source, /<meta name="robots" content="noindex[^"]*">|^robots:\s*noindex/m, `${page} is unlisted but indexable`);
+  }
 });
