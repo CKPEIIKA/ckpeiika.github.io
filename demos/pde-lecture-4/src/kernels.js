@@ -78,12 +78,6 @@ function mmsSolve(N,c,T,rich=false,bug='none'){const h=1/N,xs=range(N+1,i=>i*h);
  const exact=xs.map(x=>manufactured(x,T,rich)),error=u.map((v,i)=>v-exact[i]),weights=xs.map((_,i)=>h*(i===0||i===N?.5:1));return {N,h,steps,xs,u,exact,error,L1:sum(error.map((v,i)=>weights[i]*Math.abs(v))),L2:Math.sqrt(sum(error.map((v,i)=>weights[i]*v*v))),Linf:normInf(error)};}
 /** Marching squares: grid values sampled once, returned line segments at one level.
  * Ambiguous saddle cells use the average to choose their topology. */
-function contours(fn,xmin,xmax,ymin,ymax,nx=64,ny=64,level=0){const dx=(xmax-xmin)/nx,dy=(ymax-ymin)/ny,vals=range(ny+1,j=>range(nx+1,i=>fn(xmin+i*dx,ymin+j*dy))),out=[];
- for(let j=0;j<ny;j++)for(let i=0;i<nx;i++){const ps=[[xmin+i*dx,ymin+j*dy],[xmin+(i+1)*dx,ymin+j*dy],[xmin+(i+1)*dx,ymin+(j+1)*dy],[xmin+i*dx,ymin+(j+1)*dy]],vs=[vals[j][i],vals[j][i+1],vals[j+1][i+1],vals[j+1][i]],edges=[];
-  for(let k=0;k<4;k++){const l=(k+1)%4,a=vs[k]-level,b=vs[l]-level;if(Number.isFinite(a)&&Number.isFinite(b)&&((a<=0&&b>0)||(a>0&&b<=0))){const q=a/(a-b);edges.push([ps[k][0]+q*(ps[l][0]-ps[k][0]),ps[k][1]+q*(ps[l][1]-ps[k][1])]);}}
-  if(edges.length===2)out.push(edges);else if(edges.length===4){if(sum(vs)/4>level)out.push([edges[0],edges[1]],[edges[2],edges[3]]);else out.push([edges[0],edges[3]],[edges[1],edges[2]]);}}
- return out;}
-
-return {TAU,range,sum,clamp,Cx,add,sub,mul,scale,abs,div,expi,cpow,norm2,normInf,gain,mixedGain,stability,modalSpectrum,dft,idft,foldedEnergy,ellipticError,consistencyStudy,errorHistory,leapfrogRoots,leapfrogSequence,matMul2,matPow2,normMat2,resolventNorm,sbp,mv,satRhs,satEnergy,rk4step,boundaryMode,boundaryStep,modifiedRate,dispersion,packet,rungeStudy,rungeTriplet,manufactured,manufacturedSource,mmsSolve,contours};
+return {TAU,range,sum,clamp,Cx,add,sub,mul,scale,abs,div,expi,cpow,norm2,normInf,gain,mixedGain,stability,modalSpectrum,dft,idft,foldedEnergy,ellipticError,consistencyStudy,errorHistory,leapfrogRoots,leapfrogSequence,matMul2,matPow2,normMat2,resolventNorm,sbp,mv,satRhs,satEnergy,rk4step,boundaryMode,boundaryStep,modifiedRate,dispersion,packet,rungeStudy,rungeTriplet,manufactured,manufacturedSource,mmsSolve};
 })();
 export default moduleValue;

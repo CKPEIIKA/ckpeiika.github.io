@@ -4,6 +4,7 @@
  */
 import {formatTick} from '../../lib/chalkish/src/ticks.js';
 import {PlotFrame} from '../../lib/chalkish/src/plot-frame.js';
+import {contourSegments,joinSegments} from '../../lib/chalkish/src/vector-field.js';
 import {layoutTex,canvasMeasure,paintTex} from '../../lib/chalkish/src/tex.js';
 const C={white:'#f4f1e7',muted:'#a6b8ad',grid:'#2a3a31',yellow:'#f0d477',blue:'#8ac8db',red:'#ef9685',green:'#b6d3a0',bg:'#0d1712',dim:'#506358'};
 const W=1000,H=610,FONT='"Neucha", "Shantell Sans", "Open Sans", system-ui, sans-serif';
@@ -51,6 +52,8 @@ function graph(ink,{x=72,y=115,w=858,h=295,xmin=0,xmax=1,ymin=-1,ymax=1,xticks=4
     curve:(fn,color=C.white,width=2,n=400,dash=false)=>{const xv=[],yv=[];for(let i=0;i<=n;i++){const v=f.valueAt('x',i/n);xv.push(v);yv.push(fn(v));}clipped(xv,yv,color,width,dash);},
     series:(xv,yv,color=C.yellow,width=2,dots=false)=>{clipped(xv,yv,color,width);if(dots)xv.forEach((v,i)=>{if(inside(v,yv[i]))ink.dot(X(v),Y(yv[i]),3.2,color);});},
     dot:(a,b,r=4,col=C.yellow)=>{if(inside(a,b))ink.dot(X(a),Y(b),r,col);},
+    // Packed data-space polylines [x0, y0, x1, y1, …] (e.g. from contourLines), clipped.
+    lines:(polylines,color=C.blue,width=1.4,dash=false)=>{for(const p of polylines){const xv=[],yv=[];for(let i=0;i<p.length;i+=2){xv.push(p[i]);yv.push(p[i+1]);}clipped(xv,yv,color,width,dash);}},
     scatter:(xv,yv,{r=3.2,color=C.yellow}={})=>xv.forEach((v,i)=>{if(inside(v,yv[i]))ink.dot(X(v),Y(yv[i]),r,color);}),
     // Bars from 0 (or the nearest frame edge) to each value; a value beyond the frame runs to its
     // edge. width is in data units, or pixels in board units; color may be (value, i) => colour.
@@ -69,6 +72,17 @@ function graph(ink,{x=72,y=115,w=858,h=295,xmin=0,xmax=1,ymin=-1,ymax=1,xticks=4
       return counts;
     }
   };
+}
+// Level curve fn(x, y) = level over [xmin, xmax] × [ymin, ymax] on an n × n grid, as joined
+// data-space polylines for g.lines (Chalkish marching squares).
+function contourLines(fn,{xmin,xmax,ymin,ymax,n=64,level=0}){return joinSegments(contourSegments({fn,level,columns:n,rows:n,minX:xmin,maxX:xmax,minY:ymin,maxY:ymax}),Math.max(xmax-xmin,ymax-ymin)*1e-9);}
+// A matrix of values as cells (sign-coloured, zero cells left blank) from its top-left
+// corner; returns cellAt(px, py) → [row, column] or null for clicks.
+function matrix(ink,M,{x,y,cell,fill=v=>v>1e-10?'#38503a':v< -1e-10?'#603f39':null,textColor=()=>C.white,format=v=>fmt(v,2),hide=v=>Math.abs(v)<=1e-10,selected=null}={}){
+  M.forEach((row,i)=>row.forEach((v,j)=>{const cx=x+j*cell,cy=y+i*cell;ink.rect(cx,cy,cell-1,cell-1,fill(v,i,j),C.grid,.7);if(!hide(v))ink.text(cx+cell/2,cy+cell*.67,format(v),Math.min(17,cell*.56),textColor(v,i,j),'center');}));
+  if(selected)ink.rect(x+selected[1]*cell,y+selected[0]*cell,cell,cell,null,C.yellow,2.5);
+  const rows=M.length,cols=Math.max(0,...M.map(r=>r.length));
+  return {x,y,cell,cellAt:(px,py)=>{const i=Math.floor((py-y)/cell),j=Math.floor((px-x)/cell);return i>=0&&j>=0&&i<rows&&j<cols?[i,j]:null;}};
 }
 function fmt(x,d=4){if(!Number.isFinite(x))return String(x);if(x===0)return '0';return Math.abs(x)>=1e4||Math.abs(x)<1e-3?x.toExponential(2):Number(x.toPrecision(d)).toString();}
 // fmt for formulas: 1.86e-4 becomes 1.86·10⁻⁴, 1.00e-6 becomes 10⁻⁶ and Infinity ∞.
@@ -170,4 +184,4 @@ class Board {
   destroy(){this.dead=true;this.ro.disconnect();this.app?.destroy();this.canvas.remove();this.labels.remove();}
 }
 
-export {C,W,H,Ink,graph,fmt,fmtTex,legend,Board};
+export {C,W,H,Ink,graph,fmt,fmtTex,legend,matrix,contourLines,Board};

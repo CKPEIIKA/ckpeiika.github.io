@@ -12,6 +12,7 @@ import {
   ScalarField,
   Scene,
   TextLabel,
+  VectorField,
   chalkStyle,
 } from '../../../lib/chalkish/src/index.js';
 
@@ -233,18 +234,16 @@ export function bindFieldLessonView(model) {
   });
   scene.add(field, fieldGrid, frame);
 
-  const arrows = [];
+  // Velocity arrows on a 9 × 5 grid: one Chalkish VectorField layer.
+  const arrowX = [], arrowY = [];
   for (let row = 0; row < 5; row += 1) {
     for (let column = 0; column < 9; column += 1) {
-      const arrow = new Arrow(0, 0, 0, 0, {
-        zIndex: 4,
-        headLength: 7,
-        style: style(COLORS.yellow, 1.15),
-      });
-      arrows.push({ arrow, x: -0.84 + 1.68 * column / 8, y: -0.48 + 0.96 * row / 4 });
-      scene.add(arrow);
+      arrowX.push(-0.84 + 1.68 * column / 8);
+      arrowY.push(-0.48 + 0.96 * row / 4);
     }
   }
+  const arrows = new VectorField({ scale: 0.22, maxLength: 0.13, minLength: 2.2e-6, headLength: 0.035, zIndex: 4, style: style(COLORS.yellow, 1.15) });
+  scene.add(arrows);
 
   const particles = model.particlesX ? new ParticleCloud({
     x: model.particlesX,
@@ -297,17 +296,8 @@ export function bindFieldLessonView(model) {
     [minimum, (minimum + maximum) / 2, maximum].forEach((v, i) => legendLabels[i].setText(String(Number(v.toPrecision(3)))));
     fieldName.setText(model.id === 'laplace' ? 'φ · −∇φ →' : model.id === 'vector-calculus' ? (model.parameters.display === 'curl' ? '∂v/∂x − ∂u/∂y' : '∂u/∂x + ∂v/∂y') : model.parameters.display === 'height' ? 'h · v →' : model.parameters.display === 'pressure' ? 'p/ρ' : model.parameters.display === 'divergence' ? '∇·v' : model.parameters.display === 'velocity' || model.parameters.display === 'speed' ? '|v| · v →' : 'u · v →');
     const vectorsVisible = model.parameters.showVectors !== false;
-    for (const record of arrows) {
-      const velocity = model.velocityAt?.(record.x, record.y) ?? [0, 0];
-      const magnitude = Math.hypot(velocity[0], velocity[1]);
-      const scale = magnitude > 0 ? Math.min(0.13 / magnitude, 0.22) : 0;
-      record.arrow.setVisible(vectorsVisible && magnitude > 1e-5);
-      record.arrow.setEndpoints(
-        record.x, record.y,
-        record.x + velocity[0] * scale,
-        record.y + velocity[1] * scale,
-      );
-    }
+    arrows.setVisible(vectorsVisible);
+    if (vectorsVisible) arrows.setVectors({ x: arrowX, y: arrowY, vector: (x, y) => model.velocityAt?.(x, y) ?? [0, 0] });
     particles?.markDataDirty().setVisible(model.parameters.showParticles !== false);
     const geometry = model.parameters.geometry ?? (model.parameters.obstacle === 'circle' ? 'circle' : 'none');
     obstacle.setVisible(geometry === 'circle' || geometry === 'two-cylinders');

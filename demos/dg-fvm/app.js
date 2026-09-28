@@ -1,6 +1,7 @@
 import {
   Camera2D,
   COLORMAPS,
+  HistoryBuffer,
   PlotAxes,
   niceBounds,
   CurveLayer,
@@ -23,7 +24,7 @@ import {
 } from '../../lib/chalkish/src/chalk-transition.js';
 import { bindLabLanguage, bindMobileControls, withCommonTranslations } from '../lab-i18n.js';
 import { bindHelpDialog, bindKeys, renderKeyHelp } from '../keys.js';
-import { RingHistory } from '../lab-parity.js';
+
 
 const i18n = bindLabLanguage(withCommonTranslations({
   en: {
@@ -332,7 +333,7 @@ const controller = createDgFvLabController({
   styleName: BOARD_RENDER_STYLE,
 });
 const ANALYSIS_CAPACITY = 120;
-const analysisHistory = new RingHistory(
+const analysisHistory = new HistoryBuffer(
   ['time', 'drag', 'lift', 'jump', 'residual'],
   ANALYSIS_CAPACITY,
 );

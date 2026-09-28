@@ -1,4 +1,4 @@
-import { Camera2D, PlotAxes, Scene, mount, niceBounds } from '../../lib/chalkish/src/index.js';
+import { Camera2D, HistoryBuffer, PlotAxes, Scene, mount, niceBounds } from '../../lib/chalkish/src/index.js';
 import {
   createDsmcLabController,
   getDsmcLabPreset,
@@ -13,7 +13,6 @@ import {
 import { bindLabLanguage, bindMobileControls, withCommonTranslations } from '../lab-i18n.js';
 import { bindHelpDialog, bindKeys, renderKeyHelp } from '../keys.js';
 import {
-  RingHistory,
   makeReplayDocument,
   nextSeed,
   parseReplayDocument,
@@ -323,16 +322,13 @@ const PLOT_MODES = Object.freeze([
   'profileTemperature',
   'moments',
 ]);
-const plotHistory = {
-  x: [],
-  temperature: [],
-  rotationalTemperature: [],
-  collisions: [],
-  attempts: [],
-  pressure: [],
-  bulkVelocity: [],
-  lastStep: -1,
-};
+// The last 80 steps of each history series (Chalkish HistoryBuffer), copied into reusable
+// arrays for the plot.
+const HISTORY_KEYS = ['temperature', 'rotationalTemperature', 'collisions', 'attempts', 'pressure', 'bulkVelocity'];
+const plotHistory = new HistoryBuffer(HISTORY_KEYS, 80);
+const plotSeries = Object.fromEntries(['x', ...HISTORY_KEYS].map((key) => [key, new Float64Array(80)]));
+const historySeries = (key) => (key === 'x' ? plotHistory.indices(plotSeries.x) : plotHistory.copy(key, plotSeries[key]));
+let plotHistoryStep = -1;
 const profileZero = new Float64Array(24);
 let plotModeIndex = 0;
 let plotVisible = true;
@@ -366,25 +362,16 @@ function positionPlotPanel() {
 }
 
 function recordPlotHistory(values) {
-  if (values.step === plotHistory.lastStep) return;
-  plotHistory.lastStep = values.step;
-  plotHistory.x.push(plotHistory.x.length);
-  plotHistory.temperature.push(values.temperature);
-  plotHistory.rotationalTemperature.push(
-    Number.isFinite(values.rotationalTemperature) ? values.rotationalTemperature : 0,
-  );
-  plotHistory.collisions.push(values.collisionsLastStep);
-  plotHistory.attempts.push(values.collisionAttemptsLastStep);
-  plotHistory.pressure.push(values.pressure);
-  plotHistory.bulkVelocity.push(values.bulkVelocityX);
-  if (plotHistory.x.length > 80) {
-    for (const valuesArray of Object.values(plotHistory)) {
-      if (Array.isArray(valuesArray)) valuesArray.shift();
-    }
-    for (let index = 0; index < plotHistory.x.length; index += 1) {
-      plotHistory.x[index] = index;
-    }
-  }
+  if (values.step === plotHistoryStep) return;
+  plotHistoryStep = values.step;
+  plotHistory.push({
+    temperature: values.temperature,
+    rotationalTemperature: Number.isFinite(values.rotationalTemperature) ? values.rotationalTemperature : 0,
+    collisions: values.collisionsLastStep,
+    attempts: values.collisionAttemptsLastStep,
+    pressure: values.pressure,
+    bulkVelocity: values.bulkVelocityX,
+  });
 }
 
 function setPlotBuffers(x, primary, reference, { referenceVisible = true } = {}) {
@@ -449,11 +436,12 @@ function renderPlot() {
   }
 
   if (mode === 'temperature') {
-    const rotationalVisible = plotHistory.rotationalTemperature.some((value) => value > 0);
+    const rotational = historySeries('rotationalTemperature');
+    const rotationalVisible = rotational.some((value) => value > 0);
     setPlotBuffers(
-      plotHistory.x,
-      plotHistory.temperature,
-      plotHistory.rotationalTemperature,
+      historySeries('x'),
+      historySeries('temperature'),
+      rotational,
       { referenceVisible: rotationalVisible },
     );
     plotApp.render();
@@ -461,9 +449,9 @@ function renderPlot() {
   }
 
   if (mode === 'collisions') {
-    setPlotBuffers(plotHistory.x, plotHistory.collisions, plotHistory.attempts);
+    setPlotBuffers(historySeries('x'), historySeries('collisions'), historySeries('attempts'));
   } else if (mode === 'moments') {
-    setPlotBuffers(plotHistory.x, plotHistory.bulkVelocity, plotHistory.pressure);
+    setPlotBuffers(historySeries('x'), historySeries('bulkVelocity'), historySeries('pressure'));
   } else {
     const snapshot = controller.snapshot();
     const values = mode === 'velocity'
@@ -606,10 +594,8 @@ function reset() {
   const previousMethod = controller.view.layers.method.text;
   controller.reset(parameters());
   controller.view.layers.method.setText(previousMethod);
-  for (const valuesArray of Object.values(plotHistory)) {
-    if (Array.isArray(valuesArray)) valuesArray.length = 0;
-  }
-  plotHistory.lastStep = -1;
+  plotHistory.clear();
+  plotHistoryStep = -1;
   localizeCanvas({ animate: true });
   app.clock?.reset(null);
   diagnosticsCountdown = 0;

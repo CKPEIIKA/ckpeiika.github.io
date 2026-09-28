@@ -79,9 +79,15 @@ So the demos draw around it:
      (topmost drawn object near a point), `Panel` (frame, title, clipped content).
    - [x] `Group({ clip })` clips its children; `TextLabel({ wrap: true, maxWidth })` breaks
      into lines; `bindPointerDrag` (interaction.js) drags what a pick function returns.
-5. **Open roadmap layers.** Contours, vector-field arrows, streamlines, streaming histories,
-   matrix/table grids.
-6. **Export.** PNG/SVG of a board state, short video capture for slides.
+5. **Scientific layers.**
+   - [x] `src/vector-field.js`: `contourSegments` (marching squares, saddles, gaps) and
+     `joinSegments` into long strokes; `traceStreamline(s)` (RK4, bounds, stagnation, closed
+     orbits); `VectorField`, a chalk segment layer of arrows. Lecture 4's contours use it
+     through the gallery's `contourLines`/`g.lines`, Lecture 2's arrows are one VectorField.
+   - [x] `HistoryBuffer` (`src/history.js`, the former site RingHistory) streams the DSMC
+     and DG-FV histories; `MatrixGrid` draws matrices with `cellAt`/`highlight`, and the
+     gallery's `matrix()` does the same on Ink boards (Lecture 4 SBP).
+6. **Export.** PNG/SVG of a board state, short video capture for slides (not needed now).
 
 After steps 1–2 the gallery's `board.js` becomes a thin layer over Chalkish objects; then
 Lecture 2, the DSMC/DG-FV views and binary collision move their plots onto the same `Plot`.
