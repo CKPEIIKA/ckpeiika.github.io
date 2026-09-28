@@ -87,6 +87,12 @@ So the demos draw around it:
    - [x] `HistoryBuffer` (`src/history.js`, the former site RingHistory) streams the DSMC
      and DG-FV histories; `MatrixGrid` draws matrices with `cellAt`/`highlight`, and the
      gallery's `matrix()` does the same on Ink boards (Lecture 4 SBP).
+7. **Speed of live plots.** Measured on a binary-collision-like plot (2× pixels, software
+   rendering, per frame): the lab's hand-written immediate drawing 6.5 ms; Chalkish redrawing
+   everything 14–21 ms (half of it static dusty axes). With `Group({ cache: true })` — the
+   subtree kept as a bitmap until something in it, the camera, the canvas or the fonts
+   change — a moving marker over a cached chalk plot costs 2.4 ms, and a curve changing every
+   frame (rough stroke) over cached axes 4.2 ms. `PlotAxes` caches itself by default.
 6. **Export.** PNG/SVG of a board state, short video capture for slides (not needed now).
 
 The hidden lecture `demos/chalkish-reference/` shows every primitive above in its own

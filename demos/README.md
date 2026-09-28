@@ -96,6 +96,9 @@ experiment per group of primitives: formulas (`MathLabel`), plots (`PlotFrame`, 
 (`arrange`, `nextTo`, `Panel`), picking and dragging (`hitTest`, `bindPointerDrag`), fields
 (`contourSegments`, `VectorField`, `traceStreamlines`) and data (`MatrixGrid`,
 `HistoryBuffer`). `src/panes.js` builds each board from library calls only; copy from it.
+For live scenes, put what stays still (axes, grids, backdrops) in `new Group([...], { cache: true })`:
+it is kept as a bitmap and blitted until something in it changes (`PlotAxes` does this itself).
+Data that changes every frame draws faster with a light rough stroke than with `dusty` chalk.
 A page can stay out of the navigation on purpose with
 `<meta name="site-listing" content="unlisted">` plus `noindex` (the site tests check both).
 
