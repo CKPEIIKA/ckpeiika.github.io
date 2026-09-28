@@ -138,6 +138,23 @@ class Board {
     });
   }
   // write: draw the board in stroke by stroke (Chalkish Write), unless motion is reduced.
+  // One board command as a Chalkish object (null for an empty path).
+  build(p,fontScale){
+    const L=this.lib;
+    // Labels are chalk text on the board: board-unit size (enlarged on narrow boards as
+    // before), never below the site's 10 px text minimum.
+    if(p.type==='text')return new L.TextLabel(p.text,{x:p.x,y:p.y,size:p.size*fontScale,minPixelSize:10,font:`16px ${family(p)}`,align:p.align,baseline:'alphabetic',maxWidth:p.maxWidth||(p.align==='left'?W-p.x-20:undefined),style:{fill:p.color,passes:1}});
+    if(p.type==='math')return new L.MathLabel(p.tex,{x:p.x,y:p.y,size:p.size*fontScale,minPixelSize:10,family:FONT,align:p.align,baseline:'alphabetic',maxWidth:p.align==='left'?W-p.x-20:undefined,style:{fill:p.color,passes:1}});
+    const style=L.chalkStyle('dusty',{stroke:p.color,fill:p.fill||null,width:p.width||1.5,passes:2,roughness:this.preview ? .15 : .24,dash:p.dash?[7,6]:null});
+    if(p.type==='line')return new L.Line(p.x1,p.y1,p.x2,p.y2,{style});
+    if(p.type==='arrow')return new L.Arrow(p.x1,p.y1,p.x2,p.y2,{headLength:8,style});
+    // Dots are a few pixels across: a filled circle with one rough pass looks the same as dusty
+    // chalk and costs a fraction of it (a solution drawn as 160 moving dots).
+    if(p.type==='dot')return new L.Circle(p.r,{x:p.x,y:p.y,style:{stroke:p.color,fill:p.fill||null,width:p.width||1.5,roughness:.15,passes:1}});
+    if(p.type==='rect')return new L.Rectangle(p.w,p.h,{x:p.x+p.w/2,y:p.y+p.h/2,style});
+    if(p.type==='path'&&p.points.length>1)return new L.CurveLayer({x:Float32Array.from(p.points,q=>q[0]),y:Float32Array.from(p.points,q=>q[1]),count:p.points.length,style});
+    return null;
+  }
   render(ink,{write=false}={}){this.commands=ink.cmd||ink;if(write)this.pendingWrite=!matchMedia('(prefers-reduced-motion: reduce)').matches;this.paint();}
   view(){const r=this.host.getBoundingClientRect(),w=Math.max(1,r.width),h=Math.max(1,r.height),s=Math.min(w/W,h/H);return {w,h,s,ox:(w-W*s)/2,oy:(h-H*s)/2};}
   point(ev){const r=this.host.getBoundingClientRect(),v=this.view();return [(ev.clientX-r.left-v.ox)/v.s,(ev.clientY-r.top-v.oy)/v.s];}
@@ -149,27 +166,33 @@ class Board {
     overlay.setTransform(dpr,0,0,dpr,0,0);overlay.clearRect(0,0,w,h);overlay.translate(ox,oy);overlay.scale(s,s);
     const commands=uncrowded(this.commands,overlay,Math.min(2,Math.max(1,W/w)));
     if(this.engine==='chalkish'){
-      const L=this.lib;this.scene.clear();
+      this.scene.clear();
       const fontScale=Math.min(2,Math.max(1,W/w));
+      // Objects are kept between paints, keyed by their command: an unchanged command keeps its
+      // object and with it the cached chalk stroke, so a step rebuilds only what changed.
+      // The unchanged beginning of the list (title, grid, axes, ticks: drawn first by graph()) is
+      // also kept as one cached bitmap layer; drawing order stays exactly that of the commands.
+      const previous=this.objects??new Map(),next=new Map(),keys=[],objects=[];
       for(const p of commands){
-        // Labels are chalk text on the board: board-unit size (enlarged on narrow boards as
-        // before), never below the site's 10 px text minimum.
-        if(p.type==='text'){this.scene.add(new L.TextLabel(p.text,{x:p.x,y:p.y,size:p.size*fontScale,minPixelSize:10,font:`16px ${family(p)}`,align:p.align,baseline:'alphabetic',maxWidth:p.maxWidth||(p.align==='left'?W-p.x-20:undefined),style:{fill:p.color,passes:1}}));continue;}
-        if(p.type==='math'){this.scene.add(new L.MathLabel(p.tex,{x:p.x,y:p.y,size:p.size*fontScale,minPixelSize:10,family:FONT,align:p.align,baseline:'alphabetic',maxWidth:p.align==='left'?W-p.x-20:undefined,style:{fill:p.color,passes:1}}));continue;}
-        const style=L.chalkStyle('dusty',{stroke:p.color,fill:p.fill||null,width:p.width||1.5,passes:2,roughness:this.preview ? .15 : .24,dash:p.dash?[7,6]:null});
-        if(p.type==='line')this.scene.add(new L.Line(p.x1,p.y1,p.x2,p.y2,{style}));
-        if(p.type==='arrow')this.scene.add(new L.Arrow(p.x1,p.y1,p.x2,p.y2,{headLength:8,style}));
-        if(p.type==='dot')this.scene.add(new L.Circle(p.r,{x:p.x,y:p.y,style}));
-        if(p.type==='rect')this.scene.add(new L.Rectangle(p.w,p.h,{x:p.x+p.w/2,y:p.y+p.h/2,style}));
-        if(p.type==='path'&&p.points.length>1)this.scene.add(new L.CurveLayer({x:Float32Array.from(p.points,p=>p[0]),y:Float32Array.from(p.points,p=>p[1]),count:p.points.length,style}));
+        const key=`${fontScale}|${JSON.stringify(p)}`,list=previous.get(key),object=list?.pop()??this.build(p,fontScale);
+        if(!object)continue;
+        if(!next.has(key))next.set(key,[]);
+        next.get(key).push(object);keys.push(key);objects.push(object);
       }
+      this.objects=next;
+      const last=this.backKeys??[];let stable=0;
+      while(stable<keys.length&&stable<last.length&&keys[stable]===last[stable])stable++;
+      this.back??=new this.lib.Group([],{cache:true});
+      if(stable!==this.back.children.length||this.back.children.some((o,i)=>o!==objects[i])){this.back.clear();this.back.add(...objects.slice(0,stable));}
+      this.backKeys=keys;
+      this.scene.add(this.back,...objects.slice(stable));
       // Chalkish pins the canvas to an inline pixel size; clear it so the CSS size (100% of the host) is measured.
       this.canvas.style.removeProperty('width');this.canvas.style.removeProperty('height');
       this.camera.setCenter(W/2,H/2);this.camera.setHeight(h/s);this.app.resize();
       // A repaint during the write (fonts arriving, a resize) continues it at the same point.
       if(this.pendingWrite||this.writeStart!=null){
         const now=performance.now();if(this.pendingWrite){this.pendingWrite=false;this.writeStart=now;}
-        this.scene.play(new L.Write(this.scene.roots.slice(),{duration:L.CHALK_TIMING.writeMs/1000,lag:.125})).advance((now-this.writeStart)/1000);
+        const L=this.lib;this.scene.play(new L.Write(this.scene.roots.slice(),{duration:L.CHALK_TIMING.writeMs/1000,lag:.125})).advance((now-this.writeStart)/1000);
         this.app.start();
       }
       this.app.render();
