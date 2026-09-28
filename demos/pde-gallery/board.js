@@ -8,6 +8,10 @@ import {contourSegments,joinSegments} from '../../lib/chalkish/src/vector-field.
 import {layoutTex,canvasMeasure,paintTex} from '../../lib/chalkish/src/tex.js';
 const C={white:'#f4f1e7',muted:'#a6b8ad',grid:'#2a3a31',yellow:'#f0d477',blue:'#8ac8db',red:'#ef9685',green:'#b6d3a0',bg:'#0d1712',dim:'#506358'};
 const W=1000,H=610,FONT='"Neucha", "Shantell Sans", "Open Sans", system-ui, sans-serif';
+// Numbers (ticks, bar values): a face whose decimal point stays visible at 12px, like the
+// metric values under the board. Text commands with font: 'number' use it.
+const NUMBER_FONT='"Shantell Sans", "Neucha", "Open Sans", system-ui, sans-serif';
+const family=p=>p.font==='number'?NUMBER_FONT:FONT;
 let libraryPromise;
 function getLibrary(){
   if(new URLSearchParams(location.search).get('engine')==='canvas')return Promise.resolve(null);
@@ -38,8 +42,8 @@ function graph(ink,{x=72,y=115,w=858,h=295,xmin=0,xmax=1,ymin=-1,ymax=1,xticks=4
   const X=v=>f.x(v),Y=v=>f.y(v),label=(value,step)=>step?formatTick(value,step):fmt(value,3);
   const xs=f.ticks('x',xticks,label),ys=f.ticks('y',yticks,label);
   if(xs.length||ys.length){ink.line(x+w,y,x+w,y+h,C.grid,1);ink.line(x,y,x+w,y,C.grid,1);}
-  for(const t of xs){const px=t.position;if(px>x+.5&&px<x+w-.5)ink.line(px,y,px,y+h,C.grid,1);if(labels){ink.text(px,y+h+20,t.label,12,C.muted,'center');ink.cmd.at(-1).optional=1+t.priority;}}
-  for(const t of ys){const py=t.position;if(py>y+.5&&py<y+h-.5)ink.line(x,py,x+w,py,C.grid,1);if(labels){ink.text(x-12,py+4,t.label,12,C.muted,'right');ink.cmd.at(-1).optional=1+t.priority;}}
+  for(const t of xs){const px=t.position;if(px>x+.5&&px<x+w-.5)ink.line(px,y,px,y+h,C.grid,1);if(labels){ink.text(px,y+h+20,t.label,12,C.muted,'center');Object.assign(ink.cmd.at(-1),{optional:1+t.priority,font:'number'});}}
+  for(const t of ys){const py=t.position;if(py>y+.5&&py<y+h-.5)ink.line(x,py,x+w,py,C.grid,1);if(labels){ink.text(x-12,py+4,t.label,12,C.muted,'right');Object.assign(ink.cmd.at(-1),{optional:1+t.priority,font:'number'});}}
   ink.line(x,y+h,x+w+9,y+h,C.muted,1.2);ink.line(x,y,x,y+h,C.muted,1.2);
   if(xscale==='linear'&&xmin<0&&xmax>0)ink.line(X(0),y,X(0),y+h,C.dim,1.3);
   if(yscale==='linear'&&ymin<0&&ymax>0)ink.line(x,Y(0),x+w,Y(0),C.dim,1.3);
@@ -61,7 +65,7 @@ function graph(ink,{x=72,y=115,w=858,h=295,xmin=0,xmax=1,ymin=-1,ymax=1,xticks=4
       const lo=Math.min(ymin,ymax),hi=Math.max(ymin,ymax),clampY=v=>Math.min(hi,Math.max(lo,v)),base=Y(clampY(0));
       values.forEach((v,i)=>{if(!Number.isFinite(v))return;const col=typeof color==='function'?color(v,i):color,x0=pixels?X(at[i])-pixels/2:X(at[i]-width/2),bw=pixels??(X(at[i]+width/2)-X(at[i]-width/2)),top=Y(clampY(v));
         ink.rect(x0,Math.min(top,base),bw,Math.abs(top-base),col,stroke===undefined?col:stroke);
-        if(labels)ink.text(X(at[i]),top+(v<0?23:-9),format(v),labelSize,col,'center');});
+        if(labels){ink.text(X(at[i]),top+(v<0?23:-9),format(v),labelSize,col,'center');ink.cmd.at(-1).font='number';}});
     },
     // Counts of samples in equal bins over [xmin, xmax], drawn as touching bars; returns the counts.
     histogram:(samples,{bins=20,color=C.blue,stroke=C.dim}={})=>{
@@ -79,7 +83,7 @@ function contourLines(fn,{xmin,xmax,ymin,ymax,n=64,level=0}){return joinSegments
 // A matrix of values as cells (sign-coloured, zero cells left blank) from its top-left
 // corner; returns cellAt(px, py) → [row, column] or null for clicks.
 function matrix(ink,M,{x,y,cell,fill=v=>v>1e-10?'#38503a':v< -1e-10?'#603f39':null,textColor=()=>C.white,format=v=>fmt(v,2),hide=v=>Math.abs(v)<=1e-10,selected=null}={}){
-  M.forEach((row,i)=>row.forEach((v,j)=>{const cx=x+j*cell,cy=y+i*cell;ink.rect(cx,cy,cell-1,cell-1,fill(v,i,j),C.grid,.7);if(!hide(v))ink.text(cx+cell/2,cy+cell*.67,format(v),Math.min(17,cell*.56),textColor(v,i,j),'center');}));
+  M.forEach((row,i)=>row.forEach((v,j)=>{const cx=x+j*cell,cy=y+i*cell;ink.rect(cx,cy,cell-1,cell-1,fill(v,i,j),C.grid,.7);if(!hide(v)){ink.text(cx+cell/2,cy+cell*.67,format(v),Math.min(17,cell*.56),textColor(v,i,j),'center');ink.cmd.at(-1).font='number';}}));
   if(selected)ink.rect(x+selected[1]*cell,y+selected[0]*cell,cell,cell,null,C.yellow,2.5);
   const rows=M.length,cols=Math.max(0,...M.map(r=>r.length));
   return {x,y,cell,cellAt:(px,py)=>{const i=Math.floor((py-y)/cell),j=Math.floor((px-x)/cell);return i>=0&&j>=0&&i<rows&&j<cols?[i,j]:null;}};
@@ -102,7 +106,7 @@ function drawShape(ctx,p){
 function uncrowded(commands,ctx,fontScale){
   const optional=commands.filter(p=>p.type==='text'&&p.optional);
   if(!optional.length)return commands;
-  const box=p=>{ctx.font=`${p.size*fontScale}px ${FONT}`;const width=ctx.measureText(p.text).width,size=p.size*fontScale;
+  const box=p=>{ctx.font=`${p.size*fontScale}px ${family(p)}`;const width=ctx.measureText(p.text).width,size=p.size*fontScale;
     const left=p.align==='center'?p.x-width/2:p.align==='right'?p.x-width:p.x;return [left-2,p.y-.8*size,left+width+2,p.y+.25*size];};
   const overlaps=(a,b)=>a[0]<b[2]&&b[0]<a[2]&&a[1]<b[3]&&b[1]<a[3];
   const kept=commands.filter(p=>p.type==='text'&&!p.optional).map(box),hidden=new Set();
@@ -126,7 +130,9 @@ class Board {
         this.app=lib.mount(this.canvas,{scene:this.scene,camera:this.camera,fixedStep:null,adaptiveQuality:false,dprMax:2,update:({scene,app})=>{if(!scene.animating){app.stop();this.writeStart=null;}}});
         this.engine='chalkish';
       }catch(e){console.warn('Chalkish initialization failed; using standalone renderer.',e);this.app?.destroy();this.app=null;this.engine='canvas';}}
-      this.onEngine(this.engine);this.paint();document.fonts?.ready.then(()=>{if(!this.dead)this.paint();});
+      this.onEngine(this.engine);this.paint();
+      // Canvas text never triggers a web-font download: load both faces, then repaint.
+      Promise.all([document.fonts?.load(`16px ${FONT}`),document.fonts?.load(`16px ${NUMBER_FONT}`,'0.5')]).then(()=>{if(!this.dead)this.paint();},error=>console.error('Board fonts could not be loaded.',error));
     });
   }
   // write: draw the board in stroke by stroke (Chalkish Write), unless motion is reduced.
@@ -146,7 +152,7 @@ class Board {
       for(const p of commands){
         // Labels are chalk text on the board: board-unit size (enlarged on narrow boards as
         // before), never below the site's 10 px text minimum.
-        if(p.type==='text'){this.scene.add(new L.TextLabel(p.text,{x:p.x,y:p.y,size:p.size*fontScale,minPixelSize:10,font:`16px ${FONT}`,align:p.align,baseline:'alphabetic',maxWidth:p.maxWidth||(p.align==='left'?W-p.x-20:undefined),style:{fill:p.color,passes:1}}));continue;}
+        if(p.type==='text'){this.scene.add(new L.TextLabel(p.text,{x:p.x,y:p.y,size:p.size*fontScale,minPixelSize:10,font:`16px ${family(p)}`,align:p.align,baseline:'alphabetic',maxWidth:p.maxWidth||(p.align==='left'?W-p.x-20:undefined),style:{fill:p.color,passes:1}}));continue;}
         if(p.type==='math'){this.scene.add(new L.MathLabel(p.tex,{x:p.x,y:p.y,size:p.size*fontScale,minPixelSize:10,family:FONT,align:p.align,baseline:'alphabetic',maxWidth:p.align==='left'?W-p.x-20:undefined,style:{fill:p.color,passes:1}}));continue;}
         const style=L.chalkStyle('dusty',{stroke:p.color,fill:p.fill||null,width:p.width||1.5,passes:2,roughness:this.preview ? .15 : .24,dash:p.dash?[7,6]:null});
         if(p.type==='line')this.scene.add(new L.Line(p.x1,p.y1,p.x2,p.y2,{style}));
@@ -171,7 +177,7 @@ class Board {
       ctx.lineCap='round';ctx.lineJoin='round';for(const p of commands)if(p.type!=='text'&&p.type!=='math')drawShape(ctx,p);
       const fontScale=Math.min(2,Math.max(1,W/w));
       for(const p of commands)if(p.type==='text'){
-        overlay.font=`${p.size*fontScale}px ${FONT}`;
+        overlay.font=`${p.size*fontScale}px ${family(p)}`;
         overlay.fillStyle=p.color;overlay.textAlign=p.align;overlay.textBaseline='alphabetic';
         const maxWidth=p.maxWidth||(p.align==='left'?W-p.x-20:undefined);
         if(maxWidth)overlay.fillText(p.text,p.x,p.y,maxWidth);else overlay.fillText(p.text,p.x,p.y);

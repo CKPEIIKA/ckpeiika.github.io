@@ -25,7 +25,7 @@ function binaryCopy(locale, key) {
 }
 
 import {Vec3,Camera3D,Scene3D,ChalkRenderer3D,OrbitControls3D,clamp} from '../../lib/chalkish/src/collision-3d.js';
-import {CHALK_FONT_STACK,strokeChalkPath2D as chalkStroke} from '../../lib/chalkish/src/chalk.js';
+import {CHALK_FONT_STACK,CHALK_NUMBER_FONT_STACK,strokeChalkPath2D as chalkStroke} from '../../lib/chalkish/src/chalk.js';
 import {formatTick,niceTicks} from '../../lib/chalkish/src/ticks.js';
 import {POTENTIALS,potential,radialForce,effectivePotential,hsAngle,vssAngle,vssDcs,vhsDiameter,labFromRelative,mulberry32,sampleDisk,scatterEnsemble,criticalOrbit,solveTrajectory,hardSphereTrajectory,trajectoryAt,deflectionCurve,areaBinnedDcs} from './physics.js';
 import {CHAPTERS,setChapterLanguage} from './chapters.js';
@@ -345,9 +345,10 @@ function axes({xmin=0,xmax=1,ymin=0,ymax=1,xlabel='',ylabel='',xticks=5,yticks=3
   const grid=(x0,y0,x1,y1)=>{c.globalAlpha=.5;c.beginPath();c.moveTo(x0,y0);c.lineTo(x1,y1);chalkStroke(c);c.globalAlpha=1;};
   for(const x of [xmin,xmax])grid(X(x),t,X(x),b);
   for(const y of [ymin,ymax])grid(l,Y(y),r,Y(y));
+  c.font=`10px ${CHALK_NUMBER_FONT_STACK}`; // tick numbers: decimal points stay visible
   for(const {value,label} of axisTicks(xmin,xmax,xticks)){const px=X(value);if(Math.abs(px-l)>.5&&Math.abs(px-r)>.5)grid(px,t,px,b);c.textAlign='center';c.fillText(label,px,b+16);}
   for(const {value,label} of axisTicks(ymin,ymax,yticks)){const py=Y(value);if(Math.abs(py-t)>.5&&Math.abs(py-b)>.5)grid(l,py,r,py);c.textAlign='right';c.fillText(label,l-8,py+3);}
-  c.textAlign='left';c.fillStyle=C.dim;c.fillText(ylabel,9,13);c.textAlign='right';c.fillText(xlabel,r,h-5);c.textAlign='left';
+  c.font=`10px ${CHALK_FONT_STACK}`;c.textAlign='left';c.fillStyle=C.dim;c.fillText(ylabel,9,13);c.textAlign='right';c.fillText(xlabel,r,h-5);c.textAlign='left';
   const g={...p,l,r,t,b,X,Y,xmin,xmax,ymin,ymax};plotGeometry=g;return g;
 }
 function plotLine(g,points,color=C.gold,width=1.8,dash=[],alpha=1,maxJump=Infinity){
@@ -552,4 +553,6 @@ function bind(){
 }
 // A small read-only test/debug interface; it contains no private or remote data.
 window.collisionLab={getState:()=>({...state,playing}),getDiagnostics:()=>({status:result?.status,errorE:result?.errorE,errorL:result?.errorL,chi:result?.chi,theta:result?.theta,rmin:result?.rmin}),go:(c,s=0)=>applyLesson(c,s),set:(key,value)=>setParameter(key,value),redraw:()=>{dirty=true;}};
+// The plot canvas uses the number font for ticks; a canvas does not fetch it, so ask and redraw.
+document.fonts?.load(`10px ${CHALK_NUMBER_FONT_STACK}`,'0.5').then(()=>{dirty=true;},error=>console.error('Plot number font could not be loaded.',error));
 bind();const restored=safeHash();applyLesson(restored?.c||0,restored?.s||0,restored?.restore||null);frameId=requestAnimationFrame(tick);

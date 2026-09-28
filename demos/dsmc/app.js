@@ -1,4 +1,4 @@
-import { Camera2D, HistoryBuffer, PlotAxes, Scene, mount, niceBounds } from '../../lib/chalkish/src/index.js';
+import { CHALK_NUMBER_FONT_STACK, Camera2D, HistoryBuffer, PlotAxes, Scene, mount, niceBounds } from '../../lib/chalkish/src/index.js';
 import {
   createDsmcLabController,
   getDsmcLabPreset,
@@ -297,7 +297,7 @@ const plotScene = new Scene({ background: '#0d1611' });
 const plotCamera = new Camera2D({ centerX: 8.05, centerY: 1.05, height: 1.8 });
 // The inset's data box; axes show the values at round ticks, labels inside the box.
 const PLOT_BOX = Object.freeze({ left: 6.52, right: 9.57, bottom: 0.43, top: 1.53 });
-const plotAxes = new PlotAxes({ ...PLOT_BOX, xTicks: 3, yTicks: 2, labels: 'inside', labelGap: 0.07, font: '10px "Neucha", "Shantell Sans", sans-serif' });
+const plotAxes = new PlotAxes({ ...PLOT_BOX, xTicks: 3, yTicks: 2, labels: 'inside', labelGap: 0.07, font: `10px ${CHALK_NUMBER_FONT_STACK}` });
 plotScene.add(
   plotAxes,
   controller.view.layers.maxwellian,

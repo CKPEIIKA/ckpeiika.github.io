@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 # Preview the site locally.
 #
-#   ./preview.sh                  Jekyll: the whole site as GitHub Pages builds it, with live reload
+#   ./preview.sh                  Jekyll: the whole site as GitHub Pages builds it (rebuilds on save)
 #   ./preview.sh --python         plain static files: the demos work; Jekyll pages show as raw source
 #   ./preview.sh 4001             another port (default 4000)
 #   ./preview.sh 4000 /foo        serve under a sub-path, to check that no link assumes the domain root
@@ -64,9 +64,10 @@ if [ "$mode" = jekyll ]; then
   url="http://127.0.0.1:${port}${subpath}/"
   printf 'Jekyll preview: %s   (Ctrl+C stops it)\n' "$url"
   open_later "$url"
-  # Separate live-reload port per preview, so several can run side by side.
-  exec bundle exec jekyll serve --host 127.0.0.1 --port "$port" --baseurl "$subpath" \
-    --livereload --livereload-port "$((port + 31729))"
+  # No --livereload: with it Jekyll 4.4 skips the Cache-Control header of _config.yml for
+  # non-HTML files, so a browser could mix edited ES modules with cached old ones. Save, then
+  # reload the page.
+  exec bundle exec jekyll serve --host 127.0.0.1 --port "$port" --baseurl "$subpath"
 fi
 
 if ! command -v python3 >/dev/null 2>&1; then
@@ -84,4 +85,22 @@ fi
 url="http://127.0.0.1:${port}${subpath}/demos/"
 printf 'Static preview (demos only; Jekyll pages are not built): %s   (Ctrl+C stops it)\n' "$url"
 open_later "$url"
-LANG=C.UTF-8 LC_ALL=C.UTF-8 PYTHONUTF8=1 python3 -m http.server "$port" --bind 127.0.0.1 --directory "$serve_dir"
+# Like the Jekyll preview: Cache-Control: no-cache, so edited ES modules are never mixed with
+# cached older ones (the browser revalidates; unchanged files cost a 304).
+LANG=C.UTF-8 LC_ALL=C.UTF-8 PYTHONUTF8=1 python3 - "$port" "$serve_dir" <<'PY'
+import functools, http.server, sys
+
+class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
+    def end_headers(self):
+        self.send_header('Cache-Control', 'no-cache')
+        super().end_headers()
+
+port, directory = int(sys.argv[1]), sys.argv[2]
+handler = functools.partial(NoCacheHandler, directory=directory)
+with http.server.ThreadingHTTPServer(('127.0.0.1', port), handler) as server:
+    print(f'Serving {directory} on http://127.0.0.1:{port}/', flush=True)
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        pass
+PY

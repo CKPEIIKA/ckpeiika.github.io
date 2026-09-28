@@ -27,3 +27,8 @@ exclude:
   - lib/chalkish/package.json
   - lib/chalkish/test
   - lib/chalkish/support
+# Only for `jekyll serve` (./preview.sh): browsers revalidate every file, so an edited ES module
+# is never mixed with a cached older one. GitHub Pages ignores this setting.
+webrick:
+  headers:
+    Cache-Control: no-cache

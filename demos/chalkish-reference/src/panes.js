@@ -11,7 +11,7 @@
 // labs.js turns a pane into the gallery's live-model contract (mount, advance, render).
 
 import {
-  Arrow, Camera2D, Circle, COLORMAPS, CurveLayer, DOWN, FadeIn, Group, HistoryBuffer,
+  Arrow, CHALK_NUMBER_FONT_STACK, Camera2D, Circle, COLORMAPS, CurveLayer, DOWN, FadeIn, Group, HistoryBuffer,
   Indicate, Line, MathLabel, MatrixGrid, Panel, PlotAxes, RIGHT, Rectangle, ScalarField,
   Scene, Sequence, TextLabel, Transform, UP, Unwrite, VectorField, Write, arrange,
   chalkStyle, contourSegments, getBounds, hitTest, joinSegments, nextTo, niceTicks,
@@ -20,6 +20,7 @@ import {
 
 export const BOARD = Object.freeze({ minX: 0, maxX: 16, minY: 0, maxY: 9 });
 const FONT = '"Neucha", "Shantell Sans", "Open Sans", sans-serif';
+const NUMBER_FONT = CHALK_NUMBER_FONT_STACK;
 const C = Object.freeze({
   white: '#f4f1e7', muted: '#a6b8ad', dim: '#506358', grid: '#2a3a31',
   yellow: '#f0d477', blue: '#8ac8db', red: '#ef9685', green: '#b6d3a0', bg: '#0d1712',
@@ -109,7 +110,7 @@ export function formulasPane(params, lang) {
 export function animationPane(params, lang) {
   const { scene, camera, L } = board(lang);
   const frame = { left: 1.2, right: 9.8, bottom: 1.2, top: 7.2 };
-  const axes = new PlotAxes({ ...frame, xTicks: 4, yTicks: 2, labelGap: 0.3, font: `12px ${FONT}` });
+  const axes = new PlotAxes({ ...frame, xTicks: 4, yTicks: 2, labelGap: 0.3 });
   axes.setRanges([0, 2 * Math.PI], [-1.2, 1.2]);
   const toPoints = (f) => {
     const { xs, ys } = sample(f, 0, 2 * Math.PI, 160);
@@ -180,7 +181,7 @@ const PLOT_FUNCTIONS = {
 export function plotPane(params, lang) {
   const { scene, camera, L } = board(lang);
   const frame = { left: 1.4, right: 11, bottom: 1.2, top: 7.3 };
-  const axes = new PlotAxes({ ...frame, xTicks: 5, yTicks: 4, labelGap: 0.3, font: `12px ${FONT}` });
+  const axes = new PlotAxes({ ...frame, xTicks: 5, yTicks: 4, labelGap: 0.3 });
   const curves = new Group();
   const title = text(L('PlotFrame и PlotAxes: оси, деления, отсечение', 'PlotFrame and PlotAxes: axes, ticks, clipping'), 0.8, 8.3, { size: 0.4 });
   const name = formula('y', 11.6, 6.8, { color: C.blue });
@@ -227,7 +228,7 @@ export function ticksPane(params, lang) {
     for (const value of result.values) {
       ticks.add(
         new Line(x(value), 4.3, x(value), 4.7, { style: stroke(C.white, 1.4, { passes: 1 }) }),
-        text(fmt(value, 6), x(value), 3.85, { size: 0.3, align: 'center' }),
+        text(fmt(value, 6), x(value), 3.85, { size: 0.3, align: 'center', font: `16px ${NUMBER_FONT}` }),
       );
     }
     ticks.add(text(fmt(min, 4), 1.5, 5.25, { size: 0.26, color: C.dim, align: 'center' }), text(fmt(max, 4), 14.5, 5.25, { size: 0.26, color: C.dim, align: 'center' }));
@@ -293,7 +294,7 @@ export function layoutPane(params, lang) {
 export function dragPane(params, lang) {
   const { scene, camera, L } = board(lang);
   const frame = { left: 1.4, right: 10.6, bottom: 1.2, top: 7.3 };
-  const axes = new PlotAxes({ ...frame, xTicks: 4, yTicks: 3, labelGap: 0.3, font: `12px ${FONT}` });
+  const axes = new PlotAxes({ ...frame, xTicks: 4, yTicks: 3, labelGap: 0.3 });
   axes.setRanges([-2, 2], [-1, 3]);
   const f = (x) => x * x - 0.5;
   const { xs, ys } = sample(f, -2, 2, 200);
@@ -458,7 +459,7 @@ export function matrixPane(params, lang) {
 export function historyPane(params, lang) {
   const { scene, camera, L } = board(lang);
   const frame = { left: 1.4, right: 14.6, bottom: 1.2, top: 7.3 };
-  const axes = new PlotAxes({ ...frame, xTicks: 5, yTicks: 2, labelGap: 0.3, font: `12px ${FONT}` });
+  const axes = new PlotAxes({ ...frame, xTicks: 5, yTicks: 2, labelGap: 0.3 });
   const history = new HistoryBuffer(['x', 'v'], 240);
   const buffers = { index: new Float64Array(240), x: new Float64Array(240), v: new Float64Array(240) };
   const position = new CurveLayer({ x: new Float32Array(240), y: new Float32Array(240), count: 0, style: stroke(C.blue, 2.2) });

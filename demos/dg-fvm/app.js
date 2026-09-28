@@ -1,4 +1,5 @@
 import {
+  CHALK_NUMBER_FONT_STACK,
   Camera2D,
   COLORMAPS,
   HistoryBuffer,
@@ -378,7 +379,7 @@ const analysisField = new ScalarField(burgersHistory, 1, 60, {
   visible: false,
   style: { opacity: 0.94 },
 });
-const analysisAxes = new PlotAxes({ left: 0.06, right: 0.94, bottom: 0.08, top: 0.92, xTicks: 3, yTicks: 2, labels: 'inside', labelGap: 0.05, font: '10px "Neucha", "Shantell Sans", sans-serif' });
+const analysisAxes = new PlotAxes({ left: 0.06, right: 0.94, bottom: 0.08, top: 0.92, xTicks: 3, yTicks: 2, labels: 'inside', labelGap: 0.05, font: `10px ${CHALK_NUMBER_FONT_STACK}` });
 analysisScene.add(analysisField, analysisAxes, analysisSecondary, analysisPrimary);
 const analysisApp = mount(nodes.analysisCanvas, {
   scene: analysisScene,
