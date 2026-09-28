@@ -167,7 +167,8 @@ export const demos = [
     id: 'flow',
     group: 4,
     title: ['Стрелки и линии тока', 'Arrows and streamlines'],
-    short: ['VectorField и traceStreamlines (RK4).', 'VectorField and traceStreamlines (RK4).'],
+    short: ['VectorField, traceStreamlines (RK4) и TrailLayer.', 'VectorField, traceStreamlines (RK4) and TrailLayer.'],
+    dynamic: true,
     equation: { tex: String.raw`\frac{d\mathbf{x}}{ds} = \frac{\mathbf{v}(\mathbf{x})}{|\mathbf{v}(\mathbf{x})|}` },
     controls: [
       S('flow', 'Поле скорости', 'Velocity field', 'gyre', [O('vortex', 'вихрь', 'vortex'), O('saddle', 'седло', 'saddle'), O('source', 'источник', 'source'), O('gyre', 'двойной круговорот', 'double gyre')]),
@@ -176,8 +177,8 @@ export const demos = [
     presets: [P('Вихрь', 'Vortex', { flow: 'vortex', seeds: 6 }), P('Седло', 'Saddle', { flow: 'saddle', seeds: 12 })],
     question: ['Почему линии тока вихря замыкаются, а у источника уходят к краю?', 'Why do the vortex’s streamlines close while the source’s run to the edge?'],
     explanation: [
-      'VectorField — один слой отрезков мела: древко и два штриха головки на стрелку, длина min(maxLength, scale·|v|). traceStreamline интегрирует единичное поле направлений методом RK4 в обе стороны и останавливается на границе, в точке застоя или при замыкании орбиты.',
-      'VectorField is one layer of chalk segments: a shaft and two head strokes per arrow, length min(maxLength, scale·|v|). traceStreamline integrates the unit direction field with RK4 both ways and stops at the bounds, at a stagnation point, or when an orbit closes.',
+      'VectorField — отрезки мела: древко и два штриха головки на стрелку, длина min(maxLength, scale·|v|); быстрые стрелки ярче (четыре слоя яркости). traceStreamline интегрирует единичное поле направлений методом RK4 в обе стороны и останавливается на границе, в точке застоя или при замыкании орбиты. Пуск: 40 точек-меток плывут по полю, TrailLayer рисует их гаснущие следы.',
+      'VectorField draws chalk segments: a shaft and two head strokes per arrow, length min(maxLength, scale·|v|); faster arrows are brighter (four brightness layers). traceStreamline integrates the unit direction field with RK4 both ways and stops at the bounds, at a stagnation point, or when an orbit closes. Play: 40 tracer points ride the field, and TrailLayer draws their fading trails.',
     ],
     caveat: ['Шаг 0,03 по длине дуги, не больше 500 шагов в каждую сторону.', 'Step 0.03 in arc length, at most 500 steps each way.'],
     sources: ['rk4'],

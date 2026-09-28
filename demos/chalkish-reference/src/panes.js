@@ -15,7 +15,7 @@ import {
   Indicate, Line, MathLabel, MatrixGrid, Panel, PlotAxes, RIGHT, Rectangle, ScalarField,
   Scene, Sequence, TextLabel, Transform, UP, Unwrite, VectorField, Write, arrange,
   chalkStyle, contourSegments, getBounds, hitTest, joinSegments, nextTo, niceTicks,
-  texToText, traceStreamlines,
+  texToText, TrailLayer, traceStreamlines,
 } from '../../../lib/chalkish/src/index.js';
 
 export const BOARD = Object.freeze({ minX: 0, maxX: 16, minY: 0, maxY: 9 });
@@ -385,11 +385,19 @@ const FLOWS = {
 export function flowPane(params, lang) {
   const { scene, camera, L } = board(lang);
   const toBoard = (x, y) => [8 + 2 * x, 4 + 1.5 * y];
-  const title = text(L('VectorField и traceStreamlines', 'VectorField and traceStreamlines'), 0.8, 8.3, { size: 0.4 });
+  const title = text(L('VectorField, traceStreamlines, TrailLayer', 'VectorField, traceStreamlines, TrailLayer'), 0.8, 8.3, { size: 0.4 });
   const arrows = new VectorField({ scale: 0.35, maxLength: 0.55, minLength: 0.02, headLength: 0.14, style: stroke(C.muted, 1.3, { passes: 1 }) });
   const streamlines = new Group();
-  scene.add(new Rectangle(12, 6, { x: 8, y: 4, style: stroke(C.muted, 1.2, { passes: 1 }) }), arrows, streamlines, title);
-  let points = 0;
+  // Play: tracer points ride the flow and leave fading trails; a point leaving the box comes
+  // back at its start, and that jump (longer than maxJump) breaks its trail.
+  const trails = new TrailLayer({ length: 30, maxJump: 1, style: stroke(C.blue, 1.4, { passes: 1 }) });
+  scene.add(new Rectangle(12, 6, { x: 8, y: 4, style: stroke(C.muted, 1.2, { passes: 1 }) }), arrows, streamlines, trails, title);
+  const TRACERS = 40;
+  const startX = Float64Array.from({ length: TRACERS }, (_, k) => -2.7 + 5.4 * ((k * 0.618034) % 1));
+  const startY = Float64Array.from({ length: TRACERS }, (_, k) => -1.8 + 3.6 * (k + 0.5) / TRACERS);
+  const tracerX = Float64Array.from(startX), tracerY = Float64Array.from(startY);
+  const boardX = new Float64Array(TRACERS), boardY = new Float64Array(TRACERS);
+  let points = 0, time = 0;
   const refresh = () => {
     const v = FLOWS[params.flow];
     const x = [], y = [];
@@ -405,9 +413,28 @@ export function flowPane(params, lang) {
   };
   refresh();
   return {
-    scene, camera,
-    setParameter() { refresh(); return true; },
-    stats: () => [[L('стрелок', 'arrows'), String(arrows.arrowCount)], [L('линий тока', 'streamlines'), String(params.seeds)], [L('точек', 'points'), String(points)]],
+    scene, camera, dynamic: true,
+    update(dt) {
+      const v = FLOWS[params.flow], h = Math.min(dt, 0.05);
+      for (let i = 0; i < TRACERS; i += 1) {
+        // Midpoint rule; the field is fixed, so this is a pathline.
+        const [u0, w0] = v(tracerX[i], tracerY[i]);
+        const [u1, w1] = v(tracerX[i] + 0.5 * h * u0, tracerY[i] + 0.5 * h * w0);
+        tracerX[i] += h * u1;
+        tracerY[i] += h * w1;
+        if (!(Math.abs(tracerX[i]) <= 3 && Math.abs(tracerY[i]) <= 2)) { tracerX[i] = startX[i]; tracerY[i] = startY[i]; }
+        [boardX[i], boardY[i]] = toBoard(tracerX[i], tracerY[i]);
+      }
+      trails.push(boardX, boardY);
+      time += dt;
+      return false;
+    },
+    setParameter(key) {
+      refresh();
+      if (key === 'flow') { tracerX.set(startX); tracerY.set(startY); trails.clear(); }
+      return true;
+    },
+    stats: () => [[L('стрелок', 'arrows'), String(arrows.arrowCount)], [L('линий тока', 'streamlines'), String(params.seeds)], [L('точек', 'points'), String(points)], [L('время', 'time'), `${time.toFixed(1)} s`]],
   };
 }
 
