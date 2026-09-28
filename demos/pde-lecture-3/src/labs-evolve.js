@@ -3,7 +3,7 @@ import module1 from './kernels.js';
 const __modules = { "board.js": module0, "kernels.js": module1 };
 const moduleValue = (() => {
 const K = __modules['kernels.js'];
-const {Ink,C,graph,legend,fmt} = __modules['board.js'];
+const {Ink,C,graph,legend,fmt,fmtTex} = __modules['board.js'];
 const arr=(n,fn)=>Array.from({length:n},(_,i)=>fn(i));
 const text=lang=>(ru,en)=>lang==='en'?en:ru;
 const name=(s,lang)=>({upwind:lang==='en'?'Upwind':'Против потока',lf:lang==='en'?'Lax–Friedrichs':'Лакс — Фридрихс',lw:lang==='en'?'Lax–Wendroff':'Лакс — Вендрофф',ftcs:'FTCS',maccormack:lang==='en'?'MacCormack':'Мак-Кормак'})[s];
@@ -37,7 +37,7 @@ function heat(p,lang){
       legend(ink,[[L('Точное решение','Exact solution'),C.white],[L('Разностное решение','Difference solution'),C.yellow]],419);
       const G=K.heatAmplification(p.r,theta,k*Math.PI/n),exactDecay=Math.exp(-((k*Math.PI)**2)*dt);
       ink.text(76,473,L('Высокая мода k = ','High mode k = ')+k,18,C.muted);ink.text(76,511,'G = '+fmt(G)+'    |G| '+(Math.abs(G)>1?'>':'≤')+' 1',22,Math.abs(G)>1?C.red:G<0?C.yellow:C.green);
-      ink.text(540,473,L('Точное затухание за шаг','Exact decay per step'),18,C.muted);ink.text(540,511,'exp(−k²π²Δt) = '+fmt(exactDecay),22,C.white);
+      ink.text(540,473,L('Точное затухание за шаг','Exact decay per step'),18,C.muted);ink.math(540,511,String.raw`\exp(-k^2\pi^2\Delta t) = ${fmtTex(exactDecay)}`,22,C.white);
       ink.text(76,566,Math.abs(G)>1?L('Высокочастотное возмущение растёт.','The high-frequency perturbation grows.'):G<0?L('G < 0: мода меняет знак, хотя её модуль не растёт.','G < 0: the mode changes sign even though its magnitude does not grow.'):L('Неявный шаг не отменяет погрешность во времени.','An implicit step still has a time-discretization error.'),17,Math.abs(G)>1?C.red:C.muted);
       return {ink,stats:[[L('СКО','RMS error'),fmt(K.l2Error(u,exact))],['min / max u',fmt(Math.min(...u))+' / '+fmt(Math.max(...u))],['Δt',fmt(dt)],[L('Энергия hΣu²','Energy hΣu²'),fmt(h*K.sum(u.map(v=>v*v)))]],rows:x.map((xx,i)=>({x:xx,exact:exact[i],numerical:u[i]}))};}
   };
@@ -51,7 +51,7 @@ function shock(p,lang){
       g.series([0,exactFront,exactFront,2],[p.left,p.left,p.right,p.right],C.white,2.2);g.series(x,a,C.blue,2,p.n<=80);g.series(x,b,C.yellow,2,p.n<=80);
       for(const [front,col]of [[exactFront,C.white],[xa,C.blue],[xb,C.yellow]])ink.line(g.X(front),g.y,g.X(front),g.y+g.h+5,col,1.5,true);
       legend(ink,[[L('Точное','Exact'),C.white],[L('Консервативное','Conservative'),C.blue],[L('Неконсервативное','Nonconservative'),C.yellow]],424,72,288);
-      ink.text(76,477,L('Положение по массе:','Mass-equivalent front position:'),18,C.muted);ink.text(76,512,`xₛ = (hΣuᵢ − L uR)/(uL − uR)`,22,C.white);
+      ink.text(76,477,L('Положение по массе:','Mass-equivalent front position:'),18,C.muted);ink.math(76,512,String.raw`x_s = \frac{h\sum u_i - L\,u_R}{u_L - u_R}`,22,C.white);
       ink.text(76,563,L('Сгущение сетки не исправляет нарушение закона сохранения на разрыве.','Grid refinement does not repair a broken conservation law at a shock.'),17,C.muted);
       return {ink,stats:[[L('Точное положение','Exact front'),fmt(exactFront)],[L('Консервативное xₛ','Conservative xₛ'),fmt(xa)],[L('Неконсервативное xₛ','Nonconservative xₛ'),fmt(xb)],[L('Ошибка положения (неконс.)','Position error (noncons.)'),fmt(xb-exactFront)]],rows:x.map((xx,i)=>({x:xx,exact:xx<exactFront?p.left:p.right,conservative:a[i],nonconservative:b[i]}))};}
   };

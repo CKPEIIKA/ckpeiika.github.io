@@ -46,7 +46,7 @@ options and presets.
 | `id` | kebab-case, unique; also the URL hash (`#upwind`) |
 | `group` | index into `groups` (the catalogue filters) |
 | `title`, `short` | card title and one-line description |
-| `equation` | `[ru, en]` plain text, or a fixed HTML string (e.g. `u<sub>t</sub>`) |
+| `equation` | chalk TeX `{ tex: String.raw`…` }` or `{ tex: [ru, en] }` (words in `\text{…}`; breaks at `\qquad` on narrow screens), or `[ru, en]` plain text |
 | `controls` | `R(key, ru, en, value, min, max, step)`, `S(key, ru, en, value, options)` or `{ type: 'toggle', key, label, value: true }`; optional `help: [ru, en]` under the control; range defaults must lie on the slider grid |
 | `presets` | "Try these" buttons: `P(ru, en, { key: value })` |
 | `question` | what the student should check |
@@ -61,6 +61,7 @@ options and presets.
 `createLab(id, params, lang)` returns an object; throw on an unknown id.
 
 - `render()` → `{ ink, stats: [[label, value], …], note?, warning?, equation? }`. Required.
+  `equation` replaces the catalogue's equation for this state (`{ tex }` or a string).
 - `step()` with `count`, `time`, `stop` for dynamic experiments. Set `stop = '■'` at the
   end of the shown interval, or to a sentence when the computation must halt (instability).
   Never clip or hide diverging data; stop and say why.
@@ -76,9 +77,15 @@ optional `tool: { label }` with `setTool(active)` adds the ✎ button, and `disp
 Pass `preview(host, demo)` to `startGallery` to draw the catalogue pictures yourself.
 
 Drawing uses `../../pde-gallery/board.js`: the board is **1000 × 610** units; `Ink` has
-`line`, `arrow`, `rect`, `dot`, `path`, `text`, `title(text, subtitle)`; `graph(ink, {…})`
+`line`, `arrow`, `rect`, `dot`, `path`, `text`, `math`, `title(text, subtitle)`; `graph(ink, {…})`
 returns `curve`, `series`, `dot`, `contains`, `inverse`; `legend`, `fmt` and the chalk
-colours `C` complete it. Thumbnails keep only text between y = 70 and y = 520, so put
+colours `C` complete it. `xticks`/`yticks` ask for about that many intervals at round values,
+or take explicit values / `[value, label]` pairs (e.g. `[[Math.PI, 'π']]`). Text is drawn as
+chalk in the Chalkish scene, in board units, never below 10 px. Formulas on the board are
+`ink.math(x, y, tex, size, color, align)` with the TeX subset listed at the top of
+`lib/chalkish/src/tex.js` (scripts, `\frac`, `\sqrt`, accents, `\left…\right`, Greek,
+operators); put numbers in with `fmtTex(value)` and words with `\text{…}`, e.g.
+``String.raw`u^{n+1}_i = ${fmtTex(v)}` ``. The tests parse every formula of every preset. Thumbnails keep only text between y = 70 and y = 520, so put
 essential labels there and the title at the top.
 
 ## Behaviour every demo shares
@@ -90,6 +97,8 @@ essential labels there and the title at the top.
   controls a scrolling sheet below (about 30 %); the bar between them hides the sheet.
 - **Minimums:** text at least 10 px; buttons, links and inputs at least 24 px tall.
 - **Theme:** light/dark comes from `shell.css` tokens. The board is always dark chalk.
+- **Write-in:** opening an experiment writes its board in stroke by stroke (about 1 s,
+  Chalkish `Write`); parameter changes redraw at once, and reduced motion skips it.
 - **Deep links:** `#id` opens an experiment; the browser Back button returns to the catalogue.
 
 ## Preview

@@ -1,9 +1,12 @@
 /** Drawing adapter shared by the PDE lecture galleries. Experiments draw with the
- * site's Chalkish engine; catalogue thumbnails and `?engine=canvas` use plain Canvas 2D.
- * Design coordinates are 1000 x 610; labels share the exact same viewport transform.
+ * site's Chalkish engine, text included; catalogue thumbnails and `?engine=canvas` use
+ * plain Canvas 2D with the labels on an overlay. Design coordinates are 1000 x 610.
  */
+import {formatTick} from '../../lib/chalkish/src/ticks.js';
+import {PlotFrame} from '../../lib/chalkish/src/plot-frame.js';
+import {layoutTex,canvasMeasure,paintTex} from '../../lib/chalkish/src/tex.js';
 const C={white:'#f4f1e7',muted:'#a6b8ad',grid:'#2a3a31',yellow:'#f0d477',blue:'#8ac8db',red:'#ef9685',green:'#b6d3a0',bg:'#0d1712',dim:'#506358'};
-const W=1000,H=610;
+const W=1000,H=610,FONT='"Neucha", "Shantell Sans", "Open Sans", system-ui, sans-serif';
 let libraryPromise;
 function getLibrary(){
   if(new URLSearchParams(location.search).get('engine')==='canvas')return Promise.resolve(null);
@@ -17,30 +20,40 @@ class Ink {
   dot(x,y,r=4,color=C.yellow,fill=color){this.cmd.push({type:'dot',x,y,r,color,fill,width:1.5});return this;}
   path(points,color=C.white,width=2,dash=false){this.cmd.push({type:'path',points,color,width,dash});return this;}
   text(x,y,text,size=16,color=C.white,align='left'){this.cmd.push({type:'text',x,y,text:String(text),size,color,align});return this;}
+  // A formula in the TeX subset of lib/chalkish/src/tex.js, e.g. String.raw`u^{n+1}_i = ${fmtTex(v)}`.
+  math(x,y,tex,size=20,color=C.white,align='left'){this.cmd.push({type:'math',x,y,tex:String(tex),size,color,align});return this;}
   title(text,sub=''){this.text(42,31,text,20,C.white);this.cmd.at(-1).maxWidth=835;if(sub){this.text(42,57,sub,14,C.muted);this.cmd.at(-1).maxWidth=915;}return this;}
   badge(x,y,text,color=C.yellow){this.text(x,y,text,15,color);return this;}
 }
-function graph(ink,{x=72,y=115,w=858,h=295,xmin=0,xmax=1,ymin=-1,ymax=1,xticks=4,yticks=4,xlabel='x',ylabel='u',labels=true}={}){
-  const X=v=>x+(v-xmin)/(xmax-xmin)*w,Y=v=>y+h-(v-ymin)/(ymax-ymin)*h;
-  for(let i=0;xticks>0&&i<=xticks;i++){const v=xmin+(xmax-xmin)*i/xticks,px=X(v);ink.line(px,y,px,y+h,C.grid,1);if(labels)ink.text(px,y+h+20,fmt(v,3),12,C.muted,'center');}
-  for(let i=0;yticks>0&&i<=yticks;i++){const v=ymin+(ymax-ymin)*i/yticks,py=Y(v);ink.line(x,py,x+w,py,C.grid,1);if(labels)ink.text(x-12,py+4,fmt(v,3),12,C.muted,'right');}
+// graph(): a framed plot on the board (lib/chalkish/src/plot-frame.js does the arithmetic).
+// Ticks: a number asks for about that many intervals at round values (1, 2, 2.5, 5 × 10^k;
+// decades on a log axis); an array gives values or [value, label] pairs, e.g.
+// [[Math.PI, 'π']]; 0 draws none. xscale/yscale: 'linear' or 'log'. Tick labels are
+// optional text: on a small board the Board drops the lower-priority ones that would collide.
+function graph(ink,{x=72,y=115,w=858,h=295,xmin=0,xmax=1,ymin=-1,ymax=1,xticks=4,yticks=4,xlabel='x',ylabel='u',labels=true,xscale='linear',yscale='linear'}={}){
+  const f=new PlotFrame({left:x,right:x+w,bottom:y+h,top:y,xRange:[xmin,xmax],yRange:[ymin,ymax],xScale:xscale,yScale:yscale});
+  const X=v=>f.x(v),Y=v=>f.y(v),label=(value,step)=>step?formatTick(value,step):fmt(value,3);
+  const xs=f.ticks('x',xticks,label),ys=f.ticks('y',yticks,label);
+  if(xs.length||ys.length){ink.line(x+w,y,x+w,y+h,C.grid,1);ink.line(x,y,x+w,y,C.grid,1);}
+  for(const t of xs){const px=t.position;if(px>x+.5&&px<x+w-.5)ink.line(px,y,px,y+h,C.grid,1);if(labels){ink.text(px,y+h+20,t.label,12,C.muted,'center');ink.cmd.at(-1).optional=1+t.priority;}}
+  for(const t of ys){const py=t.position;if(py>y+.5&&py<y+h-.5)ink.line(x,py,x+w,py,C.grid,1);if(labels){ink.text(x-12,py+4,t.label,12,C.muted,'right');ink.cmd.at(-1).optional=1+t.priority;}}
   ink.line(x,y+h,x+w+9,y+h,C.muted,1.2);ink.line(x,y,x,y+h,C.muted,1.2);
-  if(xmin<0&&xmax>0)ink.line(X(0),y,X(0),y+h,C.dim,1.3);
-  if(ymin<0&&ymax>0)ink.line(x,Y(0),x+w,Y(0),C.dim,1.3);
+  if(xscale==='linear'&&xmin<0&&xmax>0)ink.line(X(0),y,X(0),y+h,C.dim,1.3);
+  if(yscale==='linear'&&ymin<0&&ymax>0)ink.line(x,Y(0),x+w,Y(0),C.dim,1.3);
   ink.text(x+w+14,y+h+5,xlabel,14,C.muted);ink.text(x-4,y-16,ylabel,15,C.muted);
-  const clipped=(pts,color,width=2,dash=false)=>{
-    // Segment clipping prevents a deliberately unstable curve from hiding its axes.
-    let group=[]; const flush=()=>{if(group.length>1)ink.path(group,color,width,dash);group=[];};
-    for(const p of pts){if(Number.isFinite(p[0])&&Number.isFinite(p[1])&&p[0]>=xmin-1e-10&&p[0]<=xmax+1e-10&&p[1]>=ymin&&p[1]<=ymax){group.push([X(p[0]),Y(p[1])]);}else flush();}flush();
-  };
-  return {X,Y,x,y,w,h,xmin,xmax,ymin,ymax,contains:(px,py)=>px>=x&&px<=x+w&&py>=y&&py<=y+h,
-    inverse:(px,py)=>[xmin+(px-x)/w*(xmax-xmin),ymax-(py-y)/h*(ymax-ymin)],
-    curve:(fn,color=C.white,width=2,n=400,dash=false)=>clipped(Array.from({length:n+1},(_,i)=>{const v=xmin+(xmax-xmin)*i/n;return [v,fn(v)];}),color,width,dash),
-    series:(xs,ys,color=C.yellow,width=2,dots=false)=>{clipped(xs.map((v,i)=>[v,ys[i]]),color,width);if(dots)xs.forEach((v,i)=>{if(v>=xmin&&v<=xmax&&ys[i]>=ymin&&ys[i]<=ymax)ink.dot(X(v),Y(ys[i]),3.2,color);});},
-    dot:(a,b,r=4,col=C.yellow)=>{if(a>=xmin&&a<=xmax&&b>=ymin&&b<=ymax)ink.dot(X(a),Y(b),r,col);}
+  // Lines are cut at the frame edge, so a deliberately unstable curve cannot hide the axes.
+  const clipped=(xv,yv,color,width=2,dash=false)=>{for(const run of f.clip(xv,yv)){const pts=[];for(let i=0;i<run.length;i+=2)pts.push([run[i],run[i+1]]);ink.path(pts,color,width,dash);}};
+  const inside=(a,b)=>f.contains(X(a),Y(b));
+  return {X,Y,x,y,w,h,xmin,xmax,ymin,ymax,frame:f,contains:(px,py)=>f.contains(px,py),
+    inverse:(px,py)=>f.value(px,py),
+    curve:(fn,color=C.white,width=2,n=400,dash=false)=>{const xv=[],yv=[];for(let i=0;i<=n;i++){const v=f.valueAt('x',i/n);xv.push(v);yv.push(fn(v));}clipped(xv,yv,color,width,dash);},
+    series:(xv,yv,color=C.yellow,width=2,dots=false)=>{clipped(xv,yv,color,width);if(dots)xv.forEach((v,i)=>{if(inside(v,yv[i]))ink.dot(X(v),Y(yv[i]),3.2,color);});},
+    dot:(a,b,r=4,col=C.yellow)=>{if(inside(a,b))ink.dot(X(a),Y(b),r,col);}
   };
 }
 function fmt(x,d=4){if(!Number.isFinite(x))return String(x);if(x===0)return '0';return Math.abs(x)>=1e4||Math.abs(x)<1e-3?x.toExponential(2):Number(x.toPrecision(d)).toString();}
+// fmt for formulas: 1.86e-4 becomes 1.86·10⁻⁴, 1.00e-6 becomes 10⁻⁶ and Infinity ∞.
+function fmtTex(x,d=4){if(Number.isNaN(x))return '\\text{NaN}';if(!Number.isFinite(x))return x>0?'\\infty':'-\\infty';const s=fmt(x,d),[m,e]=s.split('e');if(e===undefined)return s;const k=Number(m);return Math.abs(k)===1?`${k<0?'-':''}10^{${Number(e)}}`:`${k}\\cdot 10^{${Number(e)}}`;}
 function legend(ink,items,y=492,x=72,step=260){items.forEach(([s,c],i)=>{ink.line(x+i*step,y-5,x+27+i*step,y-5,c,2.5);ink.text(x+37+i*step,y,s,15,c);});}
 function drawShape(ctx,p){
   ctx.strokeStyle=p.color||C.white;ctx.fillStyle=p.fill||'transparent';ctx.lineWidth=p.width||1.5;ctx.setLineDash(p.dash?[7,6]:[]);ctx.beginPath();
@@ -50,6 +63,18 @@ function drawShape(ctx,p){
   if(p.type==='path'){p.points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));}
   if(p.fill)ctx.fill();if(p.color)ctx.stroke();
   if(p.type==='arrow'){const a=Math.atan2(p.y2-p.y1,p.x2-p.x1),r=8;ctx.beginPath();ctx.moveTo(p.x2-r*Math.cos(a-.4),p.y2-r*Math.sin(a-.4));ctx.lineTo(p.x2,p.y2);ctx.lineTo(p.x2-r*Math.cos(a+.4),p.y2-r*Math.sin(a+.4));ctx.stroke();}
+}
+// Optional text (tick labels) is dropped where it would overlap other text at the size it is
+// actually painted: the enlarged labels of a narrow board keep the higher-priority ticks.
+function uncrowded(commands,ctx,fontScale){
+  const optional=commands.filter(p=>p.type==='text'&&p.optional);
+  if(!optional.length)return commands;
+  const box=p=>{ctx.font=`${p.size*fontScale}px ${FONT}`;const width=ctx.measureText(p.text).width,size=p.size*fontScale;
+    const left=p.align==='center'?p.x-width/2:p.align==='right'?p.x-width:p.x;return [left-2,p.y-.8*size,left+width+2,p.y+.25*size];};
+  const overlaps=(a,b)=>a[0]<b[2]&&b[0]<a[2]&&a[1]<b[3]&&b[1]<a[3];
+  const kept=commands.filter(p=>p.type==='text'&&!p.optional).map(box),hidden=new Set();
+  for(const p of [...optional].sort((a,b)=>a.optional-b.optional)){const b=box(p);if(kept.some(k=>overlaps(k,b)))hidden.add(p);else kept.push(b);}
+  return hidden.size?commands.filter(p=>!hidden.has(p)):commands;
 }
 class Board {
   constructor(host,{preview=false,onEngine=()=>{}}={}){
@@ -64,13 +89,15 @@ class Board {
         if(!document.querySelector('[data-chalkish-fonts]')){for(const href of [new URL('../../assets/fonts/open-sans/open-sans.css',import.meta.url).href,new URL('../shell.css',import.meta.url).href]){const link=document.createElement('link');link.rel='stylesheet';link.href=href;link.dataset.chalkishFonts='';link.onload=()=>this.paint();document.head.append(link);}}
         this.lib=lib;this.scene=new lib.Scene({background:C.bg});
         this.camera=new lib.Camera2D({centerX:W/2,centerY:H/2,height:H,flipY:false});
-        this.app=lib.mount(this.canvas,{scene:this.scene,camera:this.camera,fixedStep:null,adaptiveQuality:false,dprMax:2});
+        // The frame loop runs only while the board is being written in.
+        this.app=lib.mount(this.canvas,{scene:this.scene,camera:this.camera,fixedStep:null,adaptiveQuality:false,dprMax:2,update:({scene,app})=>{if(!scene.animating){app.stop();this.writeStart=null;}}});
         this.engine='chalkish';
       }catch(e){console.warn('Chalkish initialization failed; using standalone renderer.',e);this.app?.destroy();this.app=null;this.engine='canvas';}}
       this.onEngine(this.engine);this.paint();document.fonts?.ready.then(()=>{if(!this.dead)this.paint();});
     });
   }
-  render(ink){this.commands=ink.cmd||ink;this.paint();}
+  // write: draw the board in stroke by stroke (Chalkish Write), unless motion is reduced.
+  render(ink,{write=false}={}){this.commands=ink.cmd||ink;if(write)this.pendingWrite=!matchMedia('(prefers-reduced-motion: reduce)').matches;this.paint();}
   view(){const r=this.host.getBoundingClientRect(),w=Math.max(1,r.width),h=Math.max(1,r.height),s=Math.min(w/W,h/H);return {w,h,s,ox:(w-W*s)/2,oy:(h-H*s)/2};}
   point(ev){const r=this.host.getBoundingClientRect(),v=this.view();return [(ev.clientX-r.left-v.ox)/v.s,(ev.clientY-r.top-v.oy)/v.s];}
   paint(){
@@ -79,9 +106,15 @@ class Board {
     const dpr=Math.min(devicePixelRatio||1,2),overlay=this.labels.getContext('2d');
     this.labels.width=Math.round(w*dpr);this.labels.height=Math.round(h*dpr);
     overlay.setTransform(dpr,0,0,dpr,0,0);overlay.clearRect(0,0,w,h);overlay.translate(ox,oy);overlay.scale(s,s);
+    const commands=uncrowded(this.commands,overlay,Math.min(2,Math.max(1,W/w)));
     if(this.engine==='chalkish'){
       const L=this.lib;this.scene.clear();
-      for(const p of this.commands){if(p.type==='text')continue;
+      const fontScale=Math.min(2,Math.max(1,W/w));
+      for(const p of commands){
+        // Labels are chalk text on the board: board-unit size (enlarged on narrow boards as
+        // before), never below the site's 10 px text minimum.
+        if(p.type==='text'){this.scene.add(new L.TextLabel(p.text,{x:p.x,y:p.y,size:p.size*fontScale,minPixelSize:10,font:`16px ${FONT}`,align:p.align,baseline:'alphabetic',maxWidth:p.maxWidth||(p.align==='left'?W-p.x-20:undefined),style:{fill:p.color,passes:1}}));continue;}
+        if(p.type==='math'){this.scene.add(new L.MathLabel(p.tex,{x:p.x,y:p.y,size:p.size*fontScale,minPixelSize:10,family:FONT,align:p.align,baseline:'alphabetic',maxWidth:p.align==='left'?W-p.x-20:undefined,style:{fill:p.color,passes:1}}));continue;}
         const style=L.chalkStyle('dusty',{stroke:p.color,fill:p.fill||null,width:p.width||1.5,passes:2,roughness:this.preview ? .15 : .24,dash:p.dash?[7,6]:null});
         if(p.type==='line')this.scene.add(new L.Line(p.x1,p.y1,p.x2,p.y2,{style}));
         if(p.type==='arrow')this.scene.add(new L.Arrow(p.x1,p.y1,p.x2,p.y2,{headLength:8,style}));
@@ -91,21 +124,31 @@ class Board {
       }
       // Chalkish pins the canvas to an inline pixel size; clear it so the CSS size (100% of the host) is measured.
       this.canvas.style.removeProperty('width');this.canvas.style.removeProperty('height');
-      this.camera.setCenter(W/2,H/2);this.camera.setHeight(h/s);this.app.resize();this.app.render();
+      this.camera.setCenter(W/2,H/2);this.camera.setHeight(h/s);this.app.resize();
+      // A repaint during the write (fonts arriving, a resize) continues it at the same point.
+      if(this.pendingWrite||this.writeStart!=null){
+        const now=performance.now();if(this.pendingWrite){this.pendingWrite=false;this.writeStart=now;}
+        this.scene.play(new L.Write(this.scene.roots.slice(),{duration:.9,lag:.125})).advance((now-this.writeStart)/1000);
+        this.app.start();
+      }
+      this.app.render();
     }else{
       this.canvas.width=Math.round(w*dpr);this.canvas.height=Math.round(h*dpr);
       const ctx=this.canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle=C.bg;ctx.fillRect(0,0,w,h);ctx.translate(ox,oy);ctx.scale(s,s);
-      ctx.lineCap='round';ctx.lineJoin='round';for(const p of this.commands)if(p.type!=='text')drawShape(ctx,p);
-    }
-    const fontScale=Math.min(2,Math.max(1,W/w));
-    for(const p of this.commands)if(p.type==='text'){
-      overlay.font=`${p.size*fontScale}px "Neucha", "Shantell Sans", "Open Sans", system-ui, sans-serif`;
-      overlay.fillStyle=p.color;overlay.textAlign=p.align;overlay.textBaseline='alphabetic';
-      const maxWidth=p.maxWidth||(p.align==='left'?W-p.x-20:undefined);
-      if(maxWidth)overlay.fillText(p.text,p.x,p.y,maxWidth);else overlay.fillText(p.text,p.x,p.y);
+      ctx.lineCap='round';ctx.lineJoin='round';for(const p of commands)if(p.type!=='text'&&p.type!=='math')drawShape(ctx,p);
+      const fontScale=Math.min(2,Math.max(1,W/w));
+      for(const p of commands)if(p.type==='text'){
+        overlay.font=`${p.size*fontScale}px ${FONT}`;
+        overlay.fillStyle=p.color;overlay.textAlign=p.align;overlay.textBaseline='alphabetic';
+        const maxWidth=p.maxWidth||(p.align==='left'?W-p.x-20:undefined);
+        if(maxWidth)overlay.fillText(p.text,p.x,p.y,maxWidth);else overlay.fillText(p.text,p.x,p.y);
+      }
+      for(const p of commands)if(p.type==='math'){
+        paintTex(overlay,layoutTex(p.tex,canvasMeasure(overlay,FONT)),{x:p.x,y:p.y,pixels:p.size*fontScale,family:FONT,color:p.color,align:p.align,maxWidth:p.align==='left'?W-p.x-20:undefined});
+      }
     }
   }
   destroy(){this.dead=true;this.ro.disconnect();this.app?.destroy();this.canvas.remove();this.labels.remove();}
 }
 
-export {C,W,H,Ink,graph,fmt,legend,Board};
+export {C,W,H,Ink,graph,fmt,fmtTex,legend,Board};

@@ -3,8 +3,9 @@ import module1 from './kernels.js';
 const __modules = { "board.js": module0, "kernels.js": module1 };
 const moduleValue = (() => {
 const K = __modules['kernels.js'];
-const {Ink,C,graph,legend,fmt} = __modules['board.js'];
+const {Ink,C,graph,legend,fmt,fmtTex} = __modules['board.js'];
 const range=(n,fn)=>Array.from({length:n},(_,i)=>fn(i));
+const PI_TICKS=[[0,'0'],[Math.PI/4,'π/4'],[Math.PI/2,'π/2'],[3*Math.PI/4,'3π/4'],[Math.PI,'π']];
 const frac=x=>{for(let d=1;d<=360;d++)if(Math.abs(x*d-Math.round(x*d))<1e-8)return d===1?String(Math.round(x)):Math.round(x*d)+'/'+d;return fmt(x);};
 const lbl=(lang)=>(ru,en)=>lang==='en'?en:ru;
 const out=(ink,stats=[])=>({ink,stats});
@@ -19,7 +20,7 @@ function gridLab(p,lang){const L=lbl(lang);return {render(){
   if(p.view==='averages')averages.forEach((v,i)=>{const a=g.X(xs[i]),b=g.X(xs[i+1]),zero=g.Y(0),q=g.Y(v);ink.rect(a,Math.min(zero,q),b-a,Math.abs(zero-q),i===selected?'#76673c':'#334d39',C.green);ink.line(a,q,b,q,C.yellow,2);});
   if(p.view==='nodes'&&p.stretch===0&&p.k>=p.n/2){const ka=((p.k+p.n/2)%p.n)-p.n/2;g.curve(x=>Math.sin(K.TAU*ka*x+.35),C.blue,2,400,true);ink.text(90,145,L(`Такие же отсчёты: k = ${ka}`,`Identical samples: k = ${ka}`),16,C.blue);}
   const hs=xs.slice(0,-1).map((x,i)=>xs[i+1]-x);
-  ink.arrow(g.X(xs[selected]),445,g.X(xs[selected+1]),445,C.yellow);ink.text((g.X(xs[selected])+g.X(xs[selected+1]))/2,476,'hᵢ = '+fmt(hs[selected]),15,C.yellow,'center');
+  ink.arrow(g.X(xs[selected]),445,g.X(xs[selected+1]),445,C.yellow);ink.math((g.X(xs[selected])+g.X(xs[selected+1]))/2,476,String.raw`h_i = ${fmtTex(hs[selected])}`,15,C.yellow,'center');
   legend(ink,[[L('Исходная функция','Original function'),C.white],[p.view==='nodes'?L('Узловые значения','Nodal values'):L('Средние по ячейкам','Cell averages'),C.yellow]],524);
   ink.text(72,566,L('Линия между отсчётами не восстанавливается однозначно.','Samples do not uniquely determine the curve between them.'),17,C.muted);
   this.g=g;this.xs=xs;
@@ -45,7 +46,7 @@ function stencil(p,lang){const L=lbl(lang);let nodes=[...(p.nodes??[-1,0,1])];re
   if(nodes.length<=Number(p.m)){ink.text(100,232,L(`Нужно не менее ${Number(p.m)+1} узлов. Сейчас: ${nodes.length}.`,`At least ${Number(p.m)+1} points are required. Selected: ${nodes.length}.`),22,C.red);return out(ink,[[L('Состояние','State'),L('Недостаточно данных','Insufficient data')]]);}
   const ws=K.fdWeights(nodes,Number(p.m)),mom=K.moments(nodes,ws,9),order=K.formalOrder(nodes,ws,Number(p.m));
   nodes.forEach((s,i)=>ink.text(500+s*100,170,frac(ws[i]),18,C.yellow,'center'));
-  ink.text(76,205,L('Коэффициент при hᵏ⁻ᵐ f⁽ᵏ⁾','Coefficient of hᵏ⁻ᵐ f⁽ᵏ⁾'),20,C.muted);
+  ink.math(76,205,String.raw`\text{${L('Коэффициент при','Coefficient of')}}\ h^{k-m} f^{(k)}`,20,C.muted);
   const base=220,cellw=91;
   mom.forEach((m,k)=>{const x=76+k*cellw,col=k===Number(p.m)?C.yellow:Math.abs(m)<1e-9?C.green:C.red;
     ink.rect(x,base,78,80,'#16251d',C.grid);ink.text(x+39,base+21,'k = '+k,13,C.muted,'center');ink.text(x+39,base+48,Math.abs(m)<1e-10?'0':frac(m),16,col,'center');ink.text(x+39,base+68,k===Number(p.m)?'= 1':Math.abs(m)<1e-9?'✓':'≠ 0',14,col,'center');});
@@ -54,7 +55,7 @@ function stencil(p,lang){const L=lbl(lang);let nodes=[...(p.nodes??[-1,0,1])];re
   const testDegree=Math.max(1,Math.min(8,Number(p.degree??(Number(p.m)+order)))),testH=.5,testX=.35,testPower=testDegree-Number(p.m),testFactorial=Array.from({length:testDegree},(_,i)=>i+1).reduce((a,b)=>a*b,1),testFactorialPower=Array.from({length:Math.max(0,testPower)},(_,i)=>i+1).reduce((a,b)=>a*b,1),testExact=testPower>=0?Math.pow(testX,testPower)/testFactorialPower:0,testValue=testPower>=0?ws.reduce((sum,w,i)=>sum+w*Math.pow(testX+testH*nodes[i],testDegree)/testFactorial,0)/Math.pow(testH,Number(p.m)):0,plotX=76,plotY=380,plotW=215,plotH=100;
   ink.rect(plotX,plotY,plotW,plotH,'#15251c',C.grid);ink.rect(305,380,520,128,'#15251c',C.grid);
   ink.text(320,403,L('Проверка точности на полиноме','Accuracy test with a polynomial'),18,C.white);
-  ink.text(320,425,L(`Pₙ(x) = xⁿ/n!,  n = ${testDegree},  h = 1/2,  x = ${testX}`,`Pₙ(x) = xⁿ/n!,  n = ${testDegree},  h = 1/2,  x = ${testX}`),15,C.muted);
+  ink.math(320,425,String.raw`P_n(x) = x^n/n!,\quad n = ${testDegree},\quad h = 1/2,\quad x = ${fmtTex(testX)}`,15,C.muted);
   ink.text(320,449,L(`точная производная: ${fmt(testExact)}`,`exact derivative: ${fmt(testExact)}`),14,C.blue);
   ink.text(320,474,L(`разностный результат: ${fmt(testValue)}`,`stencil result: ${fmt(testValue)}`),14,C.yellow);
   ink.text(320,499,L(`модуль ошибки: ${fmt(Math.abs(testValue-testExact))}`,`absolute error: ${fmt(Math.abs(testValue-testExact))}`),14,C.red);
@@ -98,8 +99,8 @@ function shift(p,lang){const L=lbl(lang);return {render(){
   }
   Object.entries(coeffs).forEach(([s,w])=>{const j=K.wrap(i+Number(s),16);ink.arrow(x(j),inputY+66,x(i),dy+244,C.yellow,2);ink.text((x(j)+x(i))/2+(Number(s)*8),260+Number(s)*14,(w>0?'+':'')+frac(w),14,C.yellow,'center');});
   const outBase=475,outScale=26/Math.max(1e-6,...v.map(q=>Math.abs(q))),outPoints=v.map((q,j)=>[x(j),outBase-q*outScale]);
-  ink.text(44,420,p.op==='compose'?'vᵢ = Δ²uᵢ':'vᵢ = P(E)uᵢ',16,C.yellow);ink.line(x(0),outBase,x(15),outBase,C.dim,1);ink.path(outPoints,C.yellow,2);outPoints.forEach((pt,j)=>ink.dot(pt[0],pt[1],j===i?5:3,j===i?C.blue:C.yellow));
-  ink.text(75,545,p.op==='compose'?'(E−I)(E−I) = E²−2E+I':p.op==='laplace'?'(E−I)(I−E⁻¹) = E−2I+E⁻¹':'Eˢuᵢ = uᵢ₊ₛ',18,C.yellow);
+  ink.math(44,420,p.op==='compose'?String.raw`v_i = \Delta^2 u_i`:String.raw`v_i = P(E)\,u_i`,16,C.yellow);ink.line(x(0),outBase,x(15),outBase,C.dim,1);ink.path(outPoints,C.yellow,2);outPoints.forEach((pt,j)=>ink.dot(pt[0],pt[1],j===i?5:3,j===i?C.blue:C.yellow));
+  ink.math(75,545,p.op==='compose'?String.raw`(E-I)(E-I) = E^2 - 2E + I`:p.op==='laplace'?String.raw`(E-I)(I-E^{-1}) = E - 2I + E^{-1}`:String.raw`E^s u_i = u_{i+s}`,18,C.yellow);
   ink.text(75,580,L('Здесь h = 1/N; для производной разность делят на hᵐ.','Here h = 1/N; divide an m-th difference by hᵐ for a derivative.'),14,C.muted);
   return out(ink,[[L('Индекс i','Index i'),i],[L('Вход uᵢ','Input uᵢ'),fmt(u[i])],[L('Результат','Output'),fmt(v[i])],[L('Сумма весов','Sum of weights'),fmt(K.sum(Object.values(coeffs)))]]);
 }};}
@@ -118,7 +119,7 @@ function compact(p,lang){const L=lbl(lang);return {render(){
 }};}
 function dispersion(p,lang){const L=lbl(lang);return {render(){
   const xi=p.xi*Math.PI,ks=K.modifiedWave(p.kind,xi),ink=new Ink().title(L('Как сетка искажает производную волны','How the grid distorts a wave derivative'),L('Для u(x) = sin(kx) проверяем, как сетка меняет волновое число k.','For u(x) = sin(kx), we check how the grid changes the wavenumber k.'));
-  const g=graph(ink,{x:70,y:126,w:460,h:294,xmin:0,xmax:Math.PI,ymin:0,ymax:Math.PI,xticks:4,xlabel:'ξ',ylabel:'ξ*'});
+  const g=graph(ink,{x:70,y:126,w:460,h:294,xmin:0,xmax:Math.PI,ymin:0,ymax:Math.PI,xticks:PI_TICKS,yticks:PI_TICKS,xlabel:'ξ',ylabel:'ξ*'});
   g.curve(x=>x,C.white,1.8);const kinds=['central','fourth','compact4','compact6'],cols=[C.red,C.blue,C.green,C.yellow];
   kinds.forEach((kind,j)=>g.curve(x=>K.modifiedWave(kind,x),cols[j],p.kind===kind?3:1.2));
   ink.line(g.X(xi),g.y,g.X(xi),g.y+g.h,C.muted,1,true);g.dot(xi,ks,5,C.yellow);
@@ -136,9 +137,9 @@ function spacetime(p,lang){const L=lbl(lang);return {render(){
   for(let r=0;r<=steps;r++){ink.line(76,origin.y+r*sy,654,origin.y+r*sy,C.grid);ink.text(59,origin.y+r*sy+5,r===0?'n+1':`n${r>1?'−'+(r-1):''}`,13,C.muted,'right');for(let j=-5;j<=5;j++)ink.dot(origin.x+j*sx,origin.y+r*sy,2.3,C.dim);}
   let current=new Set([0]);
   for(let r=0;r<steps;r++){const next=new Set();for(const j of current){for(const q of active){const k=j+q.s;next.add(k);if(Math.abs(j)<=5&&Math.abs(k)<=5)ink.line(origin.x+j*sx,origin.y+r*sy,origin.x+k*sx,origin.y+(r+1)*sy,q.w<0?'#795249':'#3d6157',1.2);}}current=next;for(const k of next)if(Math.abs(k)<=5)ink.dot(origin.x+k*sx,origin.y+(r+1)*sy,3.6,C.blue);}
-  const foot=origin.x-steps*p.C*sx;ink.arrow(foot,bottom,origin.x,origin.y,C.yellow,3);ink.dot(origin.x,origin.y,8,C.yellow);ink.text(origin.x+17,origin.y-16,L('искомое uᵢⁿ⁺¹','target uᵢⁿ⁺¹'),16,C.yellow);
+  const foot=origin.x-steps*p.C*sx;ink.arrow(foot,bottom,origin.x,origin.y,C.yellow,3);ink.dot(origin.x,origin.y,8,C.yellow);ink.math(origin.x+17,origin.y-16,String.raw`\text{${L('искомое','target')}}\ u_i^{n+1}`,16,C.yellow);
   ink.text(708,144,L('Веса одного шага','One-step weights'),18,C.white);
-  weights.forEach((v,j)=>{ink.text(708,191+j*47,['w₋','w₀','w₊'][j]+' = '+fmt(v),21,v<0?C.red:C.green);});
+  weights.forEach((v,j)=>{ink.math(708,191+j*47,['w_-','w_0','w_+'][j]+' = '+fmtTex(v),21,v<0?C.red:C.green);});
   const gmax=K.maxAmplification(p.scheme,p.C),stable=gmax<=1+1e-10;
   ink.text(708,365,'max |G| = '+fmt(gmax),19,stable?C.green:C.red);
   ink.text(708,400,stable?L('нет роста мод','no modal growth'):L('есть растущие моды','growing modes exist'),16,stable?C.green:C.red);
@@ -157,7 +158,7 @@ function balance(p,lang){const L=lbl(lang),n=8,h=1/n,a=Number(p.speed??1),dt=Num
   for(let i=0;i<n;i++){const x=x0+i*w;ink.rect(x,base-u[i]*125,w-6,u[i]*125,'#334c3c',C.green);ink.rect(x+4,base-v[i]*125,w-14,v[i]*125,null,C.yellow,2);ink.text(x+w/2-3,base+29,'i = '+i,14,C.muted,'center');ink.text(x+w/2-3,base+59,fmt(v[i]-u[i],3),16,C.yellow,'center');}
   for(let j=0;j<=n;j++){const x=x0+j*w-3,dx=F[j]*50;ink.arrow(x-dx/2,dy,x+dx/2,dy,C.blue,2.3);ink.text(x,dy-22,fmt(F[j],2),14,C.blue,'center');}
   ink.text(75,420,L('Один шаг переноса:','One transport step:'),18,C.white);
-  ink.text(75,463,'uᵢⁿ⁺¹ = uᵢⁿ + (aΔt/h)(uᵢ₋₁ⁿ − uᵢⁿ)',21,C.yellow);
+  ink.math(75,463,String.raw`u_i^{n+1} = u_i^n + \frac{a\,\Delta t}{h}\left(u_{i-1}^n - u_i^n\right)`,21,C.yellow);
   ink.text(75,506,`t = ${fmt(t,3)};   ${L('сумма до','total before')} = ${fmt(M)};   ${L('после','after')} = ${fmt(Mn)}`,17,C.white);
   ink.text(75,560,L('Периодическая граница возвращает поток справа налево. Внутренние потоки меняют распределение, сумма запаса сохраняется.','The periodic boundary returns the right flux to the left. Interior fluxes change the distribution while conserving the total.'),16,C.muted);
   return out(ink,[['t',fmt(t)],['Mⁿ',fmt(M)],['Mⁿ⁺¹',fmt(Mn)],[L('Изменение суммы','Change in total'),fmt(Mn-M)]]);
@@ -185,7 +186,7 @@ function cost(p,lang){const L=lbl(lang);return {render(){
   const a=K.costEstimate(p),b=K.costEstimate({...p,n:p.n*2}),ratio=b.operations/a.operations,ink=new Ink().title(L('Уточнение сетки увеличивает и число узлов, и число шагов','Refinement increases both grid size and the number of time steps'),L('Расчёт до одного и того же физического времени T = 1.','Both calculations reach the same physical time T = 1.'));
   const base=350,barmax=200,barw=85,xs=[145,435,725],vals=[[a.dof,b.dof],[a.steps,b.steps],[a.operations,b.operations]],names=[L('Неизвестные','Unknowns'),L('Временные шаги','Time steps'),L('Работа','Work')];
   for(let j=0;j<3;j++){const max=vals[j][1],h1=barmax*vals[j][0]/max,h2=barmax;ink.rect(xs[j],base-h1,barw,h1,'#375344',C.green);ink.rect(xs[j]+barw+14,base-h2,barw,h2,'#76673d',C.yellow);ink.text(xs[j]+barw,392,names[j],19,C.white,'center');ink.text(xs[j]+barw,436,'× '+fmt(vals[j][1]/vals[j][0]),27,C.yellow,'center');ink.text(xs[j]+barw/2,base+22,'n',15,C.green,'center');ink.text(xs[j]+barw*1.5+14,base+22,'2n',15,C.yellow,'center');}
-  ink.text(82,510,`W(2n) / W(n) = 2${p.dim===1?'¹':p.dim===2?'²':'³'} × ${p.mode==='diffusion'?'2²':'2'} = ${ratio}`,25,C.white);
+  ink.math(82,510,String.raw`W(2n)/W(n) = 2^{${p.dim}} \times ${p.mode==='diffusion'?'2^2':'2'} = ${fmtTex(ratio)}`,25,C.white);
   ink.text(82,557,L(`Память: ${fmt(a.memory/2**20)} → ${fmt(b.memory/2**20)} MiB; три массива binary64.`,`Memory: ${fmt(a.memory/2**20)} → ${fmt(b.memory/2**20)} MiB; three binary64 arrays.`),17,C.muted);
   return out(ink,[['N_dof',fmt(a.dof)],['N_steps',fmt(a.steps)],[L('Условных операций','Illustrative operations'),fmt(a.operations)],[L('Показатель n','Power of n'),a.exponent]]);
 }};}

@@ -5,6 +5,7 @@ import test from 'node:test';
 import { actionForEvent, KEY_MAP } from '../demos/keys.js';
 import { initialLanguage } from '../demos/locale.js';
 import { paramsFromState, quantize } from '../demos/pde-gallery/gallery.js';
+import { layoutTex, parseTex } from '../lib/chalkish/src/tex.js';
 
 const ROOT = new URL('../', import.meta.url);
 const read = (path) => readFile(new URL(path, ROOT), 'utf8');
@@ -183,7 +184,13 @@ for (const dir of GALLERIES) {
       ids.add(demo.id);
       assert.ok(Number.isInteger(demo.group) && groups[demo.group], `${where}: group index`);
       for (const field of ['title', 'short', 'question', 'explanation', 'caveat']) assert.ok(pair(demo[field]), `${where}: ${field} is a [ru, en] pair`);
-      assert.ok(text(demo.equation), `${where}: equation`);
+      // An equation is chalk TeX ({ tex } or { tex: [ru, en] }), plain text or fixed markup.
+      if (demo.equation?.tex !== undefined) {
+        for (const tex of [].concat(demo.equation.tex)) assert.doesNotThrow(() => parseTex(tex), `${where}: equation ${tex}`);
+        assert.ok(typeof demo.equation.tex === 'string' || pair(demo.equation.tex), `${where}: equation.tex`);
+      } else {
+        assert.ok(text(demo.equation), `${where}: equation`);
+      }
       assert.ok(Array.isArray(demo.sources) && demo.sources.every((key) => sources[key]), `${where}: sources exist`);
       if (demo.visible !== undefined) assert.equal(typeof demo.visible, 'function', `${where}: visible(key, params)`);
       for (const field of ['action', 'stepLabel']) if (demo[field] !== undefined) assert.ok(pair(demo[field]), `${where}: ${field}`);
@@ -260,7 +267,40 @@ for (const dir of GALLERIES) {
       }
     }
   });
+
+  test(`${dir}: every board formula is valid chalk TeX in every preset`, async () => {
+    const catalog = (await import(`../${dir}src/catalog.js`)).default;
+    const labs = await import(`../${dir}src/labs.js`);
+    const createLab = labs.createLab ?? labs.default.createLab;
+    const measure = (text) => Array.from(text).length * 0.5;
+    for (const lang of ['ru', 'en']) {
+      for (const demo of catalog.demos) {
+        for (const preset of [{ values: {} }, ...(demo.presets ?? [])]) {
+          const model = createLab(demo.id, { ...catalog.defaults(demo), ...preset.values }, lang);
+          if (typeof model.mount === 'function') continue;
+          if (demo.dynamic) for (let i = 0; i < 3; i += 1) model.step();
+          const view = model.render();
+          if (view.equation?.tex) for (const tex of [].concat(view.equation.tex)) assert.doesNotThrow(() => parseTex(tex), `${dir}#${demo.id}: ${tex}`);
+          for (const command of view.ink.cmd.filter((c) => c.type === 'math')) {
+            assert.doesNotThrow(() => layoutTex(command.tex, measure), `${dir}#${demo.id} (${lang}): ${command.tex}`);
+          }
+        }
+      }
+    }
+  });
 }
+
+test('fmtTex writes numbers as formula TeX', async () => {
+  globalThis.location ??= { search: '' };
+  const { fmtTex } = await import('../demos/pde-gallery/board.js');
+  const cases = [[0, '0'], [0.55, '0.55'], [-3, '-3'], [1.86e-4, '1.86\\cdot 10^{-4}'], [1e-6, '10^{-6}'],
+    [-1e-6, '-10^{-6}'], [2.5e5, '2.5\\cdot 10^{5}'], [Infinity, '\\infty'], [-Infinity, '-\\infty'], [NaN, '\\text{NaN}']];
+  const measure = (text) => Array.from(text).length * 0.5;
+  for (const [value, tex] of cases) {
+    assert.equal(fmtTex(value), tex);
+    assert.doesNotThrow(() => layoutTex(tex, measure));
+  }
+});
 
 test('on phones every experiment view uses the shared 70/30 controls sheet', async () => {
   // Pages whose controls live in static markup carry the bar next to the controls it hides.

@@ -31,7 +31,8 @@ export const demos = [
     group: 0,
     title: ['Секущая и производная', 'Secant and derivative'],
     short: ['Центральная разность и её ошибка.', 'A centered difference and its error.'],
-    equation: ['f′(x) ≈ [f(x+h) − f(x−h)] / 2h', 'f′(x) ≈ [f(x+h) − f(x−h)] / 2h'],
+    // Chalk TeX (lib/chalkish/src/tex.js); { tex: [ru, en] } when it contains words.
+    equation: { tex: String.raw`f'(x) \approx \frac{f(x+h) - f(x-h)}{2h}` },
     controls: [
       S('fn', 'Функция', 'Function', 'sin', [O('sin', 'sin x', 'sin x'), O('gauss', 'Гауссов импульс', 'Gaussian pulse')]),
       R('h', 'Шаг h', 'Step h', 0.5, 0.05, 1.5, 0.05),
@@ -63,7 +64,7 @@ export const demos = [
     thumbSteps: 30,
     title: ['Перенос против потока', 'Upwind transport'],
     short: ['Импульс движется и расплывается.', 'A pulse moves and smears out.'],
-    equation: ['uₜ + uₓ = 0;   uᵢⁿ⁺¹ = uᵢⁿ − Co (uᵢⁿ − uᵢ₋₁ⁿ)', 'uₜ + uₓ = 0;   uᵢⁿ⁺¹ = uᵢⁿ − Co (uᵢⁿ − uᵢ₋₁ⁿ)'],
+    equation: { tex: String.raw`u_t + u_x = 0;\qquad u_i^{n+1} = u_i^n - \mathrm{Co}\,(u_i^n - u_{i-1}^n)` },
     controls: [
       R('courant', 'Число Куранта Co', 'Courant number Co', 0.5, 0.1, 1.2, 0.05),
       R('n', 'Число ячеек N', 'Number of cells N', 80, 20, 320, 20),

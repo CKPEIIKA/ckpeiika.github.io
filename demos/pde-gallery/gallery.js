@@ -2,6 +2,7 @@
 // A lecture supplies its catalog, its model factory and a few titles; see startGallery().
 
 import { Board } from './board.js';
+import { renderTexElement } from '../../lib/chalkish/src/tex-element.js';
 import { bindControlsSheet } from '../controls-sheet.js';
 import { thumbnailCommands } from './thumbnails.js';
 import { bindHelpDialog, bindKeys, renderKeyHelp } from '../keys.js';
@@ -83,6 +84,7 @@ export function startGallery(config) {
   const states = new Map();
   let lang = pageLanguage();
   let filter = -1, active = null, model = null, board = null, params = {}, lastView = null;
+  let writeIn = false; // the next draw writes the board in (only when an experiment opens)
   let playing = false, accumulator = 0, lastFrame = 0, raf = 0, galleryBoards = [], lastGalleryScroll = 0;
   let thumbnailQueue = [], thumbnailTimer = 0, thumbnailWorker = null, liveFrames = 0;
   const controlRows = new Map();
@@ -118,10 +120,26 @@ export function startGallery(config) {
     sheet.sync();
   }
 
+  // Equations: { tex } or { tex: [ru, en] } are chalk TeX (lib/chalkish/src/tex.js);
+  // [ru, en] is plain text; a string is fixed markup from the catalog file.
+  let equationTex = null, equationKey = null;
   function showEquation(value) {
-    // Catalog equations are either bilingual plain text or fixed markup from the catalog file.
-    if (Array.isArray(value)) $('equation').textContent = T(value);
-    else $('equation').innerHTML = value;
+    const tex = value && typeof value === 'object' && !Array.isArray(value) ? T(value.tex) : null;
+    const key = JSON.stringify([tex ?? value, lang]);
+    if (key === equationKey) return; // draw() runs every step; redraw only on change
+    equationKey = key;
+    const bar = $('equation');
+    if (tex !== null) {
+      if (equationTex) equationTex.update(tex);
+      else equationTex = renderTexElement(bar, tex);
+      return;
+    }
+    equationTex?.dispose();
+    equationTex = null;
+    bar.setAttribute('aria-label', L('Уравнение', 'Equation'));
+    if (Array.isArray(value)) bar.textContent = T(value);
+    else if (typeof value === 'string') bar.innerHTML = value;
+    else bar.textContent = '';
   }
 
   // Thumbnails never block the page: a module worker computes them when the lecture names its
@@ -361,9 +379,9 @@ export function startGallery(config) {
     if (!model || (!board && !isLive())) return;
     try {
       lastView = model.render();
-      if (lastView.equation) $('equation').textContent = lastView.equation;
-      else showEquation(active.equation);
-      if (lastView.ink) board?.render(lastView.ink);
+      showEquation(lastView.equation ? (typeof lastView.equation === 'string' ? [lastView.equation, lastView.equation] : lastView.equation) : active.equation);
+      if (lastView.ink) board?.render(lastView.ink, { write: writeIn });
+      writeIn = false;
       if (isLive()) syncControls(); // live scenes move params themselves (e.g. the time slider)
       $('equation-caption').textContent = lastView.caption ?? '';
       $('equation-caption').hidden = !lastView.caption;
@@ -495,6 +513,7 @@ export function startGallery(config) {
     };
     $('speed').value = d.speed ?? 24;
     buildControls();
+    writeIn = true;
     restart();
     $('controls-panel').scrollTop = 0;
     scrollTo(0, 0);
