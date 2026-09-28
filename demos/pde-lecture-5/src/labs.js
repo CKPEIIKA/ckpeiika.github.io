@@ -119,14 +119,14 @@ function ssp(p,L){const n=40,h=1/n,u=initialAverages(n,p.profile),sol=rkStep(u,p
  const output=response(ink,[[L('Этап','Stage'),`${phase}/${sol.stages.length-1}`],['ν',p.nu],['TVⁿ',tv(u)],['TVⁿ⁺¹',tv(sol.out)]],u.map((v,i)=>({cell:i,input:v,stage1:arr[1][i],stage2:arr[2]?.[i]??sol.out[i],after:sol.out[i]})));output.equation={tex:p.method==='ssp2'?String.raw`\text{SSP RK2: } u^{(1)} = u^n + \tau L(u^n);\qquad u^{(2)} = u^{(1)} + \tau L(u^{(1)});\qquad u^{n+1} = \frac12 u^n + \frac12 u^{(2)}`:String.raw`\text{Midpoint: } u^* = u^n + \frac12\tau L(u^n);\qquad u^{n+1} = u^n + \tau L(u^*)`};return output;}};}
 
 function enoLab(p,L){return {render(){const data=localData(p.profile,p.position,1,p.noise),sel=eno(data.get,0,p.order),coef=polynomialFromAverages(sel.values,sel.offsets),ink=new Ink();
- ink.title(L('ENO: не взвешиваем, а рекурсивно выбираем','ENO: recursively select, rather than blend'),L('Жёлтые отрезки — выбранные средние; зелёная линия — общая правая грань.','Yellow segments are the selected averages; green marks the target interface.'));
+ ink.title(L('ENO: шаблон выбирается шаг за шагом','ENO: the stencil is chosen step by step'),L('Жёлтые отрезки — выбранные средние; зелёная линия — общая правая грань.','Yellow segments are the selected averages; green marks the target interface.'));
  const exactAtJump=p.profile==='jump'&&Math.abs(p.position-.5)<1e-10;const g=localGraph(ink,data,{y:110,h:220,xmin:-3.5,xmax:3.5,selection:sel.offsets});
  g.curve(x=>x>=sel.offsets[0]-.5&&x<=sel.offsets.at(-1)+.5?poly(coef,x):NaN,C.yellow,3,550);g.dot(.5,sel.value,6,C.green);
  ink.text(72,378,L('Сравнение |Δᵏū|','Compare |Δᵏū|'),17,C.white);ink.text(429,378,L('выбор','choice'),17,C.white);ink.text(660,378,L('текущий набор ячеек','current cell set'),17,C.white);
  let left=0;
  sel.decisions.forEach((d,k)=>{const y=407+32*k;ink.text(72,y,`k=${d.degree}:  ${F(Math.abs(d.dl))}   :   ${F(Math.abs(d.dr))}`,18,C.white);ink.text(435,y,d.chooseLeft?L('← влево','← left'):L('вправо →','right →'),18,C.yellow);left=d.chosen;ink.text(656,y,`{${Array.from({length:d.degree+1},(_,j)=>left+j).join(', ')}}`,18,C.yellow);});
  const integralErr=maxabs(sel.offsets.map((j,k)=>polynomialAverage(coef,j-.5,j+.5)-sel.values[k]));
- footMath(ink,String.raw`\text{${L('Грань','Interface')}}:\quad u^-_{i+½} = ${T(sel.value)}\qquad \text{${L('ошибка средних','mean residual')}} = ${T(integralErr)}`,L('Меньшая разность — локальный критерий; «ENO» не означает строгую TVD-гарантию.','The smaller difference is a local criterion; ENO does not mean a strict TVD guarantee.'));
+ footMath(ink,String.raw`\text{${L('Грань','Interface')}}:\quad u^-_{i+½} = ${T(sel.value)}\qquad \text{${L('ошибка средних','mean residual')}} = ${T(integralErr)}`,L('Меньшая разность — локальный критерий; малые осцилляции порядка hʳ возможны.','The smaller difference is a local criterion; small oscillations of order hʳ remain possible.'));
  return response(ink,[[L('Ячейки','Cells'),sel.offsets.join(', ')],['u⁻',sel.value],[L('Эталон на грани','Reference at face'),exactAtJump?L('разрыв','jump'):data.f(.5)],[L('Невязка средних','Average residual'),integralErr]],sel.decisions.map(d=>({degree:d.degree,delta_left:d.dl,delta_right:d.dr,chosen_left:d.chosen,face_value:sel.value})));}};}
 
 function wenoCandidates(p,L){return {render(){const data=localData(p.profile,p.position),vals=[-2,-1,0,1,2].map(data.get),polys=wenoPolynomials(vals),w=weno5(vals,'linear'),ink=new Ink();
@@ -135,7 +135,7 @@ function wenoCandidates(p,L){return {render(){const data=localData(p.profile,p.p
  polys.forEach((co,k)=>{const col=p.candidate===-1||p.candidate===k?colors[k]:C.dim;g.curve(x=>x>=k-2.5&&x<=k+.5?poly(co,x):NaN,col,p.candidate===k?3.5:2,400);g.dot(.5,w.q[k],5,col);});
  for(let k=0;k<3;k++){const x=80+k*300;ink.line(x,400,x+32,400,colors[k],3);ink.text(x+43,406,`S${k}:  q${k} = ${F(w.q[k])}`,19,colors[k]);ink.text(x,441,`d${k} = ${w.optimal[k]}`,20,C.white);}
  formula(ink,78,490,String.raw`\sum_k d_k q_k = ${T(w.value)}\qquad u(x_{i+½}) = ${exactAtJump?String.raw`\text{${L('разрыв','jump')}}`:T(data.f(.5))}`,C.green,23);
- foot(ink,L('Пятый порядок получается для значения на грани, а не для произвольного x.','Fifth order is obtained at the interface, not at arbitrary x.'),L('После разрыва оптимальные линейные веса уже не знают, какой шаблон следует подавить.','At a jump, optimal linear weights do not know which contaminated stencil to suppress.'));
+ foot(ink,L('Пятый порядок — у значения именно на грани xᵢ₊½.','Fifth order holds for the value at the interface itself.'),L('После разрыва оптимальные линейные веса уже не знают, какой шаблон следует подавить.','At a jump, optimal linear weights do not know which contaminated stencil to suppress.'));
  return response(ink,[['q₀',w.q[0]],['q₁',w.q[1]],['q₂',w.q[2]],[L('Ошибка на грани','Interface error'),exactAtJump?'—':w.value-data.f(.5)]],w.q.map((q,k)=>({stencil:k,interface_value:q,optimal_weight:w.optimal[k],weighted_term:w.optimal[k]*q,reference:exactAtJump?'undefined_at_jump':data.f(.5)})));}};}
 
 function wenoWeights(p,L){return {render(){const data=localData(p.profile,p.position,p.amplitude),v=[-2,-1,0,1,2].map(data.get),js=weno5(v,'js',10**p.logeps),z=weno5(v,'z',10**p.logeps),ink=new Ink();
@@ -160,7 +160,7 @@ function critical(p,L){let g,probe=4;return {click(x,y){if(!g?.contains(x,y))ret
  legend(ink,[[L('оптимальные d','optimal d'),C.white],['WENO-JS',C.yellow],['WENO-Z',C.green]],454);
  const rate=key=>{const r=convergenceRate(rows,key,probe);return r===null?'—':T(r);};
  formula(ink,72,493,String.raw`h = ${T(rows[probe].h)} \to h/2:\quad p_{\text{linear}} = ${rate('linear_error')};\quad p_{\mathrm{JS}} = ${rate('js_error')};\quad p_{\mathrm{Z}} = ${rate('z_error')}`,C.white,19);
- foot(ink,L('Изменяйте положение критической точки и ε, а не только число сеток.','Vary the critical-point location and ε, not just the grid count.'),L('Ошибки ниже 10⁻¹⁶ показаны на нижней линии; порядок при E ≤ 10⁻¹⁴ не выводится.','Errors below 10⁻¹⁶ are placed at the floor; rates involving E ≤ 10⁻¹⁴ are suppressed.'));
+ foot(ink,L('Изменяйте положение критической точки и ε вместе с числом сеток.','Vary the critical-point location and ε together with the grid count.'),L('Ошибки ниже 10⁻¹⁶ показаны на нижней линии; порядок при E ≤ 10⁻¹⁴ не выводится.','Errors below 10⁻¹⁶ are placed at the floor; rates involving E ≤ 10⁻¹⁴ are suppressed.'));
  return response(ink,[['h',rows[probe].h],['p linear',rate('linear_error')],['p JS',rate('js_error')],['p Z',rate('z_error')]],rows.map((r,i)=>({...r,p_linear:i<8?convergenceRate(rows,'linear_error',i)??'':'',p_JS:i<8?convergenceRate(rows,'js_error',i)??'':'',p_Z:i<8?convergenceRate(rows,'z_error',i)??'':''})));}};}
 
 function faceReport(u,i,method,eps,L){const get=j=>u[mod(j,u.length)];if(['wenojs','wenoz','linear5'].includes(method)){const r=weno5([-2,-1,0,1,2].map(j=>get(i+j)),method==='wenoz'?'z':method==='linear5'?'linear':'js',eps);return {text:`ω = (${r.weights.map(F).join(', ')})     u⁻ = ${F(r.value)}`,weights:r.weights};}
@@ -185,7 +185,7 @@ function burgers(p,L){const h=2/p.N,xs=Array.from({length:p.N},(_,i)=>-1+(i+.5)*
  formula(ink,74,440,String.raw`u^- = ${T(left)}\qquad u^+ = ${T(right)}\qquad\to\qquad F(u^-,u^+) = ${T(f)}`,C.green,22);
  const mass=h*sum(u),initialMass=h*sum(initial),balance=mass-initialMass-budget;
  formula(ink,74,481,String.raw`M-M_0 = ${T(mass-initialMass)}\qquad \int(F_L-F_R)\,dt = ${T(budget)}`,C.white,19);
- footMath(ink,String.raw`L_1 = ${T(2*norm1(diff(u,exact)))}\qquad \text{${L('дефект баланса массы','mass-balance defect')}} = ${T(balance)}`,L('Точное решение — энтропийное; выбросы реконструкции не маскируются.','The exact reference is the entropy solution; reconstruction overshoots are not masked.'));
+ footMath(ink,String.raw`L_1 = ${T(2*norm1(diff(u,exact)))}\qquad \text{${L('дефект баланса массы','mass-balance defect')}} = ${T(balance)}`,L('Точное решение — энтропийное; выбросы реконструкции показаны такими, какие есть.','The exact reference is the entropy solution; reconstruction overshoots show as computed.'));
  return response(ink,[['t',time],['u⁻',left],['u⁺',right],['F',f],[L('Дефект баланса','Balance defect'),balance]],u.map((v,i)=>({x:xs[i],numerical:v,exact:exact[i],error:v-exact[i]})));}};}
 
 function createLab(id,params,lang='ru'){

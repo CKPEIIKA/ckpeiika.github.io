@@ -48,7 +48,7 @@ export const demos = [
       'MathLabel(tex, { size }) разбирает подмножество TeX (src/tex.js) и раскладывает его в единицах em шрифта доски: индексы, дроби, корни, акценты, \\left…\\right, матрицы и cases. Рендерер рисует глифы мелом; texToText даёт ту же формулу текстом для экранных чтецов.',
       'MathLabel(tex, { size }) parses a TeX subset (src/tex.js) and lays it out in em of the board font: scripts, fractions, roots, accents, \\left…\\right, matrices and cases. The renderer draws the glyphs in chalk; texToText gives the same formula as text for screen readers.',
     ],
-    caveat: ['Неизвестная команда вызывает TexError при создании, а не рисуется неправильно. Шрифт — Neucha; начертание математики упрощено.', 'An unknown command throws a TexError at creation instead of drawing wrongly. The font is Neucha; math typography is simplified.'],
+    caveat: ['Неизвестная команда вызывает TexError при создании, и ошибка видна сразу. Шрифт — Neucha; начертание математики упрощено.', 'An unknown command throws a TexError at creation, so the mistake shows at once. The font is Neucha; math typography is simplified.'],
     sources: ['texbook'],
   },
   {

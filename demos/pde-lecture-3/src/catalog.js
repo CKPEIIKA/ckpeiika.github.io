@@ -57,7 +57,7 @@ const demos=[
  presets:[P(['Область аппроксимации','Truncation region'],{precision:'f64',logh:-1}),P(['Провал вычитания','Cancellation'],{precision:'f64',logh:-16}),P(['Одинарная точность','Single precision'],{precision:'f32',logh:-4})],
  question:['Почему график ошибки перестаёт падать? Сравните binary32 и binary64, не меняя саму формулу.','Why does the error stop decreasing? Compare binary32 and binary64 without changing the formula.'],
  explanation:['Каждая точка графика — результат вычитания близких чисел. В режиме binary32 округляются аргументы, значения функции и промежуточные операции. При малых h округление начинает преобладать, поэтому кривая становится неровной.','Every point is the result of subtracting nearby numbers. In binary32 mode, arguments, function values and intermediate operations are rounded. At small h, round-off dominates and the curve becomes jagged.'],
- caveat:['Math.exp вычисляется встроенной функцией JavaScript; режим binary32 округляет её результат и не моделирует конкретную библиотеку expf. Нулевые ошибки на графике помечаются отдельно.','Math.exp is the JavaScript implementation; binary32 mode rounds its result rather than emulating a specific expf library. Exactly zero errors are marked separately on the plot.'],sources:['heathRound']
+ caveat:['Math.exp — встроенная функция JavaScript; в режиме binary32 её результат округляется до одинарной точности. Нулевые ошибки на графике помечаются отдельно.','Math.exp is the JavaScript implementation; binary32 mode rounds its result to single precision. Exactly zero errors are marked separately on the plot.'],sources:['heathRound']
 },
 {
  id:'shift',group:2,title:['Алгебра операторов сдвига','The algebra of shift operators'],short:['E перемещает данные; полином строит шаблон','E shifts data; a polynomial builds a stencil'],
@@ -66,7 +66,7 @@ const demos=[
  presets:[P(['Один сдвиг','One shift'],{op:'shift'}),P(['Симметричная разность','Symmetric difference'],{op:'laplace'}),P(['Композиция','Composition'],{op:'compose'})],
  question:['Сравните Δ² и Δ∇. Коэффициенты похожи; почему они относятся к разным точкам?','Compare Δ² and Δ∇. The weights look similar; why are the stencils centered at different locations?'],
  explanation:['Операторы действуют на периодический массив из 16 значений. Композиция соответствует перемножению полиномов по E. Показаны именно безразмерные разности, до деления на h или h².','These operators act on a periodic array of 16 values. Composition is polynomial multiplication in E. The displayed results are dimensionless differences, before division by h or h².'],
- caveat:['Запись E = exp(hD), D = d/dx, используется формально через ряд Тейлора при достаточной гладкости. Она не означает, что матрицу экспоненты необходимо вычислять в программе.','The relation E = exp(hD), D = d/dx, is a formal Taylor-series identity for sufficiently smooth functions. It does not require a matrix exponential in the implementation.'],sources:['scijs','taylor']
+ caveat:['Запись E = exp(hD), D = d/dx, — формальное тождество ряда Тейлора для достаточно гладких функций; в программе E действует как сдвиг на одну ячейку.','The relation E = exp(hD), D = d/dx, is a formal Taylor-series identity for sufficiently smooth functions; in code, E is a shift by one cell.'],sources:['scijs','taylor']
 },
 {
  id:'compact',group:3,title:['Компактный шаблон, связанная задача','A compact stencil, a coupled solve'],short:['Неизвестные производные тоже входят в уравнение','Neighboring derivatives are unknowns too'],
@@ -84,7 +84,7 @@ const demos=[
  presets:[P(['Длинная волна','Long wave'],{xi:.1}),P(['Всего 4 узла на волну','Only 4 points per wave'],{xi:.5}),P(['Шахматная мода','Checkerboard mode'],{xi:1})],
  question:['Доведите ξ до π. Почему центральная разность даёт нулевую производную у самой короткой представимой волны?','Move ξ to π. Why does a centered difference return zero for the shortest representable wave?'],
  explanation:['Ось ξ измеряет частоту относительно шага. Идеальная производная даёт прямую ξ* = ξ. Отклонение означает ошибку амплитуды производной, а при полудискретном переносе — ошибку фазовой скорости.','ξ is a wavenumber measured relative to grid spacing. The exact derivative lies on ξ* = ξ. Deviation means derivative-amplitude error and, for semidiscrete advection, a phase-speed error.'],
- caveat:['Это анализ пространственного оператора. Ошибка интегрирования по времени здесь не примешивается; компактная формула не делает произвольную временную схему устойчивой.','This isolates the spatial operator. Time-integration error is not included; a compact derivative does not make an arbitrary time scheme stable.'],sources:['lele']
+ caveat:['Анализируется только пространственный оператор; интегрирование по времени и его устойчивость — отдельный вопрос (лекция 4).','Only the spatial operator is analysed; time integration and its stability are a separate question (Lecture 4).'],sources:['lele']
 },
 {
  id:'spacetime',group:4,title:['Связи схемы в пространстве и времени','A stencil in space and time'],short:['Характеристика и связи схемы','Characteristic and scheme links'],
@@ -128,7 +128,7 @@ const demos=[
  controls:[R('left',['Левое состояние uL','Left state uL'],1,.8,1.6,.1),R('right',['Правое состояние uR','Right state uR'],.2,.1,.6,.05),R('n',['Ячеек N','Cells N'],160,40,320,40)],
  presets:[P(['Базовый скачок','Reference shock'],{left:1,right:.2,n:160}),P(['Сгущение сетки','Refine the grid'],{left:1,right:.2,n:320}),P(['Другие состояния','Different states'],{left:1.6,right:.1,n:160})],
  question:['Сравните положения скачка при сгущении сетки. Почему формально эквивалентная для гладкого u запись u·uₓ становится опасной на разрыве?','Compare shock positions under refinement. Why does u·uₓ, equivalent for smooth u, become problematic at a discontinuity?'],
- explanation:['Сравниваются консервативная схема с потоком Русанова и неконсервативная форма uᵢ(uᵢ−uᵢ₋₁)/h. Точная скорость следует из интегрального закона сохранения. Положение численного скачка оценивается по массе, а не по максимальному градиенту.','A conservative Rusanov flux is compared with the nonconservative form uᵢ(uᵢ−uᵢ₋₁)/h. The exact speed follows from integral conservation. The numerical shock position is measured from mass rather than from the steepest gradient.'],
+ explanation:['Сравниваются консервативная схема с потоком Русанова и неконсервативная форма uᵢ(uᵢ−uᵢ₋₁)/h. Точная скорость следует из интегрального закона сохранения. Положение численного скачка вычисляется из баланса массы.','A conservative Rusanov flux is compared with the nonconservative form uᵢ(uᵢ−uᵢ₋₁)/h. The exact speed follows from integral conservation. The numerical shock position is computed from the mass balance.'],
  caveat:['Здесь uL > uR > 0, границы заданы постоянными состояниями, C = 0.4. Расчёт останавливается до выхода скачка из области.','Here uL > uR > 0, boundary states are fixed, and C = 0.4. The run stops before the shock reaches the boundary.'],sources:['leveque']
 },
 {
@@ -147,7 +147,7 @@ const demos=[
  presets:[P(['2D перенос','2D advection'],{dim:2,mode:'advection',n:64}),P(['3D перенос','3D advection'],{dim:3,mode:'advection',n:64}),P(['3D явная диффузия','3D explicit diffusion'],{dim:3,mode:'diffusion',n:64})],
  question:['Уменьшите h вдвое. Почему память выросла в 8 раз, а работа в трёхмерной явной диффузии — в 32 раза?','Halve h. Why does memory grow by 8 while work for three-dimensional explicit diffusion grows by 32?'],
  explanation:['Сравнивается расчёт до фиксированного времени T = 1 в единичной области. Для переноса взято Δt = h/2; для явной диффузии Δt = h²/(2d). Память: три массива binary64 по q неизвестных в узле.','The comparison reaches a fixed T = 1 on a unit domain. Advection uses Δt = h/2; explicit diffusion uses Δt = h²/(2d). Memory counts three binary64 arrays of q unknowns per node.'],
- caveat:['Это прозрачная модель числа операций, не измерение времени на компьютере. C_op = 12 условных операций на неизвестную и итерацию. Коммуникации, геометрия и ввод-вывод не учтены.','This is a transparent operation-count model, not a hardware timing measurement. C_op = 12 illustrative operations per unknown per iteration. Communication, geometry and I/O are excluded.'],sources:['leveque']
+ caveat:['Прозрачная модель числа операций: C_op = 12 условных операций на неизвестную и итерацию. Коммуникации, геометрия и ввод-вывод в модель не входят.','A transparent operation-count model: C_op = 12 illustrative operations per unknown per iteration. Communication, geometry and I/O are outside the model.'],sources:['leveque']
 }
 ];
 demos.sort((a,b)=>a.group-b.group);
