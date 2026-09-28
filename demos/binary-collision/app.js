@@ -27,6 +27,7 @@ function binaryCopy(locale, key) {
 import {Vec3,Camera3D,Scene3D,ChalkRenderer3D,OrbitControls3D,clamp} from '../../lib/chalkish/src/collision-3d.js';
 import {formatTick,niceBounds,niceTicks} from '../../lib/chalkish/src/ticks.js';
 import {PlotBoard} from './plot-board.js';
+import {renderTexElement} from '../../lib/chalkish/src/tex-element.js';
 import {POTENTIALS,potential,radialForce,effectivePotential,hsAngle,vssAngle,vssDcs,vhsDiameter,labFromRelative,mulberry32,sampleDisk,scatterEnsemble,criticalOrbit,solveTrajectory,hardSphereTrajectory,trajectoryAt,deflectionCurve,areaBinnedDcs} from './physics.js';
 import {CHAPTERS,setChapterLanguage} from './chapters.js';
 import {bindLabLanguage,withCommonTranslations} from '../lab-i18n.js';
@@ -86,6 +87,13 @@ function setView(mode,force=false){
   camera.update();updateCameraButtons();dirty=true;
 }
 function updateCameraButtons(){for(const [id,mode] of [['view3d','3d'],['viewPlane','plane'],['viewFront','front']]){$(id).classList.toggle('active',viewMode===mode);$(id).setAttribute('aria-pressed',viewMode===mode);}$('perspective').setAttribute('aria-pressed',camera.projection==='perspective');}
+// The step's formulas in chalk TeX, one element per line in its colour class (lib/chalkish/src/tex-element.js).
+let equationHandles=[];
+function renderEquations(lines){
+  for(const handle of equationHandles)handle.dispose();equationHandles=[];
+  const box=$('equations');box.replaceChildren();
+  for(const [tex,cls]of lines){const line=document.createElement('div');if(cls)line.className=cls;box.append(line);equationHandles.push(renderTexElement(line,Array.isArray(tex)?tex[i18n.language==='en'?1:0]:tex));}
+}
 function applyLesson(c,s,restore=null){
   state.chapter=clamp(c,0,8);state.step=clamp(s,0,2);playing=false;
   const cdata=chapter(),sdata=step();Object.assign(state,{...INITIAL,chapter:state.chapter,step:state.step},cdata.defaults);
@@ -101,7 +109,7 @@ function navigate(delta,wholeChapter=false){
 }
 function updateText(){
   $('lessonTitle').innerHTML=chapter().title;
-  $('stepTitle').textContent=`${state.step+1}. ${step().title}`;$('explanation').innerHTML=step().text;$('equations').innerHTML=step().eq;$('observation').textContent=step().note;
+  $('stepTitle').textContent=`${state.step+1}. ${step().title}`;$('explanation').innerHTML=step().text;renderEquations(step().tex);$('observation').textContent=step().note;
   $('pageCount').textContent=`${String(state.chapter*3+state.step+1).padStart(2,'0')} / 27`;
   $('prevButton').disabled=state.chapter===0&&state.step===0;$('nextButton').disabled=state.chapter===8&&state.step===2;
   $('prevButton').textContent='‹';$('nextButton').textContent='›';
@@ -566,7 +574,7 @@ function bind(){
   bindKeys(keyActions);
   window.addEventListener('hashchange',()=>{const q=safeHash();if(q)applyLesson(q.c,q.s,q.restore);});
   document.addEventListener('visibilitychange',()=>{if(document.hidden){playing=false;updateTransport();}});
-  window.addEventListener('pagehide',()=>{playing=false;cancelAnimationFrame(frameId);controls.dispose();renderer.dispose();plotObserver.disconnect();},{once:true});
+  window.addEventListener('pagehide',()=>{playing=false;cancelAnimationFrame(frameId);controls.dispose();renderer.dispose();plotBoard.dispose();},{once:true});
 }
 // A small read-only test/debug interface; it contains no private or remote data.
 window.collisionLab={getState:()=>({...state,playing}),getDiagnostics:()=>({status:result?.status,errorE:result?.errorE,errorL:result?.errorL,chi:result?.chi,theta:result?.theta,rmin:result?.rmin}),go:(c,s=0)=>applyLesson(c,s),set:(key,value)=>setParameter(key,value),redraw:()=>{dirty=true;}};

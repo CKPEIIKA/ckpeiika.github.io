@@ -88,6 +88,11 @@ export class PlotBoard {
     this.observer.observe(canvas.parentElement);
   }
 
+  dispose() {
+    this.observer.disconnect();
+    this.app.destroy();
+  }
+
   // Starts a frame; returns the CSS size of the canvas.
   begin(background) {
     this.scene.background = background;

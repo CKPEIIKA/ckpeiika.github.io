@@ -31,7 +31,7 @@ test('catalogue exposes all nineteen interactive lecture modules', () => {
   );
   assert.ok(PDE_DEMOS.every((entry) => entry.available === true));
   for (const entry of PDE_DEMOS) {
-    assert.ok(entry.equation.length > 0, entry.id);
+    assert.ok(typeof entry.equation?.tex === 'string' && entry.equation.tex.length > 0, entry.id);
     assert.ok(entry.title.ru && entry.title.en, entry.id);
     if (entry.id !== 'derivatives') {
       assert.ok(LESSON_SPECS[entry.id], `${entry.id}: controls`);

@@ -25,12 +25,12 @@ export const conditions = {
 export function lessonPresentation(model, entry, language) {
   const p = model.parameters;
   let equation = entry.equation;
-  if (model.id === 'pde-field') equation = { transport: 'uₜ + cuₓ = 0', diffusion: 'uₜ = Duₓₓ', wave: 'uₜₜ = c²uₓₓ' }[p.mode];
-  if (model.id === 'wave') equation = p.source === 'oscillator' ? 'uₜₜ = c(x)²uₓₓ + f(x,t)' : 'uₜₜ = c(x)²uₓₓ';
-  if (model.id === 'nonlinearity') equation = p.law === 'linear' ? 'uₜ + 0.6uₓ = 0' : 'uₜ + (u²/2)ₓ = 0';
-  if (model.id === 'geometry') equation = 'uₜ = D∇²u · ∂u/∂n = 0';
-  if (model.id === 'incompressibility') equation = 'vₜ = −∇p/ρ + ν∇²v · ∇·v = 0';
-  if (model.id === 'shallow-water') equation = 'hₜ + ∇·(hv) = 0 · (hv)ₜ + ∇·(hv⊗v + gh²I/2) = 0';
+  if (model.id === 'pde-field') equation = { transport: { tex: String.raw`u_t + c\,u_x = 0` }, diffusion: { tex: String.raw`u_t = D\,u_{xx}` }, wave: { tex: String.raw`u_{tt} = c^2 u_{xx}` } }[p.mode];
+  if (model.id === 'wave') equation = p.source === 'oscillator' ? { tex: String.raw`u_{tt} = c(x)^2 u_{xx} + f(x,t)` } : { tex: String.raw`u_{tt} = c(x)^2 u_{xx}` };
+  if (model.id === 'nonlinearity') equation = p.law === 'linear' ? { tex: String.raw`u_t + 0.6\,u_x = 0` } : { tex: String.raw`u_t + (u^2/2)_x = 0` };
+  if (model.id === 'geometry') equation = { tex: String.raw`u_t = D\nabla^2 u,\qquad \frac{\partial u}{\partial n} = 0` };
+  if (model.id === 'incompressibility') equation = { tex: String.raw`\mathbf{v}_t = -\frac{\nabla p}{\rho} + \nu\nabla^2\mathbf{v},\qquad \nabla\cdot\mathbf{v} = 0` };
+  if (model.id === 'shallow-water') equation = { tex: String.raw`h_t + \nabla\cdot(h\mathbf{v}) = 0;\qquad (h\mathbf{v})_t + \nabla\cdot\left(h\mathbf{v}\otimes\mathbf{v} + \frac{g h^2}{2} I\right) = 0` };
   let detail = conditions[model.id]?.[language] ?? '';
   if (model.id === 'riemann') {
     const names = language === 'ru' ? { shock: 'ударная', fan: 'разрежение', none: 'нет волны' } : { shock: 'shock', fan: 'rarefaction', none: 'no wave' };
