@@ -15,7 +15,7 @@ function foot(ink,a,b=''){ink.line(42,519,958,519,C.dim);ink.text(42,549,a,18,C.
 function footMath(ink,tex,b=''){ink.line(42,519,958,519,C.dim);ink.math(42,549,tex,18,C.white);if(b)ink.text(42,579,b,16,C.muted);}
 // Board formulas are TeX (lib/chalkish/src/tex.js); numbers go in through T.
 function formula(ink,x,y,tex,col=C.yellow,size=20){ink.math(x,y,tex,size,col);}
-function bars(ink,g,values,col=C.yellow,labels=false,width=.66){values.forEach((v,i)=>{ink.rect(g.X(i-width/2),g.Y(Math.max(0,v)),g.w/(g.xmax-g.xmin)*width,Math.abs(g.Y(v)-g.Y(0)),col,col);if(labels)ink.text(g.X(i),g.Y(v)+(v<0?23:-9),F(v),14,col,'center');});}
+function bars(ink,g,values,col=C.yellow,labels=false,width=.66){g.bars(values,{color:col,labels,width,format:F});}
 function staircase(ink,g,u,{color=C.white,width=2,x0=0,h=1/u.length,select=-1}={}){const pts=[];u.forEach((v,i)=>{pts.push([x0+i*h,v],[x0+(i+1)*h,v]);if(i===select&&v>=g.ymin&&v<=g.ymax)ink.rect(g.X(x0+i*h),g.y,g.w/(g.xmax-g.xmin)*h,g.h,null,C.yellow,1.3);});let group=[];const flush=()=>{if(group.length>1)ink.path(group,color,width);group=[];};pts.forEach(([x,y])=>{if(x>=g.xmin-1e-9&&x<=g.xmax+1e-9&&y>=g.ymin&&y<=g.ymax)group.push([g.X(x),g.Y(y)]);else flush();});flush();}
 // Grid lines on the cell faces ξ = i ± ½ between a and b.
 function faces(a,b){return Array.from({length:Math.round(b-a)+1},(_,i)=>a+i);}
@@ -62,7 +62,7 @@ function twoStage(p,L){const u=initialAverages(48,p.profile),non=p.equation==='b
 function orderTest(p,L){return {render(){const ink=new Ink(),n=14,u=Array.from({length:n},(_,i)=>.5+.1*Math.sin(i)),v=[...u];v[p.j]+=p.delta;const a=linearStep(u,p.nu,p.scheme),b=linearStep(v,p.nu,p.scheme),incr=diff(b,a);
  ink.title(L('Монотонность — свойство оператора H','Monotonicity is a property of the operator H'),L('Сверху меняем один вход, снизу измеряем все выходные отклики.','One input is changed above; every output response is measured below.'));
  const top=graph(ink,{y:110,h:105,xmin:-.5,xmax:13.5,ymin:0,ymax:1.15,xticks:7,yticks:2,xlabel:'j',ylabel:'v − u'});bars(ink,top,diff(v,u),C.green,false);
- const bottom=graph(ink,{y:292,h:136,xmin:-.5,xmax:13.5,ymin:-.35,ymax:1.3,xticks:7,yticks:3,xlabel:'i',ylabel:'H(v) − H(u)'});incr.forEach((d,i)=>bars(ink,{...bottom,X:j=>bottom.X(j+i)},[d],d< -1e-14?C.red:C.blue,true));
+ const bottom=graph(ink,{y:292,h:136,xmin:-.5,xmax:13.5,ymin:-.35,ymax:1.3,xticks:7,yticks:3,xlabel:'i',ylabel:'H(v) − H(u)'});bottom.bars(incr,{color:d=>d< -1e-14?C.red:C.blue,labels:true,format:F});
  ink.arrow(top.X(p.j),240,bottom.X(p.j),264,C.yellow);formula(ink,600,259,String.raw`\delta = ${T(p.delta)};\quad \nu = ${T(p.nu)}`,C.white,20);
  const c=linearCoefficients(p.nu,p.scheme);formula(ink,72,480,c.map(([j,b])=>`b_{${j}} = ${T(b)}`).join(String.raw`\qquad `),C.white,19);
  const neg=Math.min(...incr);foot(ink,neg<-1e-12?L('v ≥ u, но не H(v) ≥ H(u): отрицательный отклик найден.','v ≥ u, but not H(v) ≥ H(u): a negative response was found.'):L('Для этого линейного шага все коэффициенты и отклики неотрицательны.','For this linear step, all coefficients and responses are nonnegative.'),L('Не путайте монотонность H с визуальной монотонностью одного профиля.','Do not confuse order preservation by H with a monotone-looking profile.'));

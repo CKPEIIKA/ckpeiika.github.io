@@ -26,6 +26,7 @@ function binaryCopy(locale, key) {
 
 import {Vec3,Camera3D,Scene3D,ChalkRenderer3D,OrbitControls3D,clamp} from '../../lib/chalkish/src/collision-3d.js';
 import {CHALK_FONT_STACK,strokeChalkPath2D as chalkStroke} from '../../lib/chalkish/src/chalk.js';
+import {formatTick,niceTicks} from '../../lib/chalkish/src/ticks.js';
 import {POTENTIALS,potential,radialForce,effectivePotential,hsAngle,vssAngle,vssDcs,vhsDiameter,labFromRelative,mulberry32,sampleDisk,scatterEnsemble,criticalOrbit,solveTrajectory,hardSphereTrajectory,trajectoryAt,deflectionCurve,areaBinnedDcs} from './physics.js';
 import {CHAPTERS,setChapterLanguage} from './chapters.js';
 import {bindLabLanguage,withCommonTranslations} from '../lab-i18n.js';
@@ -47,6 +48,8 @@ const renderer=new ChalkRenderer3D($('stage'),{camera,background:C.bg,onLayout:(
 const controls=new OrbitControls3D($('stage'),camera,()=>{manualCamera=true;viewMode='free';updateCameraButtons();dirty=true;},pickStage);
 const plotContext=$('plot').getContext('2d',{alpha:false});
 const plotObserver=new ResizeObserver(()=>{const r=$('plot').getBoundingClientRect(),d=Math.min(2,devicePixelRatio||1);$('plot').width=Math.round(r.width*d);$('plot').height=Math.round(r.height*d);dirty=true;});plotObserver.observe($('plot'));
+// Plot captions in the page language.
+const tr=(ru,en)=>document.documentElement.lang==='en'?en:ru;
 const fmt=(x,n=2)=>Number.isFinite(x)?x.toFixed(n).replace(/\.00$/,'').replace(/(\.\d)0$/,'$1'):'?';
 const ang=x=>fmt(x/DEG,1)+'°';
 const scientific=x=>x===0?'0':x.toExponential(1);
@@ -327,16 +330,23 @@ function plotCanvas(){
   const c=plotContext,w=$('plot').clientWidth,h=$('plot').clientHeight,d=Math.min(2,devicePixelRatio||1);
   c.setTransform(d,0,0,d,0,0);c.globalAlpha=1;c.fillStyle=C.bg;c.fillRect(0,0,w,h);c.lineWidth=1;c.font=`10px ${CHALK_FONT_STACK}`;c.textBaseline='alphabetic';c.setLineDash([]);return {c,w,h};
 }
+// An even split is kept when its step is already round (0…180° by 30°); otherwise, e.g.
+// 0…1.15 in five, the ticks move to round values (lib/chalkish/src/ticks.js).
+function axisTicks(min,max,count){
+  const step=(max-min)/count,power=10**Math.floor(Math.log10(step)),mantissa=step/power;
+  const round=[1,1.5,2,2.5,3,4,5,6,8,10].some(m=>Math.abs(mantissa-m)<1e-9)&&Math.abs(min/step-Math.round(min/step))<1e-9;
+  if(round)return Array.from({length:count+1},(_,i)=>{const value=min+step*i;return {value,label:formatTick(Math.abs(value)<step*1e-9?0:value,step)};});
+  const ticks=niceTicks(min,max,count);return ticks.values.map(value=>({value,label:formatTick(value,ticks.step)}));
+}
 function axes({xmin=0,xmax=1,ymin=0,ymax=1,xlabel='',ylabel='',xticks=5,yticks=3}={}){
   const p=plotCanvas(),{c,w,h}=p,l=45,r=w-21,t=23,b=h-30;
   const X=x=>l+(x-xmin)/(xmax-xmin)*(r-l),Y=y=>b-(y-ymin)/(ymax-ymin)*(b-t);
   c.strokeStyle=C.line;c.fillStyle=C.muted;c.lineWidth=.65;
-  for(let i=0;i<=xticks;i++){
-    const x=xmin+(xmax-xmin)*i/xticks,px=X(x);c.globalAlpha=.5;c.beginPath();c.moveTo(px,t);c.lineTo(px,b);chalkStroke(c);c.globalAlpha=1;c.textAlign='center';c.fillText(fmt(x,Math.max(0,1-Math.floor(Math.log10((xmax-xmin)/xticks)))),px,b+16);
-  }
-  for(let i=0;i<=yticks;i++){
-    const y=ymin+(ymax-ymin)*i/yticks,py=Y(y);c.globalAlpha=.5;c.beginPath();c.moveTo(l,py);c.lineTo(r,py);chalkStroke(c);c.globalAlpha=1;c.textAlign='right';c.fillText(fmt(y,Math.max(0,1-Math.floor(Math.log10((ymax-ymin)/yticks)))),l-8,py+3);
-  }
+  const grid=(x0,y0,x1,y1)=>{c.globalAlpha=.5;c.beginPath();c.moveTo(x0,y0);c.lineTo(x1,y1);chalkStroke(c);c.globalAlpha=1;};
+  for(const x of [xmin,xmax])grid(X(x),t,X(x),b);
+  for(const y of [ymin,ymax])grid(l,Y(y),r,Y(y));
+  for(const {value,label} of axisTicks(xmin,xmax,xticks)){const px=X(value);if(Math.abs(px-l)>.5&&Math.abs(px-r)>.5)grid(px,t,px,b);c.textAlign='center';c.fillText(label,px,b+16);}
+  for(const {value,label} of axisTicks(ymin,ymax,yticks)){const py=Y(value);if(Math.abs(py-t)>.5&&Math.abs(py-b)>.5)grid(l,py,r,py);c.textAlign='right';c.fillText(label,l-8,py+3);}
   c.textAlign='left';c.fillStyle=C.dim;c.fillText(ylabel,9,13);c.textAlign='right';c.fillText(xlabel,r,h-5);c.textAlign='left';
   const g={...p,l,r,t,b,X,Y,xmin,xmax,ymin,ymax};plotGeometry=g;return g;
 }
@@ -349,11 +359,11 @@ function legend(g,entries){let x=g.r-entries.reduce((sum,[name])=>sum+g.c.measur
 function plotTwoBody(){
   const m1=state.mass,M=m1+1,lab=state.step===0;
   const track=which=>result.view.map((s,i)=>{const R=lab?[m1/M*(-5+result.g*s.t),m1/M*state.b]:[0,0],q=labFromRelative([s.x,s.y],[s.vx,s.vy],m1,1,R);return [(s.t-result.view[0].t)/(result.view.at(-1).t-result.view[0].t),which==='r'?s.x:which==='cm'?R[0]:q[which][0]];});
-  if(state.step===2){const g=axes({xmin:0,xmax:1,ymin:-5,ymax:5,xlabel:'t / tкон',ylabel:'x / d'});plotLine(g,track('r'),C.gold);plotMarker(g,state.time,trajectoryAt(result,state.time).x);$('plotTitle').textContent='Относительное положение';$('plotHint').textContent='x = x₁ − x₂';return;}
+  if(state.step===2){const g=axes({xmin:0,xmax:1,ymin:-5,ymax:5,xlabel:tr('t / tкон','t / tend'),ylabel:'x / d'});plotLine(g,track('r'),C.gold);plotMarker(g,state.time,trajectoryAt(result,state.time).x);$('plotTitle').textContent=tr('Относительное положение','Relative position');$('plotHint').textContent='x = x₁ − x₂';return;}
   const one=track('r1'),two=track('r2'),cm=track('cm'),vals=[...one,...two].map(x=>x[1]),ymin=Math.floor(Math.min(...vals)),ymax=Math.ceil(Math.max(...vals));
-  const g=axes({xmin:0,xmax:1,ymin,ymax:ymax===ymin?ymax+1:ymax,xlabel:'t / tкон',ylabel:'x / d'});
+  const g=axes({xmin:0,xmax:1,ymin,ymax:ymax===ymin?ymax+1:ymax,xlabel:tr('t / tкон','t / tend'),ylabel:'x / d'});
   plotLine(g,one,C.gold);plotLine(g,two,C.cyan);plotLine(g,cm,C.dim,1,[4,4]);plotLine(g,[[state.time,ymin],[state.time,ymax]],C.dim,1,[3,5],.7);legend(g,[['x₁',C.gold],['x₂',C.cyan],['X',C.dim,[4,4]]]);
-  $('plotTitle').textContent='Центр масс движется равномерно';$('plotHint').textContent=lab?'лабораторная система':'система центра масс';
+  $('plotTitle').textContent=tr('Центр масс движется равномерно','The center of mass moves uniformly');$('plotHint').textContent=lab?tr('лабораторная система','laboratory frame'):tr('система центра масс','center-of-mass frame');
 }
 function plotCylinder(){
   const {c,w,h}=plotCanvas(),x=w<520?78:101,y=h/2-1,r=Math.min(h*.34,52),ph=state.phi*DEG,t=clamp(state.time,0,1),progress=t*t*(3-2*t),shownB=state.step===1?state.b*progress:state.b;
@@ -362,21 +372,21 @@ function plotCylinder(){
   c.strokeStyle=C.line;c.lineWidth=1;c.setLineDash([3,4]);c.beginPath();c.moveTo(x-r*1.3,y);c.lineTo(x+r*1.5,y);c.moveTo(x,y-r*1.3);c.lineTo(x,y+r*1.3);chalkStroke(c);c.setLineDash([]);c.globalAlpha=1;
   const px=x+r*shownB*Math.sin(ph),py=y-r*shownB*Math.cos(ph);c.strokeStyle=C.gold;c.lineWidth=2;c.beginPath();c.moveTo(x,y);c.lineTo(px,py);chalkStroke(c);c.fillStyle=shownB<1?C.gold:C.red;c.beginPath();c.arc(px,py,4.2,0,TAU);c.fill();c.font=`italic 17px ${CHALK_FONT_STACK}`;c.fillText('b',x+(px-x)*.5+6,y+(py-y)*.5);c.font=`10px ${CHALK_FONT_STACK}`;c.fillStyle=C.muted;c.textAlign='center';c.fillText(binaryCopy(document.documentElement.lang === "en" ? "en" : "ru", "viewAlongG"),x,h-8);c.textAlign='left';
   const tx=w<520?168:220;c.font=`19px ${CHALK_FONT_STACK}`;c.fillStyle=shownB<1?C.gold:C.red;c.fillText(shownB<1?binaryCopy(document.documentElement.lang === "en" ? "en" : "ru", "centerInside"):'Центр вне цилиндра',tx,49);c.font=`12px ${CHALK_FONT_STACK}`;c.fillStyle=C.dim;c.fillText(`b / d = ${fmt(shownB,3)} ${shownB<1?'<':'≥'} 1`,tx,74);c.font=`13px ${CHALK_FONT_STACK}`;c.fillText('σT = πd²',tx,101);c.font=`10px ${CHALK_FONT_STACK}`;c.fillStyle=C.muted;if(w>520)c.fillText(binaryCopy(document.documentElement.lang === "en" ? "en" : "ru", "circleArea"),tx,121);
-  plotGeometry={type:'disk',x,y,r,w,h};$('plotTitle').textContent='Поперечное сечение';$('plotHint').textContent='щелчок по кругу меняет b и φ';
+  plotGeometry={type:'disk',x,y,r,w,h};$('plotTitle').textContent=tr('Поперечное сечение','Cross section');$('plotHint').textContent=tr('щелчок по кругу меняет b и φ','click the circle to change b and φ');
 }
 function plotHardSphere(){
   const g=axes({xmin:0,xmax:1.15,ymin:0,ymax:180,xlabel:'b / d',ylabel:'χ, °',xticks:5,yticks:3});plotLine(g,Array.from({length:140},(_,i)=>[1.15*i/139,hsAngle(1.15*i/139)/DEG]));plotMarker(g,state.b,hsAngle(state.b)/DEG);
-  $('plotTitle').textContent='χ(b) для твёрдых сфер';$('plotHint').textContent='выберите прицельный параметр на графике';
+  $('plotTitle').textContent=tr('χ(b) для твёрдых сфер','χ(b) for hard spheres');$('plotHint').textContent=tr('выберите прицельный параметр на графике','pick the impact parameter on the plot');
 }
 function plotSolidAngle(){
   const g=axes({xmin:0,xmax:180,ymin:0,ymax:1.1,xlabel:'χ, °',ylabel:'sin χ',xticks:6,yticks:2});plotLine(g,Array.from({length:140},(_,i)=>{const x=180*i/139;return [x,Math.sin(x*DEG)];}),C.gold);const {chi}=angularState();plotMarker(g,chi/DEG,Math.sin(chi));
-  $('plotTitle').textContent='Площадь угловой ячейки зависит от χ';$('plotHint').textContent='dΩ / (dχ dφ) = sin χ';
+  $('plotTitle').textContent=tr('Площадь угловой ячейки зависит от χ','The area of an angular cell depends on χ');$('plotHint').textContent='dΩ / (dχ dφ) = sin χ';
 }
 function plotMapping(){
   const g=axes({xmin:0,xmax:1,ymin:-1,ymax:1,xlabel:'(b / d)²',ylabel:'cos χ',xticks:4,yticks:2}),[lo,hi]=ringBounds();
   g.c.fillStyle=C.cyan;g.c.globalAlpha=.1;g.c.fillRect(g.X(lo*lo),g.t,g.X(hi*hi)-g.X(lo*lo),g.b-g.t);g.c.globalAlpha=1;
   plotLine(g,[[0,-1],[1,1]],C.gold,2);plotMarker(g,state.b*state.b,2*state.b*state.b-1);
-  $('plotTitle').textContent='Равные площади → равные телесные углы';$('plotHint').textContent='HS: cos χ = 2(b/d)² − 1';
+  $('plotTitle').textContent=tr('Равные площади → равные телесные углы','Equal areas → equal solid angles');$('plotHint').textContent='HS: cos χ = 2(b/d)² − 1';
 }
 function plotPotential(){
   const ymax=Math.max(3,state.E*1.3),g=axes({xmin:.55,xmax:3.6,ymin:-1.35,ymax,xlabel:'r / ℓ₀',ylabel:'U / ε',xticks:5,yticks:3}),entries=[['U',C.gold]];
@@ -390,7 +400,7 @@ function plotPotential(){
   plotLine(g,[[g.xmin,state.E],[g.xmax,state.E]],C.ink,1,[6,5],.6);entries.push(['E',C.ink,[6,5]]);legend(g,entries);
   const q=trajectoryAt(result,state.time),r=Math.hypot(q.x,q.y);plotMarker(g,r,potential(r,state.model,state.n));
   if(state.step>=1)plotMarker(g,r,effectivePotential(r,params()),C.cyan);
-  $('plotTitle').textContent='Потенциальная и полная энергия';$('plotHint').textContent=r>3.6?`r = ${fmt(r)}: вне окна графика`:'точка движется вместе с частицей';
+  $('plotTitle').textContent=tr('Потенциальная и полная энергия','Potential and total energy');$('plotHint').textContent=r>3.6?`r = ${fmt(r)}: ${tr('вне окна графика','outside the plot')}`:tr('точка движется вместе с частицей','the point moves with the particle');
 }
 function plotDeflection(){
   if(state.plotMode==='dcs'){
@@ -398,7 +408,7 @@ function plotDeflection(){
     for(let i=0;i<measure.dcs.length;i++){
       const a=-1+2*i/measure.dcs.length,b=-1+2*(i+1)/measure.dcs.length,y=measure.dcs[i];g.c.fillStyle=C.cyan;g.c.globalAlpha=.22;g.c.fillRect(g.X(a)+1,g.Y(y),g.X(b)-g.X(a)-2,g.b-g.Y(y));g.c.globalAlpha=.85;g.c.strokeStyle=C.cyan;g.c.lineWidth=1;g.c.strokeRect(g.X(a)+1,g.Y(y),g.X(b)-g.X(a)-2,g.b-g.Y(y));g.c.globalAlpha=1;
     }
-    const limit=curve.at(-1).b;$('plotTitle').textContent='Сечение: сумма всех ветвей';$('plotHint').textContent=`b ≤ ${fmt(limit)} ℓ₀ · конечные интервалы Ω`;return;
+    const limit=curve.at(-1).b;$('plotTitle').textContent=tr('Сечение: сумма всех ветвей','Cross section: the sum of all branches');$('plotHint').textContent=`b ≤ ${fmt(limit)} ℓ₀ · ${tr('конечные интервалы Ω','finite Ω intervals')}`;return;
   }
   const finite=curve.filter(p=>Number.isFinite(p.theta)),min=Math.min(-.001,...finite.map(p=>p.theta/DEG),result.theta/DEG),ymin=Math.max(-720,Math.floor(min/90)*90),ymax=180;
   const g=axes({xmin:0,xmax:curve.at(-1).b,ymin,ymax,xlabel:'b / ℓ₀',ylabel:'Θ, °',xticks:4,yticks:Math.min(5,Math.round((ymax-ymin)/90))});
@@ -408,7 +418,7 @@ function plotDeflection(){
   plotMarker(g,state.b,result.theta/DEG);
   if(state.model==='lj')legend(g,[['Θ',C.gold],['χ ∈ [0, π]',C.cyan,[3,4]]]);
   if(state.model==='lj'&&state.E<.8){const bc=criticalOrbit(state.E).b;plotLine(g,[[bc,ymin],[bc,ymax]],C.purple,1,[3,5],.7);}
-  $('plotTitle').textContent='Функция рассеяния';$('plotHint').textContent='кривая: квадратура · маркер: уравнение Ньютона';
+  $('plotTitle').textContent=tr('Функция рассеяния','Deflection function');$('plotHint').textContent=tr('кривая: квадратура · маркер: уравнение Ньютона','curve: quadrature · marker: Newton’s equation');
 }
 function measuredHistogram(){
   const bins=18,hist=Array(bins).fill(0),N=Math.floor(state.count*state.time),d=dsmcDiameter();

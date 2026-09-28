@@ -57,9 +57,11 @@ So the demos draw around it:
      `xscale`/`yscale: 'log'`) and Lecture 2's `SampledPlot` are built on it.
    - [x] Fewer labels when they would collide: the gallery Board measures tick labels at
      their painted size and drops the lower-priority ones (phones), keeping all on desktop.
-   - [ ] Bars, histograms, scatter and legend as frame helpers (the labs still draw their
-     own bars and legends); the binary-collision plots and the DSMC/DG-FV history panels
-     on the frame; `SampledPlot` curves clipped like the gallery's.
+   - [x] `graph()` draws `bars`, `histogram` and `scatter` cut at the frame (Lectures 4–5 use
+     them); `PlotAxes` (scene grid and labels for a frame, inside or outside, rebuilt only
+     when ranges change) with `niceBounds` gives the DSMC and DG-FV insets real values;
+     `SampledPlot` curves are clipped at the panel edge; binary collision picks round ticks
+     where its even splits were not round (and its plot captions are now bilingual).
 3. **Draw-on animations.**
    - [x] `Mobject.reveal` (0…1): strokes drawn up to that fraction of their length (chalk
      grain included, arrows shaft first), text by characters, formulas by glyphs, fills and

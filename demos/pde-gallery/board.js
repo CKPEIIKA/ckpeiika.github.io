@@ -30,6 +30,8 @@ class Ink {
 // decades on a log axis); an array gives values or [value, label] pairs, e.g.
 // [[Math.PI, 'π']]; 0 draws none. xscale/yscale: 'linear' or 'log'. Tick labels are
 // optional text: on a small board the Board drops the lower-priority ones that would collide.
+// The returned object maps (X, Y, inverse, contains) and draws: curve, series, dot, scatter,
+// bars and histogram, all cut at the frame.
 function graph(ink,{x=72,y=115,w=858,h=295,xmin=0,xmax=1,ymin=-1,ymax=1,xticks=4,yticks=4,xlabel='x',ylabel='u',labels=true,xscale='linear',yscale='linear'}={}){
   const f=new PlotFrame({left:x,right:x+w,bottom:y+h,top:y,xRange:[xmin,xmax],yRange:[ymin,ymax],xScale:xscale,yScale:yscale});
   const X=v=>f.x(v),Y=v=>f.y(v),label=(value,step)=>step?formatTick(value,step):fmt(value,3);
@@ -48,7 +50,24 @@ function graph(ink,{x=72,y=115,w=858,h=295,xmin=0,xmax=1,ymin=-1,ymax=1,xticks=4
     inverse:(px,py)=>f.value(px,py),
     curve:(fn,color=C.white,width=2,n=400,dash=false)=>{const xv=[],yv=[];for(let i=0;i<=n;i++){const v=f.valueAt('x',i/n);xv.push(v);yv.push(fn(v));}clipped(xv,yv,color,width,dash);},
     series:(xv,yv,color=C.yellow,width=2,dots=false)=>{clipped(xv,yv,color,width);if(dots)xv.forEach((v,i)=>{if(inside(v,yv[i]))ink.dot(X(v),Y(yv[i]),3.2,color);});},
-    dot:(a,b,r=4,col=C.yellow)=>{if(inside(a,b))ink.dot(X(a),Y(b),r,col);}
+    dot:(a,b,r=4,col=C.yellow)=>{if(inside(a,b))ink.dot(X(a),Y(b),r,col);},
+    scatter:(xv,yv,{r=3.2,color=C.yellow}={})=>xv.forEach((v,i)=>{if(inside(v,yv[i]))ink.dot(X(v),Y(yv[i]),r,color);}),
+    // Bars from 0 (or the nearest frame edge) to each value; a value beyond the frame runs to its
+    // edge. width is in data units, or pixels in board units; color may be (value, i) => colour.
+    bars:(values,{at=values.map((_,i)=>i),width=.66,pixels=null,color=C.yellow,stroke,labels=false,format=fmt,labelSize=14}={})=>{
+      const lo=Math.min(ymin,ymax),hi=Math.max(ymin,ymax),clampY=v=>Math.min(hi,Math.max(lo,v)),base=Y(clampY(0));
+      values.forEach((v,i)=>{if(!Number.isFinite(v))return;const col=typeof color==='function'?color(v,i):color,x0=pixels?X(at[i])-pixels/2:X(at[i]-width/2),bw=pixels??(X(at[i]+width/2)-X(at[i]-width/2)),top=Y(clampY(v));
+        ink.rect(x0,Math.min(top,base),bw,Math.abs(top-base),col,stroke===undefined?col:stroke);
+        if(labels)ink.text(X(at[i]),top+(v<0?23:-9),format(v),labelSize,col,'center');});
+    },
+    // Counts of samples in equal bins over [xmin, xmax], drawn as touching bars; returns the counts.
+    histogram:(samples,{bins=20,color=C.blue,stroke=C.dim}={})=>{
+      const counts=new Array(bins).fill(0),span=(xmax-xmin)/bins;
+      for(const v of samples){if(!(v>=xmin&&v<=xmax))continue;counts[Math.min(bins-1,Math.floor((v-xmin)/span))]++;}
+      const lo=Math.min(ymin,ymax),hi=Math.max(ymin,ymax);
+      counts.forEach((c,i)=>{const top=Y(Math.min(hi,Math.max(lo,c))),base=Y(Math.min(hi,Math.max(lo,0)));ink.rect(X(xmin+i*span),Math.min(top,base),X(xmin+(i+1)*span)-X(xmin+i*span),Math.abs(top-base),color,stroke);});
+      return counts;
+    }
   };
 }
 function fmt(x,d=4){if(!Number.isFinite(x))return String(x);if(x===0)return '0';return Math.abs(x)>=1e4||Math.abs(x)<1e-3?x.toExponential(2):Number(x.toPrecision(d)).toString();}

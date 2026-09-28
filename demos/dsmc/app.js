@@ -1,4 +1,4 @@
-import { Camera2D, Scene, mount } from '../../lib/chalkish/src/index.js';
+import { Camera2D, PlotAxes, Scene, mount, niceBounds } from '../../lib/chalkish/src/index.js';
 import {
   createDsmcLabController,
   getDsmcLabPreset,
@@ -296,7 +296,11 @@ const controller = createDsmcLabController({
 });
 const plotScene = new Scene({ background: '#0d1611' });
 const plotCamera = new Camera2D({ centerX: 8.05, centerY: 1.05, height: 1.8 });
+// The inset's data box; axes show the values at round ticks, labels inside the box.
+const PLOT_BOX = Object.freeze({ left: 6.52, right: 9.57, bottom: 0.43, top: 1.53 });
+const plotAxes = new PlotAxes({ ...PLOT_BOX, xTicks: 3, yTicks: 2, labels: 'inside', labelGap: 0.07, font: '10px "Neucha", "Shantell Sans", sans-serif' });
 plotScene.add(
+  plotAxes,
   controller.view.layers.maxwellian,
   controller.view.layers.distribution,
 );
@@ -385,21 +389,23 @@ function recordPlotHistory(values) {
 
 function setPlotBuffers(x, primary, reference, { referenceVisible = true } = {}) {
   const count = Math.min(x.length, primary.length, reference.length);
-  const minimum = Math.min(0, ...primary, ...reference);
-  const maximum = Math.max(1e-12, ...primary, ...reference);
-  const minimumX = Math.min(0, ...x);
-  const maximumX = Math.max(1, ...x);
-  const scaleX = 3.05 / Math.max(1e-12, maximumX - minimumX);
-  const scaleY = 1.1 / Math.max(1e-12, maximum - minimum);
+  const finite = (values) => Array.prototype.filter.call(values, Number.isFinite);
+  const ys = [...finite(primary), ...(referenceVisible ? finite(reference) : [])];
+  const [minimum, maximum] = niceBounds(Math.min(0, ...ys), Math.max(1e-12, ...ys), 2);
+  const [minimumX, maximumX] = niceBounds(Math.min(0, ...finite(x)), Math.max(1e-12, ...finite(x)), 3);
+  plotAxes.setRanges([minimumX, maximumX], [minimum, maximum]);
+  plotAxes.setVisible(plotExpanded);
+  const scaleX = (PLOT_BOX.right - PLOT_BOX.left) / (maximumX - minimumX);
+  const scaleY = (PLOT_BOX.top - PLOT_BOX.bottom) / (maximum - minimum);
   controller.view.layers.distribution
     .setBuffers({ x, y: primary, count })
     .setScale(scaleX, scaleY)
-    .setPosition(6.52 - minimumX * scaleX, 0.43 - minimum * scaleY)
+    .setPosition(PLOT_BOX.left - minimumX * scaleX, PLOT_BOX.bottom - minimum * scaleY)
     .setVisible(plotExpanded);
   controller.view.layers.maxwellian
     .setBuffers({ x, y: reference, count })
     .setScale(scaleX, scaleY)
-    .setPosition(6.52 - minimumX * scaleX, 0.43 - minimum * scaleY)
+    .setPosition(PLOT_BOX.left - minimumX * scaleX, PLOT_BOX.bottom - minimum * scaleY)
     .setVisible(plotExpanded && referenceVisible);
 }
 
@@ -426,6 +432,7 @@ function renderPlot() {
   if (!plotExpanded) {
     layers.distribution.setVisible(false);
     layers.maxwellian.setVisible(false);
+    plotAxes.setVisible(false);
     plotApp.render();
     return;
   }

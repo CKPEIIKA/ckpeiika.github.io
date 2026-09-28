@@ -1,6 +1,8 @@
 import {
   Camera2D,
   COLORMAPS,
+  PlotAxes,
+  niceBounds,
   CurveLayer,
   ScalarField,
   Scene,
@@ -375,7 +377,8 @@ const analysisField = new ScalarField(burgersHistory, 1, 60, {
   visible: false,
   style: { opacity: 0.94 },
 });
-analysisScene.add(analysisField, analysisSecondary, analysisPrimary);
+const analysisAxes = new PlotAxes({ left: 0.06, right: 0.94, bottom: 0.08, top: 0.92, xTicks: 3, yTicks: 2, labels: 'inside', labelGap: 0.05, font: '10px "Neucha", "Shantell Sans", sans-serif' });
+analysisScene.add(analysisField, analysisAxes, analysisSecondary, analysisPrimary);
 const analysisApp = mount(nodes.analysisCanvas, {
   scene: analysisScene,
   camera: analysisCamera,
@@ -415,8 +418,14 @@ function normalizeAnalysis(x, first, second, count) {
       maximumY = Math.max(maximumY, value);
     }
   }
-  const spanX = Math.max(1e-12, maximumX - minimumX);
-  const spanY = Math.max(1e-12, maximumY - minimumY);
+  // Round bounds, so the axes show readable values and stay put while the data moves.
+  if (!Number.isFinite(minimumX)) [minimumX, maximumX] = [0, 1];
+  if (!Number.isFinite(minimumY)) [minimumY, maximumY] = [0, 1];
+  [minimumX, maximumX] = niceBounds(minimumX, maximumX, 3);
+  [minimumY, maximumY] = niceBounds(minimumY, maximumY, 2);
+  analysisAxes.setRanges([minimumX, maximumX], [minimumY, maximumY]);
+  const spanX = maximumX - minimumX;
+  const spanY = maximumY - minimumY;
   for (let index = 0; index < outputCount; index += 1) {
     const sourceIndex = outputCount === count
       ? index
@@ -475,6 +484,7 @@ function renderAnalysis() {
   analysisPrimary.setVisible(analysisExpanded && mode !== 'spaceTime');
   analysisSecondary.setVisible(analysisExpanded && mode !== 'spaceTime' && mode !== 'spectrum');
   analysisField.setVisible(analysisExpanded && mode === 'spaceTime');
+  analysisAxes.setVisible(analysisExpanded && mode !== 'spaceTime');
   if (!analysisExpanded) {
     analysisApp.render();
     return;
