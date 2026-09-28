@@ -40,8 +40,26 @@ export function bindKeys(actions, extra = []) {
       event.preventDefault();
     }
   }
+  // A slider, checkbox or dropdown used with the mouse keeps the focus, and then Space and the
+  // arrows would move it instead of the demo. Once a pointer changed it, focus returns to the
+  // page; a keyboard user who tabs into a control keeps its native keys.
+  let pointerControl = null;
+  const POINTER_CONTROLS = 'input[type="range"], input[type="checkbox"], select';
+  const onPointerDown = (event) => { pointerControl = event.target?.closest?.(POINTER_CONTROLS) ?? null; };
+  const onChange = (event) => {
+    if (pointerControl && event.target === pointerControl) {
+      pointerControl.blur();
+      pointerControl = null;
+    }
+  };
+  document.addEventListener('pointerdown', onPointerDown, true);
+  document.addEventListener('change', onChange, true);
   document.addEventListener('keydown', onKey);
-  return () => document.removeEventListener('keydown', onKey);
+  return () => {
+    document.removeEventListener('pointerdown', onPointerDown, true);
+    document.removeEventListener('change', onChange, true);
+    document.removeEventListener('keydown', onKey);
+  };
 }
 
 // Fills a <dl> with the keys a page supports, in the shared order.
