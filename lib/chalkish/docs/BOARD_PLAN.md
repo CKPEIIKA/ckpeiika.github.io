@@ -73,8 +73,12 @@ So the demos draw around it:
    - [x] One chalk pen for board and page: `src/chalk-transition.js` (moved from examples)
      holds `CHALK_TIMING`, which `demos/shell.css` repeats (tested); canvas labels are
      rewritten through `reveal`; the gallery writes the equation bar with its board.
-4. **Layout and interaction.** `nextTo`/`arrange`, panels, text wrapping, clipping groups,
-   hit-testing, draggable points.
+4. **Layout and interaction.**
+   - [x] `src/layout.js`: world `getBounds` of any object (text and formulas through a
+     measure), `nextTo`/`arrange`/`moveTo` with `RIGHT`/`LEFT`/`UP`/`DOWN`, `hitTest`
+     (topmost drawn object near a point), `Panel` (frame, title, clipped content).
+   - [x] `Group({ clip })` clips its children; `TextLabel({ wrap: true, maxWidth })` breaks
+     into lines; `bindPointerDrag` (interaction.js) drags what a pick function returns.
 5. **Open roadmap layers.** Contours, vector-field arrows, streamlines, streaming histories,
    matrix/table grids.
 6. **Export.** PNG/SVG of a board state, short video capture for slides.
