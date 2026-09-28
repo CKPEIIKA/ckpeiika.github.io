@@ -9,7 +9,7 @@ import {
   markChalkTransition,
   rewriteChalkLabel,
   rewriteChalkText,
-} from '../../lib/chalkish/examples/chalk-transition.js';
+} from '../../lib/chalkish/src/chalk-transition.js';
 import { bindLabLanguage, bindMobileControls, withCommonTranslations } from '../lab-i18n.js';
 import { bindHelpDialog, bindKeys, renderKeyHelp } from '../keys.js';
 import {

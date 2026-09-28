@@ -147,7 +147,7 @@ class Board {
       // A repaint during the write (fonts arriving, a resize) continues it at the same point.
       if(this.pendingWrite||this.writeStart!=null){
         const now=performance.now();if(this.pendingWrite){this.pendingWrite=false;this.writeStart=now;}
-        this.scene.play(new L.Write(this.scene.roots.slice(),{duration:.9,lag:.125})).advance((now-this.writeStart)/1000);
+        this.scene.play(new L.Write(this.scene.roots.slice(),{duration:L.CHALK_TIMING.writeMs/1000,lag:.125})).advance((now-this.writeStart)/1000);
         this.app.start();
       }
       this.app.render();

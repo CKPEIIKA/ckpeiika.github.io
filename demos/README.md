@@ -97,8 +97,9 @@ essential labels there and the title at the top.
   controls a scrolling sheet below (about 30 %); the bar between them hides the sheet.
 - **Minimums:** text at least 10 px; buttons, links and inputs at least 24 px tall.
 - **Theme:** light/dark comes from `shell.css` tokens. The board is always dark chalk.
-- **Write-in:** opening an experiment writes its board in stroke by stroke (about 1 s,
-  Chalkish `Write`); parameter changes redraw at once, and reduced motion skips it.
+- **Write-in:** opening an experiment writes its board in stroke by stroke and its equation
+  with it (Chalkish `Write` and the page pen of `src/chalk-transition.js`, one timing
+  `CHALK_TIMING`); parameter changes redraw at once, and reduced motion skips it.
 - **Deep links:** `#id` opens an experiment; the browser Back button returns to the catalogue.
 
 ## Preview

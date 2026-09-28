@@ -3,6 +3,7 @@
 
 import { Board } from './board.js';
 import { renderTexElement } from '../../lib/chalkish/src/tex-element.js';
+import { markChalkTransition } from '../../lib/chalkish/src/chalk-transition.js';
 import { bindControlsSheet } from '../controls-sheet.js';
 import { thumbnailCommands } from './thumbnails.js';
 import { bindHelpDialog, bindKeys, renderKeyHelp } from '../keys.js';
@@ -381,6 +382,8 @@ export function startGallery(config) {
       lastView = model.render();
       showEquation(lastView.equation ? (typeof lastView.equation === 'string' ? [lastView.equation, lastView.equation] : lastView.equation) : active.equation);
       if (lastView.ink) board?.render(lastView.ink, { write: writeIn });
+      // The equation above the board is written with the same pen, at the same time.
+      if (writeIn) markChalkTransition($('equation'), 'write');
       writeIn = false;
       if (isLive()) syncControls(); // live scenes move params themselves (e.g. the time slider)
       $('equation-caption').textContent = lastView.caption ?? '';

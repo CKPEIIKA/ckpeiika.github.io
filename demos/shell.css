@@ -250,3 +250,68 @@ body::after {
     display: none;
   }
 }
+
+/* The chalk pen for page text: write, erase and rewrite (lib/chalkish/src/chalk-transition.js
+   sets data-chalk-transition; its CHALK_TIMING matches the durations above). */
+@keyframes chalk-write {
+  from {
+    clip-path: inset(0 100% 0 0);
+    opacity: 0.2;
+    filter: blur(0.7px);
+  }
+  72% { opacity: 0.92; }
+  to {
+    clip-path: inset(0);
+    opacity: 1;
+    filter: none;
+  }
+}
+
+@keyframes chalk-erase {
+  from {
+    clip-path: inset(0);
+    opacity: 1;
+    filter: none;
+  }
+  to {
+    clip-path: inset(0 0 0 100%);
+    opacity: 0.08;
+    filter: blur(1.1px);
+  }
+}
+
+@keyframes chalk-rewrite {
+  0% {
+    clip-path: inset(0);
+    opacity: 1;
+    filter: none;
+  }
+  42% {
+    clip-path: inset(0 0 0 100%);
+    opacity: 0.08;
+    filter: blur(1.2px);
+  }
+  52% {
+    clip-path: inset(0 100% 0 0);
+    opacity: 0.16;
+    filter: blur(0.8px);
+  }
+  82% { opacity: 0.9; }
+  100% {
+    clip-path: inset(0);
+    opacity: 1;
+    filter: none;
+  }
+}
+
+[data-chalk-transition="write"] {
+  animation: chalk-write var(--chalk-transition-duration) steps(9, end) both;
+}
+
+[data-chalk-transition="erase"] {
+  animation: chalk-erase var(--chalk-transition-duration) steps(7, end) both;
+}
+
+[data-chalk-transition="rewrite"] {
+  animation: chalk-rewrite var(--chalk-rewrite-duration) steps(15, end) both;
+}

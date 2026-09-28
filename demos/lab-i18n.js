@@ -1,4 +1,4 @@
-import { rewriteChalkText } from '../lib/chalkish/examples/chalk-transition.js';
+import { rewriteChalkText } from '../lib/chalkish/src/chalk-transition.js';
 import { bindControlsSheet } from './controls-sheet.js';
 import { bindLocaleSwitch, pageLanguage } from './locale.js';
 

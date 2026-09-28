@@ -70,7 +70,9 @@ So the demos draw around it:
    - [x] The gallery writes a board in when an experiment opens (skipped with reduced motion).
    - [x] `Transform` (lines, polylines, arrows, curve layers; resampled by arc length, colour
      blended), `FadeIn`/`FadeOut` (with drift), `Indicate` (swell and colour about the centre).
-   - [ ] One chalk-writing effect for board and page (the page's `chalk-transition.js`).
+   - [x] One chalk pen for board and page: `src/chalk-transition.js` (moved from examples)
+     holds `CHALK_TIMING`, which `demos/shell.css` repeats (tested); canvas labels are
+     rewritten through `reveal`; the gallery writes the equation bar with its board.
 4. **Layout and interaction.** `nextTo`/`arrange`, panels, text wrapping, clipping groups,
    hit-testing, draggable points.
 5. **Open roadmap layers.** Contours, vector-field arrows, streamlines, streaming histories,
