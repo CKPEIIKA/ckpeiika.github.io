@@ -82,8 +82,11 @@ So the demos draw around it:
 5. **Scientific layers.**
    - [x] `src/vector-field.js`: `contourSegments` (marching squares, saddles, gaps) and
      `joinSegments` into long strokes; `traceStreamline(s)` (RK4, bounds, stagnation, closed
-     orbits); `VectorField`, a chalk segment layer of arrows. Lecture 4's contours use it
-     through the gallery's `contourLines`/`g.lines`, Lecture 2's arrows are one VectorField.
+     orbits); `VectorField`, chalk arrows in `shades` layers, brighter where the field is
+     faster. Lecture 4's contours use it through the gallery's `contourLines`/`g.lines`,
+     Lecture 2's arrows are one VectorField.
+   - [x] `TrailLayer` (`src/trails.js`): fading tracks of the last positions of moving
+     points, broken at jumps (periodic wraps). Lecture 2 particles and DSMC tracers use it.
    - [x] `HistoryBuffer` (`src/history.js`, the former site RingHistory) streams the DSMC
      and DG-FV histories; `MatrixGrid` draws matrices with `cellAt`/`highlight`, and the
      gallery's `matrix()` does the same on Ink boards (Lecture 4 SBP).

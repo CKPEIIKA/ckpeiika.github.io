@@ -94,7 +94,7 @@ essential labels there and the title at the top.
 experiment per group of primitives: formulas (`MathLabel`), plots (`PlotFrame`, `PlotAxes`,
 `niceTicks`), animation (`Write`, `Transform`, `FadeIn`, `Indicate`, `Unwrite`), layout
 (`arrange`, `nextTo`, `Panel`), picking and dragging (`hitTest`, `bindPointerDrag`), fields
-(`contourSegments`, `VectorField`, `traceStreamlines`) and data (`MatrixGrid`,
+(`contourSegments`, `VectorField`, `traceStreamlines`; `TrailLayer` for particle tracks) and data (`MatrixGrid`,
 `HistoryBuffer`). `src/panes.js` builds each board from library calls only; copy from it.
 For live scenes, put what stays still (axes, grids, backdrops) in `new Group([...], { cache: true })`:
 it is kept as a bitmap and blitted until something in it changes (`PlotAxes` does this itself).

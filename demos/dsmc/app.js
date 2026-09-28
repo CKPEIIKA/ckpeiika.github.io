@@ -1,4 +1,4 @@
-import { CHALK_NUMBER_FONT_STACK, Camera2D, HistoryBuffer, PlotAxes, Scene, mount, niceBounds } from '../../lib/chalkish/src/index.js';
+import { CHALK_NUMBER_FONT_STACK, Camera2D, HistoryBuffer, PlotAxes, Scene, TrailLayer, mount, niceBounds } from '../../lib/chalkish/src/index.js';
 import {
   createDsmcLabController,
   getDsmcLabPreset,
@@ -50,6 +50,7 @@ const i18n = bindLabLanguage(withCommonTranslations({
     'page.rotationControls': 'Rotation and display',
     'page.rotationEnabled': 'Larsen–Borgnakke exchange',
     'page.highlights': 'Collision marks',
+    'page.trails': 'Tracer trails',
     'page.collisionSample': 'Displayed collisions',
     'page.boardStyle': 'Particles',
     'style.chalk': 'Colored chalk',
@@ -121,6 +122,7 @@ const i18n = bindLabLanguage(withCommonTranslations({
     'page.rotationControls': 'Вращение и отображение',
     'page.rotationEnabled': 'Обмен Ларсена — Боргнакке',
     'page.highlights': 'Метки столкновений',
+    'page.trails': 'Следы частиц-меток',
     'page.collisionSample': 'Доля отображаемых столкновений',
     'page.boardStyle': 'Частицы',
     'style.chalk': 'Цветной мел',
@@ -200,6 +202,7 @@ const nodes = Object.freeze({
   rotationalRelaxation: required('rotational-relaxation'),
   rotationalCollisionNumber: required('rotational-collision-number'),
   eventHighlights: required('event-highlights'),
+  tracerTrails: required('tracer-trails'),
   collisionSample: required('collision-sample'),
   collisionSampleValue: required('collision-sample-value'),
   modelControls: required('model-controls'),
@@ -564,12 +567,29 @@ function updateDiagnostics({ animate = false } = {}) {
   renderPlot();
 }
 
+// Tracer trails: the first particles leave fading tracks, so free flights show as straight
+// runs and collisions as kinks. A jump across the box (periodic wrap) breaks the track.
+const TRACERS = 24;
+const trails = new TrailLayer({
+  length: 24, shades: 4, maxJump: 2, zIndex: 6,
+  style: { stroke: '#f0d477', width: 1.3, opacity: 0.85, roughness: 0.15, passes: 1 },
+});
+controller.scene.add(trails);
+function recordTrails() {
+  trails.setVisible(nodes.tracerTrails.checked);
+  if (!nodes.tracerTrails.checked) return;
+  const { positionsX, positionsY } = controller.model.state;
+  trails.push(positionsX, positionsY, Math.min(TRACERS, positionsX.length));
+}
+nodes.tracerTrails.addEventListener('change', () => { trails.clear(); recordTrails(); app.render(); });
+
 const app = mount(nodes.canvas, {
   scene: controller.scene,
   camera: controller.camera,
   fixedStep: 1 / 30,
   update: () => {
     controller.update();
+    recordTrails();
     diagnosticsCountdown -= 1;
     if (diagnosticsCountdown <= 0) {
       diagnosticsCountdown = 4;
@@ -596,6 +616,7 @@ function reset() {
   controller.view.layers.method.setText(previousMethod);
   plotHistory.clear();
   plotHistoryStep = -1;
+  trails.clear();
   localizeCanvas({ animate: true });
   app.clock?.reset(null);
   diagnosticsCountdown = 0;

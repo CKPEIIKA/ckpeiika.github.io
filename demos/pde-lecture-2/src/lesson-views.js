@@ -12,6 +12,7 @@ import {
   ScalarField,
   Scene,
   TextLabel,
+  TrailLayer,
   VectorField,
   chalkStyle,
 } from '../../../lib/chalkish/src/index.js';
@@ -253,6 +254,10 @@ export function bindFieldLessonView(model) {
     palette: [{ fill: '#eeeada', radius: 1.8, opacity: 0.72 }],
   }) : null;
   if (particles) scene.add(particles);
+  // Fading trails behind the particles show their paths (pathlines); a periodic wrap breaks them.
+  const trails = particles ? new TrailLayer({ length: 18, shades: 4, maxJump: 0.5, zIndex: 4, style: { stroke: '#eeeada', width: 1, opacity: 0.45, roughness: 0.15, passes: 1 } }) : null;
+  if (trails) scene.add(trails);
+  let trailTime = null, trailRevision = null;
 
   const obstacle = new Circle(0.275, {
     zIndex: 5, visible: false,
@@ -299,6 +304,13 @@ export function bindFieldLessonView(model) {
     arrows.setVisible(vectorsVisible);
     if (vectorsVisible) arrows.setVectors({ x: arrowX, y: arrowY, vector: (x, y) => model.velocityAt?.(x, y) ?? [0, 0] });
     particles?.markDataDirty().setVisible(model.parameters.showParticles !== false);
+    if (trails) {
+      trails.setVisible(model.parameters.showParticles !== false);
+      if (model.revision !== trailRevision || trailTime === null || model.time < trailTime) trails.clear();
+      if (model.time !== trailTime) trails.push(model.particlesX, model.particlesY);
+      trailTime = model.time;
+      trailRevision = model.revision;
+    }
     const geometry = model.parameters.geometry ?? (model.parameters.obstacle === 'circle' ? 'circle' : 'none');
     obstacle.setVisible(geometry === 'circle' || geometry === 'two-cylinders');
     obstacle2.setVisible(geometry === 'two-cylinders');
