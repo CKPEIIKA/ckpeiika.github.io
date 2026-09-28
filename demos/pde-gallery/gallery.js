@@ -234,12 +234,16 @@ export function startGallery(config) {
       card.onclick = () => { lastGalleryScroll = scrollY; location.hash = d.id; };
       $('catalogue-grid').append(card);
       if (config.preview) {
-        try {
-          const preview = config.preview(image, d);
-          galleryBoards.push({ destroy: () => preview.dispose() });
-        } catch (error) {
-          console.error(`Preview for ${d.id} failed`, error);
-        }
+        // Live previews are real scenes: one per idle slot, like the thumbnails, so the
+        // catalogue appears at once instead of after every scene has been built.
+        thumbnailQueue.push(() => {
+          try {
+            const preview = config.preview(image, d);
+            galleryBoards.push({ destroy: () => preview.dispose() });
+          } catch (error) {
+            console.error(`Preview for ${d.id} failed`, error);
+          }
+        });
         return;
       }
       const b = new Board(image, { preview: true });
@@ -253,7 +257,7 @@ export function startGallery(config) {
         }
       });
     });
-    if (!config.preview && !startThumbnailWorker(boards)) scheduleThumbnails();
+    if (config.preview || !startThumbnailWorker(boards)) scheduleThumbnails();
   }
 
   // A live model may take a new parameter without restarting (setParameter returns true).

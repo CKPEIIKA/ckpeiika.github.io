@@ -130,6 +130,12 @@ body{min-width:18rem;padding:.55rem 1rem 1rem;font-family:var(--font-board-ui)}
 .lab-main,.stage,.equation,.metrics,.playback,.status-line{background-color:var(--board);background-image:var(--board-texture),linear-gradient(118deg,#14271e,#0b1511 78%);background-size:300px 300px,auto;background-blend-mode:soft-light,normal}
 .equation{font-family:var(--font-chalk);text-shadow:.03em 0 #fff2,-.02em .01em #fff1}
 .metric-value{font-family:var(--font-chalk-clean)}
+/* Everything on the dark board side is chalk, as in the labs: the chalk hand for words, the clean
+   chalk face (Shantell Sans) for buttons and numbers. */
+.metric-label,.speed-label,.status-line,.equation-caption,.mobile-board-hint{font-family:var(--font-chalk);letter-spacing:.01em}
+.metric-label{font-size:12px}
+.status-line{font-size:12px}
+.playback button,.speed-label output{font-family:var(--font-chalk-label);text-shadow:.03em 0 #fff2,-.02em .01em #fff1}
 @media(max-width:800px){body{padding:.5rem .55rem 1rem}.lab-active{height:auto!important;min-height:100dvh;overflow:visible!important;display:block}#demo-view{padding:0 0 1rem}.lab-layout{display:flex;flex-direction:column;min-height:auto}.lab-main{order:0;min-height:auto;flex:none}.controls-panel{order:1;overflow:visible;flex:none}.stage-viewport{display:block;overflow:hidden;flex:none}.stage{min-width:0;width:100%;height:auto;aspect-ratio:1000/610;flex:none}.mobile-board-hint{display:none!important}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.metric{border-bottom:1px dashed #33483b}.playback{flex-wrap:wrap}.demo-toolbar{gap:8px;padding:.45rem 0}.demo-heading h2{font-size:15px}.demo-number{font-size:16px}}
 @media(max-width:480px){.demo-heading h2{font-size:13px}.demo-navigation{gap:3px}.demo-navigation button{width:28px;height:29px}.equation{font-size:14px}.metric{padding:7px 5px}.metric-value{font-size:12px}}
 @media(max-width:1150px){body.lab-active{height:auto;min-height:100dvh;overflow:visible;display:block}#demo-view{padding:0 3vw 20px}.lab-layout{display:flex;flex-direction:column;min-height:auto;flex:initial}.lab-main{order:0;min-height:auto;min-width:0;flex:none}.stage-viewport{display:block;flex:none;overflow:hidden}.stage{min-width:0;width:100%;height:auto;aspect-ratio:1000/610;flex:none;touch-action:pan-y}.controls-panel{order:1;overflow:visible;flex:none;display:block}}

@@ -5,6 +5,7 @@
 import {formatTick} from '../../lib/chalkish/src/ticks.js';
 import {PlotFrame} from '../../lib/chalkish/src/plot-frame.js';
 import {contourSegments,joinSegments} from '../../lib/chalkish/src/vector-field.js';
+import {strokeChalkPath2D} from '../../lib/chalkish/src/chalk.js';
 import {layoutTex,canvasMeasure,paintTex} from '../../lib/chalkish/src/tex.js';
 const C={white:'#f4f1e7',muted:'#a6b8ad',grid:'#2a3a31',yellow:'#f0d477',blue:'#8ac8db',red:'#ef9685',green:'#b6d3a0',bg:'#0d1712',dim:'#506358'};
 const W=1000,H=610,FONT='"Neucha", "Shantell Sans", "Open Sans", system-ui, sans-serif';
@@ -92,14 +93,15 @@ function fmt(x,d=4){if(!Number.isFinite(x))return String(x);if(x===0)return '0';
 // fmt for formulas: 1.86e-4 becomes 1.86·10⁻⁴, 1.00e-6 becomes 10⁻⁶ and Infinity ∞.
 function fmtTex(x,d=4){if(Number.isNaN(x))return '\\text{NaN}';if(!Number.isFinite(x))return x>0?'\\infty':'-\\infty';const s=fmt(x,d),[m,e]=s.split('e');if(e===undefined)return s;const k=Number(m);return Math.abs(k)===1?`${k<0?'-':''}10^{${Number(e)}}`:`${k}\\cdot 10^{${Number(e)}}`;}
 function legend(ink,items,y=492,x=72,step=260){items.forEach(([s,c],i)=>{ink.line(x+i*step,y-5,x+27+i*step,y-5,c,2.5);ink.text(x+37+i*step,y,s,15,c);});}
+// Canvas 2D drawing (thumbnails, fallback) with Chalkish's cheap three-pass chalk stroke.
 function drawShape(ctx,p){
   ctx.strokeStyle=p.color||C.white;ctx.fillStyle=p.fill||'transparent';ctx.lineWidth=p.width||1.5;ctx.setLineDash(p.dash?[7,6]:[]);ctx.beginPath();
   if(p.type==='line'||p.type==='arrow'){ctx.moveTo(p.x1,p.y1);ctx.lineTo(p.x2,p.y2);}
   if(p.type==='rect')ctx.rect(p.x,p.y,p.w,p.h);
   if(p.type==='dot')ctx.arc(p.x,p.y,p.r,0,2*Math.PI);
   if(p.type==='path'){p.points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));}
-  if(p.fill)ctx.fill();if(p.color)ctx.stroke();
-  if(p.type==='arrow'){const a=Math.atan2(p.y2-p.y1,p.x2-p.x1),r=8;ctx.beginPath();ctx.moveTo(p.x2-r*Math.cos(a-.4),p.y2-r*Math.sin(a-.4));ctx.lineTo(p.x2,p.y2);ctx.lineTo(p.x2-r*Math.cos(a+.4),p.y2-r*Math.sin(a+.4));ctx.stroke();}
+  if(p.fill)ctx.fill();if(p.color)strokeChalkPath2D(ctx);
+  if(p.type==='arrow'){const a=Math.atan2(p.y2-p.y1,p.x2-p.x1),r=8;ctx.beginPath();ctx.moveTo(p.x2-r*Math.cos(a-.4),p.y2-r*Math.sin(a-.4));ctx.lineTo(p.x2,p.y2);ctx.lineTo(p.x2-r*Math.cos(a+.4),p.y2-r*Math.sin(a+.4));strokeChalkPath2D(ctx);}
 }
 // Optional text (tick labels) is dropped where it would overlap other text at the size it is
 // actually painted: the enlarged labels of a narrow board keep the higher-priority ticks.
