@@ -9,6 +9,9 @@ remains focused on reusable library mechanisms, so it does not attempt to list
 all 42 cases twice. Duplication is not documentation; it is synchronized failure
 waiting for a calendar invitation.
 
+How Chalkish becomes a complete board for the site's demos (text, plots, formulas,
+write animations) is planned step by step in [BOARD_PLAN.md](BOARD_PLAN.md).
+
 The student-facing PDE modules for CFD Lecture 2 have their own acceptance-led
 plan in [PDE_LECTURE_ROADMAP.md](PDE_LECTURE_ROADMAP.md). The shared library owns
 the tested numerical and drawing primitives; the static course site owns the
