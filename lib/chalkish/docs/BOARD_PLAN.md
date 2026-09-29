@@ -62,6 +62,10 @@ So the demos draw around it:
      when ranges change) with `niceBounds` gives the DSMC and DG-FV insets real values;
      `SampledPlot` curves are clipped at the panel edge; binary collision picks round ticks
      where its even splits were not round (and its plot captions are now bilingual).
+   - [x] Finite-volume pictures on `graph()`: `cells` (averages as a staircase, broken where
+     a value leaves the frame), `averages` (a bar, dot and face per cell at ξ = j) and
+     `stencil` (brackets over cells, stacked by row). Lecture 5's variation, MUSCL, ENO and
+     WENO boards draw with them (test/fv-helpers.test.js).
 3. **Draw-on animations.**
    - [x] `Mobject.reveal` (0…1): strokes drawn up to that fraction of their length (chalk
      grain included, arrows shaft first), text by characters, formulas by glyphs, fills and

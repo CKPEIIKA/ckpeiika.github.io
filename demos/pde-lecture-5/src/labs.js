@@ -16,18 +16,13 @@ function footMath(ink,tex,b=''){ink.line(42,519,958,519,C.dim);ink.math(42,549,t
 // Board formulas are TeX (lib/chalkish/src/tex.js); numbers go in through T.
 function formula(ink,x,y,tex,col=C.yellow,size=20){ink.math(x,y,tex,size,col);}
 function bars(ink,g,values,col=C.yellow,labels=false,width=.66){g.bars(values,{color:col,labels,width,format:F});}
-function staircase(ink,g,u,{color=C.white,width=2,x0=0,h=1/u.length,select=-1}={}){const pts=[];u.forEach((v,i)=>{pts.push([x0+i*h,v],[x0+(i+1)*h,v]);if(i===select&&v>=g.ymin&&v<=g.ymax)ink.rect(g.X(x0+i*h),g.y,g.w/(g.xmax-g.xmin)*h,g.h,null,C.yellow,1.3);});let group=[];const flush=()=>{if(group.length>1)ink.path(group,color,width);group=[];};pts.forEach(([x,y])=>{if(x>=g.xmin-1e-9&&x<=g.xmax+1e-9&&y>=g.ymin&&y<=g.ymax)group.push([g.X(x),g.Y(y)]);else flush();});flush();}
 // Grid lines on the cell faces ξ = i ± ½ between a and b.
 function faces(a,b){return Array.from({length:Math.round(b-a)+1},(_,i)=>a+i);}
 function localGraph(ink,data,{y=111,h=252,w=858,xmin=-3.5,xmax=3.5,selection=[]}={}){
  const vals=Array.from({length:Math.ceil(xmax-xmin)+1},(_,i)=>data.get(Math.floor(xmin)+i)),ex=extent(vals);
  const g=graph(ink,{y,h,w,xmin,xmax,ymin:Math.min(ex[0],-.1),ymax:ex[1],xticks:faces(xmin,xmax),yticks:4,xlabel:'ξ',ylabel:'ū, p'});
- for(let j=Math.ceil(xmin-.5);j<=Math.floor(xmax+.5);j++){
-  if(j-.5<g.xmin||j+.5>g.xmax)continue;
-  ink.line(g.X(j-.5),g.y,g.X(j-.5),g.y+g.h,C.grid);
-  ink.line(g.X(j-.42),g.Y(data.get(j)),g.X(j+.42),g.Y(data.get(j)),selection.includes(j)?C.yellow:C.white,selection.includes(j)?4:2);
-  g.dot(j,data.get(j),3,selection.includes(j)?C.yellow:C.white);
- }
+ const at=[];for(let j=Math.ceil(xmin-.5);j<=Math.floor(xmax+.5);j++)at.push(j);
+ g.averages(at.map(j=>data.get(j)),{at,selected:selection});
  g.curve(data.f,C.dim,1.4,400,true);ink.line(g.X(.5),g.y-4,g.X(.5),g.y+g.h,C.green,2,true);
  return g;
 }
@@ -69,7 +64,7 @@ function orderTest(p,L){return {render(){const ink=new Ink(),n=14,u=Array.from({
  return response(ink,[[L('min(v−u)','min(v−u)'),0],[L('min отклика','Minimum response'),neg],[L('Σ откликов','Response sum'),sum(incr)]],u.map((x,i)=>({cell:i,u:x,v:v[i],Hu:a[i],Hv:b[i],response:incr[i]})));}};}
 
 function variation(p,L){const n=16;let u=Array.isArray(p.values)&&p.values.length===n?[...p.values]:initialAverages(n,p.profile),before=[...u],initialTV=tv(u),count=0,g;return {get count(){return count;},get time(){return count*p.nu/n;},get stop(){return count>=80?'■':'';},step(){before=[...u];u=fluxLimitedStep(u,p.nu,p.method);count++;},paint(x,y){if(!g?.contains(x,y))return false;const[q,z]=g.inverse(x,y),i=clamp(Math.floor(q*n),0,n-1);u[i]=clamp(z,-.2,1.2);before=[...u];initialTV=tv(u);count=0;p.values=[...u];return true;},render(){const ink=new Ink();ink.title(L('Полная вариация: посчитайте каждую ступеньку','Total variation: account for every jump'),L('Рисуйте по верхнему графику. Периодический шов учтён в первом столбике.','Draw on the upper plot. The first bar includes the periodic seam.'));
- const ex=extent([...u,...before]);g=graph(ink,{y:105,h:180,ymin:Math.min(-.25,ex[0]),ymax:Math.max(1.25,ex[1]),xlabel:'x',ylabel:'ū'});staircase(ink,g,before,{color:C.dim,width:2});staircase(ink,g,u,{color:C.yellow,width:3});
+ const ex=extent([...u,...before]);g=graph(ink,{y:105,h:180,ymin:Math.min(-.25,ex[0]),ymax:Math.max(1.25,ex[1]),xlabel:'x',ylabel:'ū'});g.cells(before,{color:C.dim,width:2});g.cells(u,{color:C.yellow,width:3});
  const old=before.map((v,i)=>Math.abs(v-before[mod(i-1,n)])),now=u.map((v,i)=>Math.abs(v-u[mod(i-1,n)]));const low=graph(ink,{y:350,h:109,xmin:-.6,xmax:15.6,ymin:0,ymax:Math.max(.2,...old,...now)*1.1,xticks:0,yticks:2,xlabel:'i',ylabel:'|Δū|'});
  old.forEach((v,i)=>{ink.rect(low.X(i-.35),low.Y(v),low.w/16*.28,low.Y(0)-low.Y(v),C.dim);ink.rect(low.X(i+.02),low.Y(now[i]),low.w/16*.28,low.Y(0)-low.Y(now[i]),now[i]>v+1e-12?C.red:C.yellow);});
  legend(ink,[[L('до шага','before'),C.dim],[L('после шага','after'),C.yellow],[L('локальный рост','local increase'),C.red]],496);
@@ -79,7 +74,7 @@ function variation(p,L){const n=16;let u=Array.isArray(p.values)&&p.values.lengt
 function muscl(p,L){return {render(){const ink=new Ink(),dm=p.center-p.left,dp=p.right-p.center,s=slope(dm,dp,p.limiter),sc=.5*(dm+dp),vals=[p.left,p.center,p.right],ex=extent([...vals,p.center-sc/2,p.center+sc/2,p.center-s/2,p.center+s/2]);
  ink.title(L('Среднее не обязано совпадать со значением на грани','A cell average is not an interface value'),L('Три заданных средних. Меняется только реконструкция центральной ячейки.','Three prescribed averages. Only the center-cell reconstruction changes.'));
  const g=graph(ink,{y:116,h:252,xmin:-1.5,xmax:1.5,ymin:ex[0],ymax:ex[1],xticks:faces(-1.5,1.5),xlabel:'ξ',ylabel:'ū, p(ξ)'});
- vals.forEach((v,i)=>{const j=i-1;ink.line(g.X(j-.5),g.y,g.X(j-.5),g.y+g.h,C.dim);ink.line(g.X(j-.45),g.Y(v),g.X(j+.45),g.Y(v),C.white,3);g.dot(j,v,4,C.white);});ink.rect(g.X(-.5),g.y,g.X(.5)-g.X(-.5),g.h,null,C.yellow,2);
+ g.averages(vals,{at:[-1,0,1],half:.45,width:3,dot:4,faces:C.dim});ink.rect(g.X(-.5),g.y,g.X(.5)-g.X(-.5),g.h,null,C.yellow,2);
  ink.line(g.X(-.5),g.Y(p.center-sc/2),g.X(.5),g.Y(p.center+sc/2),C.red,2,true);
  ink.line(g.X(-.5),g.Y(p.center-s/2),g.X(.5),g.Y(p.center+s/2),C.yellow,4);g.dot(-.5,p.center-s/2,6,C.yellow);g.dot(.5,p.center+s/2,6,C.yellow);
  legend(ink,[[L('средние','averages'),C.white],[L('центральный наклон','centered slope'),C.red],[L('ограниченный','limited'),C.yellow]],414);
@@ -121,7 +116,7 @@ function ssp(p,L){const n=40,h=1/n,u=initialAverages(n,p.profile),sol=rkStep(u,p
 function enoLab(p,L){return {render(){const data=localData(p.profile,p.position,1,p.noise),sel=eno(data.get,0,p.order),coef=polynomialFromAverages(sel.values,sel.offsets),ink=new Ink();
  ink.title(L('ENO: шаблон выбирается шаг за шагом','ENO: the stencil is chosen step by step'),L('Жёлтые отрезки — выбранные средние; зелёная линия — общая правая грань.','Yellow segments are the selected averages; green marks the target interface.'));
  const exactAtJump=p.profile==='jump'&&Math.abs(p.position-.5)<1e-10;const g=localGraph(ink,data,{y:110,h:220,xmin:-3.5,xmax:3.5,selection:sel.offsets});
- g.curve(x=>x>=sel.offsets[0]-.5&&x<=sel.offsets.at(-1)+.5?poly(coef,x):NaN,C.yellow,3,550);g.dot(.5,sel.value,6,C.green);
+ g.stencil(sel.offsets[0],sel.offsets.at(-1),{label:L('шаблон','stencil')});g.curve(x=>x>=sel.offsets[0]-.5&&x<=sel.offsets.at(-1)+.5?poly(coef,x):NaN,C.yellow,3,550);g.dot(.5,sel.value,6,C.green);
  ink.text(72,378,L('Сравнение |Δᵏū|','Compare |Δᵏū|'),17,C.white);ink.text(429,378,L('выбор','choice'),17,C.white);ink.text(660,378,L('текущий набор ячеек','current cell set'),17,C.white);
  let left=0;
  sel.decisions.forEach((d,k)=>{const y=407+32*k;ink.text(72,y,`k=${d.degree}:  ${F(Math.abs(d.dl))}   :   ${F(Math.abs(d.dr))}`,18,C.white);ink.text(435,y,d.chooseLeft?L('← влево','← left'):L('вправо →','right →'),18,C.yellow);left=d.chosen;ink.text(656,y,`{${Array.from({length:d.degree+1},(_,j)=>left+j).join(', ')}}`,18,C.yellow);});
@@ -132,7 +127,7 @@ function enoLab(p,L){return {render(){const data=localData(p.profile,p.position,
 function wenoCandidates(p,L){return {render(){const data=localData(p.profile,p.position),vals=[-2,-1,0,1,2].map(data.get),polys=wenoPolynomials(vals),w=weno5(vals,'linear'),ink=new Ink();
  ink.title(L('Три трёхъячеечных шаблона — одна общая грань','Three three-cell stencils share one interface'),L('Отрезки — средние. Кривые — интегрально согласованные параболы.','Segments are averages; curves are quadratics fitted to those averages.'));
  const exactAtJump=p.profile==='jump'&&Math.abs(p.position-.5)<1e-10;const selected=p.candidate>=0?Array.from({length:3},(_,j)=>p.candidate+j-2):[],g=localGraph(ink,data,{y:117,h:241,xmin:-2.5,xmax:2.5,selection:selected});
- polys.forEach((co,k)=>{const col=p.candidate===-1||p.candidate===k?colors[k]:C.dim;g.curve(x=>x>=k-2.5&&x<=k+.5?poly(co,x):NaN,col,p.candidate===k?3.5:2,400);g.dot(.5,w.q[k],5,col);});
+ polys.forEach((co,k)=>{const col=p.candidate===-1||p.candidate===k?colors[k]:C.dim;g.stencil(k-2,k,{row:k,color:col,label:`S${k}`});g.curve(x=>x>=k-2.5&&x<=k+.5?poly(co,x):NaN,col,p.candidate===k?3.5:2,400);g.dot(.5,w.q[k],5,col);});
  for(let k=0;k<3;k++){const x=80+k*300;ink.line(x,400,x+32,400,colors[k],3);ink.text(x+43,406,`S${k}:  q${k} = ${F(w.q[k])}`,19,colors[k]);ink.text(x,441,`d${k} = ${w.optimal[k]}`,20,C.white);}
  formula(ink,78,490,String.raw`\sum_k d_k q_k = ${T(w.value)}\qquad u(x_{i+½}) = ${exactAtJump?String.raw`\text{${L('разрыв','jump')}}`:T(data.f(.5))}`,C.green,23);
  foot(ink,L('Пятый порядок — у значения именно на грани xᵢ₊½.','Fifth order holds for the value at the interface itself.'),L('После разрыва оптимальные линейные веса уже не знают, какой шаблон следует подавить.','At a jump, optimal linear weights do not know which contaminated stencil to suppress.'));

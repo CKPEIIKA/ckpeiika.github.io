@@ -52,6 +52,7 @@ function graph(ink,{x=72,y=115,w=858,h=295,xmin=0,xmax=1,ymin=-1,ymax=1,xticks=4
   // Lines are cut at the frame edge, so a deliberately unstable curve cannot hide the axes.
   const clipped=(xv,yv,color,width=2,dash=false)=>{for(const run of f.clip(xv,yv)){const pts=[];for(let i=0;i<run.length;i+=2)pts.push([run[i],run[i+1]]);ink.path(pts,color,width,dash);}};
   const inside=(a,b)=>f.contains(X(a),Y(b));
+  const frameH=h; // the cells helper below takes its own h (cell width)
   return {X,Y,x,y,w,h,xmin,xmax,ymin,ymax,frame:f,contains:(px,py)=>f.contains(px,py),
     inverse:(px,py)=>f.value(px,py),
     curve:(fn,color=C.white,width=2,n=400,dash=false)=>{const xv=[],yv=[];for(let i=0;i<=n;i++){const v=f.valueAt('x',i/n);xv.push(v);yv.push(fn(v));}clipped(xv,yv,color,width,dash);},
@@ -67,6 +68,31 @@ function graph(ink,{x=72,y=115,w=858,h=295,xmin=0,xmax=1,ymin=-1,ymax=1,xticks=4
       values.forEach((v,i)=>{if(!Number.isFinite(v))return;const col=typeof color==='function'?color(v,i):color,x0=pixels?X(at[i])-pixels/2:X(at[i]-width/2),bw=pixels??(X(at[i]+width/2)-X(at[i]-width/2)),top=Y(clampY(v));
         ink.rect(x0,Math.min(top,base),bw,Math.abs(top-base),col,stroke===undefined?col:stroke);
         if(labels){ink.text(X(at[i]),top+(v<0?23:-9),format(v),labelSize,col,'center');ink.cmd.at(-1).font='number';}});
+    },
+    // Finite volumes. cells: cell averages as a staircase over equal cells from x0 (the whole
+    // x range by default); a run leaving the frame is broken, not clamped; select outlines one cell.
+    cells:(values,{x0=xmin,h=(xmax-xmin)/values.length,color=C.white,width=2,select=-1}={})=>{
+      let run=[];const flush=()=>{if(run.length>1)ink.path(run,color,width);run=[];};
+      values.forEach((v,i)=>{
+        if(i===select&&v>=ymin&&v<=ymax)ink.rect(X(x0+i*h),y,X(x0+(i+1)*h)-X(x0+i*h),frameH,null,C.yellow,1.3);
+        for(const a of [x0+i*h,x0+(i+1)*h]){if(Number.isFinite(v)&&a>=xmin-1e-9&&a<=xmax+1e-9&&v>=ymin&&v<=ymax)run.push([X(a),Y(v)]);else flush();}
+      });flush();
+    },
+    // averages: one short bar and dot per cell of unit width centred at the integers in at (ξ = j,
+    // faces at j ± ½), with the left face of each cell drawn in faces (null: none). Cells in
+    // selected are drawn in yellow; cells that do not fit the x range are skipped.
+    averages:(values,{at=values.map((_,i)=>i),half=.42,color=C.white,width=2,dot=3,faces=C.grid,selected=[]}={})=>{
+      values.forEach((v,i)=>{const j=at[i];if(j-.5<xmin-1e-9||j+.5>xmax+1e-9||!Number.isFinite(v))return;const on=selected.includes(j),col=on?C.yellow:color;
+        if(faces)ink.line(X(j-.5),y,X(j-.5),y+frameH,faces);
+        ink.line(X(j-half),Y(v),X(j+half),Y(v),col,on?width+2:width);
+        if(inside(j,v))ink.dot(X(j),Y(v),dot,col);});
+    },
+    // stencil: a bracket over cells first … last along the top of the frame (row 0, 1, … stacks
+    // them downwards), with an optional label at its right end.
+    stencil:(first,last,{row=0,color=C.yellow,label='',width=2}={})=>{
+      const a=X(first-.5)+4,b=X(last+.5)-4,top=y+12+16*row;
+      ink.path([[a,top+6],[a,top],[b,top],[b,top+6]],color,width);
+      if(label)ink.text(b+6,top+5,label,13,color);
     },
     // Counts of samples in equal bins over [xmin, xmax], drawn as touching bars; returns the counts.
     histogram:(samples,{bins=20,color=C.blue,stroke=C.dim}={})=>{
