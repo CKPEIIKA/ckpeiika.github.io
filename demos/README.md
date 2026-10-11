@@ -3,7 +3,7 @@
 Every demo on this site looks and behaves the same way: one header, one theme toggle,
 one EN/RU switch, one catalogue style, one experiment view, one phone layout. A new
 lecture is a copy of `_template/` with its own experiments; it inherits all of that.
-The tests in `test/demo-consistency.test.js` find new demo folders by themselves and
+The tests in `tests/demo-consistency.test.js` find new demo folders by themselves and
 fail when a demo leaves the standard.
 
 ## Start a lecture
