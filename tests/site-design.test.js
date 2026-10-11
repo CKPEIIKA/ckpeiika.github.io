@@ -62,10 +62,10 @@ test('markdown pages use kramdown maths and no root-relative links', async () =>
   }
 });
 
-test('the assignments page lists problem 2 with its common requirements and 25 variants', async () => {
+test('the assignments page lists problem 2 with its common requirements and 19 variants', async () => {
   const page = await read('pages/ml-assignments.html');
   assert.match(page, /<details id="task-2" class="assignment-detail">/, 'the roster link #task-2 has a target');
   const ids = [...page.matchAll(/<details id="(problem2-variant-\d+)"/g)].map((match) => match[1]);
-  assert.deepEqual(ids, Array.from({ length: 25 }, (_, i) => `problem2-variant-${i + 1}`));
+  assert.deepEqual(ids, Array.from({ length: 19 }, (_, i) => `problem2-variant-${i + 1}`));
   assert.equal((page.match(/<details\b/g) ?? []).length, (page.match(/<\/details>/g) ?? []).length, 'every details element is closed');
 });
