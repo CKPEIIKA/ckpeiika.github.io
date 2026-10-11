@@ -43,7 +43,8 @@ body:has(#site-theme-toggle:checked) main {
 .tablewrap th,
 .tablewrap td {
   padding: 9px 10px;
-  overflow-wrap: anywhere;
+  /* break-word, unlike anywhere, keeps a whole word in the column's minimum width. */
+  overflow-wrap: break-word;
   border: 0;
   border-right: 1px solid var(--accent-color);
   border-bottom: 1px solid var(--accent-color);

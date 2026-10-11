@@ -39,6 +39,8 @@ scripts:
   <td class="task-done" data-label="Задача {{ task_number }}">✓ Выполнена</td>
     {% elsif task_status == 'closed' %}
   <td class="closed" data-label="Задача {{ task_number }}">×</td>
+    {% elsif task_number == 2 and student.task2_variant != '' %}
+  <td data-label="Задача 2"><a class="task" href="#problem2-variant-{{ student.task2_variant | escape }}">{{ student.task2_title | escape }}</a></td>
     {% else %}
   <td data-label="Задача {{ task_number }}"><a class="task" href="#task-{{ task_number }}">Задача {{ task_number }}</a></td>
     {% endif %}
@@ -54,7 +56,7 @@ scripts:
 {% endfor %}
 </tbody>
 </table></div>
-<p class="legend">Задача 0 общая для всех студентов; × — задачи 2–6 пока закрыты, — в столбце курсовой работы означает, что тема ещё не назначена.</p>
+<p class="legend">Задача 0 общая для всех студентов; × — задачи 3–6 пока закрыты, — в столбце курсовой работы означает, что тема ещё не назначена.</p>
 </section>
 
 
