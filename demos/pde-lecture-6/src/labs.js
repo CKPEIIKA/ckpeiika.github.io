@@ -44,8 +44,8 @@ function waveModels(p,L){return{render(){
   const cols=[C.blue,C.yellow,C.red];ls.forEach((v,i)=>{ink.arrow(g.X(0),g.Y(0),g.X(v*tau),g.Y(tau),cols[i%3],2.7);ink.text(g.X(v*tau),g.Y(tau)-10,F(v),15,cols[i%3],'center');});
   ink.dot(g.X(0),g.Y(0),5,C.white);ink.line(g.x,g.Y(tau),g.x+g.w,g.Y(tau),C.dim,1,true);
   ink.text(632,130,L('Состояния в веере','States in the fan'),21,C.white);
-  const modelRows=p.method==='roe'?['U_L → U₁ → U₂ → U_R','λ = ũ − ã, ũ, ũ + ã']:p.method==='hllc'?['U_L → U*L → U*R → U_R','S_L, S*, S_R']:['U_L → U_HLL → U_R','S_L, S_R'];
-  modelRows.forEach((v,i)=>ink.text(632,176+i*39,v,19,i?C.yellow:C.white));
+  const modelRows=p.method==='roe'?[String.raw`U_L\to U_1\to U_2\to U_R`,String.raw`\lambda=\tilde u-\tilde a,\ \tilde u,\ \tilde u+\tilde a`]:p.method==='hllc'?[String.raw`U_L\to U_{*L}\to U_{*R}\to U_R`,String.raw`S_L,\ S_*,\ S_R`]:[String.raw`U_L\to U_{HLL}\to U_R`,String.raw`S_L,\ S_R`];
+  modelRows.forEach((v,i)=>ink.math(632,176+i*39,v,19,i?C.yellow:C.white));
   const lines=p.method==='hll'||p.method==='hlle'?[L('Контакт внутри одной средней зоны.','The contact lies inside one mean state.'),L('Его скачок не хранится отдельно.','Its jump is not retained separately.')]:[L('Средняя волна переносит контакт.','The middle wave transports the contact.'),L('u и p непрерывны через контакт.','u and p are continuous at a contact.')];
   lines.forEach((v,i)=>ink.text(632,293+i*33,v,17,C.muted));
   ink.text(632,409,L('Прямые — модель волн решателя.','Straight rays are the solver’s wave model.'),16,C.green);
@@ -61,13 +61,13 @@ function interfaceFlux(p,L){return{render(){
   const A=[[0,1,0,0],[.5*(G-3)*u*u+.5*(G-1)*v*v,(3-G)*u,-(G-1)*v,G-1],[-u*v,v,u,0],[u*(.5*(G-1)*(u*u+v*v)-h),h-(G-1)*u*u,-(G-1)*u*v,G*u]];
   const residual=norm(A.map((row,i)=>row.reduce((s,c,j)=>s+c*du[j],0)-(fr[i]-fl[i])));
   ink.text(65,498,`Roe:  ‖ Ã ΔU − ΔF ‖₂ = ${F(residual)}`,20,C.green);
-  note(ink,L('Численный поток — функция двух состояний. Расхождение здесь ещё не является ошибкой.','A numerical flux is a function of two states. A difference here is not yet an error.'),L('При U_L = U_R каждый согласованный поток должен совпасть с физическим F(U).','At U_L = U_R, every consistent flux must equal the physical flux F(U).'));
+  note(ink,L('Численный поток — функция двух состояний. Расхождение здесь ещё не является ошибкой.','A numerical flux is a function of two states. A difference here is not yet an error.'),L('Если левое и правое состояния равны, каждый согласованный поток совпадает с физическим F(U).','If the left and right states are equal, every consistent flux equals the physical flux F(U).'));
   return response(ink,[[L('Невязка Роу','Roe residual'),residual],['ε entropy',p.entropyFix??.1],['M∞ (+up)',p.lowMachCutoff??1]],rows);}};}
 
 function hllSpeeds(p,L){return{render(){
   const ink=new Ink(),[a,b]=initialStates(p),cases=['hll','hlle'].map(id=>({id,...hllIntermediate(a,b,id)})),all=cases.flatMap(c=>[c.SL,c.SR]),[lo,hi]=extent([...all,0],.2);
   ink.title(L('Одна формула HLL, разные оценки крайних скоростей','One HLL formula, different outer-speed estimates'),L('Davis: физические края обоих состояний. Einfeldt: физические и осреднённые края.','Davis: physical endpoints from both states. Einfeldt: physical and Roe-averaged endpoints.'));
-  cases.forEach((c,j)=>{const y=130+j*178,g=graph(ink,{x:100,y,w:790,h:76,xmin:lo,xmax:hi,ymin:0,ymax:1,yticks:0,xlabel:'S',ylabel:''});ink.line(g.X(c.SL),g.Y(.5),g.X(c.SR),g.Y(.5),color(c.id),8);g.dot(c.SL,.5,7,color(c.id));g.dot(c.SR,.5,7,color(c.id));ink.text(100,y-15,name(c.id),21,color(c.id));ink.text(100,y+128,`S_L = ${F(c.SL)};   S_R = ${F(c.SR)};    ρ_HLL = ${F(c.state.rho)};    p_HLL = ${F(c.state.p)}`,19,c.state.p>0&&c.state.rho>0?C.white:C.red);});
+  cases.forEach((c,j)=>{const y=128+j*186,g=graph(ink,{x:100,y,w:790,h:70,xmin:lo,xmax:hi,ymin:0,ymax:1,yticks:0,xlabel:'S',ylabel:''});ink.line(g.X(c.SL),g.Y(.5),g.X(c.SR),g.Y(.5),color(c.id),8);g.dot(c.SL,.5,7,color(c.id));g.dot(c.SR,.5,7,color(c.id));ink.text(100,y-15,name(c.id),21,color(c.id));ink.math(100,y+136,String.raw`S_L=${F(c.SL)};\ \ S_R=${F(c.SR)};\ \ \rho_{HLL}=${F(c.state.rho)};\ \ p_{HLL}=${F(c.state.p)}`,16,c.state.p>0&&c.state.rho>0?C.white:C.red);});
   note(ink,L('Проверьте сильное разрежение. Какие состояния попадают внутрь скоростной оболочки?','Try strong rarefaction. Which states fall inside the estimated wave envelope?'),L('Положительность промежуточного состояния и положительность полного шага — разные проверки.','Positivity of an intermediate state and positivity of a full update are separate checks.'));
   return response(ink,cases.flatMap(c=>[[`${name(c.id)} ρ*`,c.state.rho],[`${name(c.id)} p*`,c.state.p]]),cases.map(c=>({method:c.id,SL:c.SL,SR:c.SR,rhoHLL:c.state.rho,pHLL:c.state.p})));}};}
 
@@ -95,14 +95,14 @@ function machSplit(m,s,up){if(Math.abs(m)>=1)return.5*(m+s*Math.abs(m));const ba
 function pressureSplit(m,s,alpha=0){if(Math.abs(m)>=1)return .5*(1+s*Math.sign(m));return .25*(m+s)**2*(2-s*m)+s*alpha*m*(m*m-1)**2;}
 function ausmSplit(p,L){return{render(){
   const ink=new Ink(),up=p.variant==='ausm-up',ml=p.machL??.2,mr=p.machR??-.1,m0=Math.sqrt(Math.min(1,Math.max((ml*ml+mr*mr)/2,(p.lowMachCutoff??.1)**2))),fa=m0*(2-m0),alpha=up?3/16*(-4+5*fa*fa):0,xs=range(-2,2,241);
-  ink.title(L('AUSM: раздельные полиномы для переноса и давления','AUSM: separate polynomials for advection and pressure'),`${up?'AUSM+up: M₄, P₅':'AUSM: M₂, P₃'}   |   f_a = ${F(fa)};  α = ${F(alpha)}`);
+  ink.title(L('AUSM: раздельные полиномы для переноса и давления','AUSM: separate polynomials for advection and pressure'),`${up?'AUSM+up: M₄, P₅':'AUSM: M₂, P₃'}   |   fₐ = ${F(fa)};  α = ${F(alpha)}`);
   const a=graph(ink,{x:83,y:142,w:370,h:250,xmin:-2,xmax:2,ymin:-2.1,ymax:2.1,xlabel:'M',ylabel:'M⁺, M⁻'}),b=graph(ink,{x:562,y:142,w:345,h:250,xmin:-2,xmax:2,ymin:-.1,ymax:1.1,xlabel:'M',ylabel:'P⁺, P⁻'});
   for(const s of[1,-1]){const col=s===1?C.yellow:C.blue;a.series(xs,xs.map(m=>machSplit(m,s,up)),col,2.4);b.series(xs,xs.map(m=>pressureSplit(m,s,alpha)),col,2.4);}
   a.dot(ml,machSplit(ml,1,up),6,C.yellow);a.dot(mr,machSplit(mr,-1,up),6,C.blue);b.dot(ml,pressureSplit(ml,1,alpha),6,C.yellow);b.dot(mr,pressureSplit(mr,-1,alpha),6,C.blue);
   const mf=machSplit(ml,1,up)+machSplit(mr,-1,up),pf=pressureSplit(ml,1,alpha)+pressureSplit(mr,-1,alpha),pu=up?-.75*pressureSplit(ml,1,alpha)*pressureSplit(mr,-1,alpha)*2*fa*(mr-ml):0;
-  ink.text(82,454,`M⁺(M_L) + M⁻(M_R) = ${F(mf)}`,20,C.yellow);ink.text(82,495,`P⁺(M_L) + P⁻(M_R) = ${F(pf)};    P_u / (ρa²) = ${F(pu)}`,20,C.blue);
-  note(ink,up?L('Добавки M_p и P_u связывают скачки давления и скорости с численными потоками.','The M_p and P_u terms couple pressure and velocity jumps to the numerical fluxes.'):L('Сложите положительную часть слева и отрицательную справа.','Combine the positive contribution from the left with the negative contribution from the right.'),L('Полиномиальный этап: коэффициенты нормированы, скачок давления нулевой, M_p = 0.','Polynomial stage: normalized coefficients, zero pressure jump, M_p = 0.'));
-  return response(ink,[['M split',mf],['P split',pf],['f_a',fa],['P_u / ρa²',pu]],xs.map(m=>({mach:m,Mplus:machSplit(m,1,up),Mminus:machSplit(m,-1,up),Pplus:pressureSplit(m,1,alpha),Pminus:pressureSplit(m,-1,alpha)})));}};}
+  ink.math(82,454,String.raw`M^+(M_L)+M^-(M_R)=${F(mf)}`,20,C.yellow);ink.math(82,495,String.raw`P^+(M_L)+P^-(M_R)=${F(pf)};\ \ P_u/(\rho a^2)=${F(pu)}`,20,C.blue);
+  note(ink,up?L('Добавки Mp и Pᵤ связывают скачки давления и скорости с численными потоками.','The Mp and Pᵤ terms couple pressure and velocity jumps to the numerical fluxes.'):L('Сложите положительную часть слева и отрицательную справа.','Combine the positive contribution from the left with the negative contribution from the right.'),L('Полиномиальный этап: коэффициенты нормированы, скачок давления нулевой, Mp = 0.','Polynomial stage: normalized coefficients, zero pressure jump, M_p = 0.'));
+  return response(ink,[['M split',mf],['P split',pf],['fₐ',fa],['Pᵤ / ρa²',pu]],xs.map(m=>({mach:m,Mplus:machSplit(m,1,up),Mminus:machSplit(m,-1,up),Pplus:pressureSplit(m,1,alpha),Pminus:pressureSplit(m,-1,alpha)})));}};}
 
 function lowMach(p,L){return{render(){
   const ink=new Ink(),selected=[p.methodA??'roe',p.methodB??'ausm-up'],xs=range(-4,0,100),grad=p.gradient??.1;

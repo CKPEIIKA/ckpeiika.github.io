@@ -32,7 +32,7 @@ class Ink {
   // A measured scalar array, rendered by Chalkish ScalarField in a single draw.
   // This avoids thousands of separate chalk rectangles for an Euler grid.
   field(data,columns,rows,{x,y,w,h,min,max,palette='chalk'}={}){this.cmd.push({type:'field',data,columns,rows,x,y,w,h,min,max,palette});return this;}
-  title(text,sub=''){this.text(42,31,text,20,C.white);this.cmd.at(-1).maxWidth=835;if(sub){this.text(42,57,sub,14,C.muted);this.cmd.at(-1).maxWidth=915;}return this;}
+  title(text,sub=''){this.text(42,31,text,20,C.white);this.cmd.at(-1).maxWidth=835;if(sub){this.text(42,60,sub,14,C.muted);this.cmd.at(-1).maxWidth=915;}return this;}
   badge(x,y,text,color=C.yellow){this.text(x,y,text,15,color);return this;}
 }
 // graph(): a framed plot on the board (lib/chalkish/src/plot-frame.js does the arithmetic).
