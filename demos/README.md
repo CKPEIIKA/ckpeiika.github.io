@@ -9,16 +9,17 @@ fail when a demo leaves the standard.
 ## Start a lecture
 
 ```sh
-node scripts/new-lecture.mjs 6 "Название лекции" "Lecture title" \
+node scripts/new-lecture.mjs 7 "Название лекции" "Lecture title" \
   --question-ru "Главный вопрос лекции?" --question-en "The lecture's main question?" \
   --summary-ru "Что показывают опыты." --summary-en "What the experiments show."
-./preview.sh          # then open /demos/pde-lecture-6/ (add --python to skip Jekyll)
+./preview.sh          # then open /demos/pde-lecture-7/ (add --python to skip Jekyll)
 npm test                                       # or: node --test lib/chalkish/test/*.test.js test/*.test.js
 ```
 
-The script copies `_template/` to `pde-lecture-6/`, fills the titles and adds the link to
-`pages/cfd2026.md`. Then replace the two example experiments. `_template/` itself is never
-published (Jekyll skips folders starting with `_`), but you can open it locally.
+The script copies `_template/` to `pde-lecture-7/`, fills the titles and adds the link to
+`pages/cfd2026.md`. Then replace the two example experiments. `_template/` is force-included
+by Jekyll and published at `/demos/_template/` as an unlisted, noindex preview; it stays out
+of site navigation and can also be opened locally.
 
 ## What a lecture contains
 
@@ -77,7 +78,7 @@ optional `tool: { label }` with `setTool(active)` adds the ✎ button, and `disp
 Pass `preview(host, demo)` to `startGallery` to draw the catalogue pictures yourself.
 
 Drawing uses `../../pde-gallery/board.js`: the board is **1000 × 610** units; `Ink` has
-`line`, `arrow`, `rect`, `dot`, `path`, `text`, `math`, `title(text, subtitle)`; `graph(ink, {…})`
+`line`, `arrow`, `rect`, `dot`, `path`, `text`, `math`, `field` (scalar fields), `title(text, subtitle)`; `graph(ink, {…})`
 returns `curve`, `series`, `dot`, `contains`, `inverse`; `legend`, `fmt` and the chalk
 colours `C` complete it. `xticks`/`yticks` ask for about that many intervals at round values,
 or take explicit values / `[value, label]` pairs (e.g. `[[Math.PI, 'π']]`). Text is drawn as

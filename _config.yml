@@ -8,16 +8,21 @@ kramdown:
   math_engine: mathjax
 plugins:
   - kramdown-parser-gfm
+# Jekyll matches explicitly included nested directories by basename while traversing.
+# Publish the reusable template for direct access; its page metadata keeps it unlisted.
+include:
+  - _template
 exclude:
   - AGENTS.md
   - README.md
   - demos/README.md
+  - demos/pde-lecture-6/README.md
   - preview.sh
   - Gemfile
   - Gemfile.lock
   - package.json
   - scripts
-  - test
+  - tests
   - todo
   - lib/chalkish/LICENSE
   - lib/chalkish/README.md

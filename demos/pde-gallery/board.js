@@ -7,6 +7,7 @@ import {PlotFrame} from '../../lib/chalkish/src/plot-frame.js';
 import {contourSegments,joinSegments} from '../../lib/chalkish/src/vector-field.js';
 import {strokeChalkPath2D} from '../../lib/chalkish/src/chalk.js';
 import {layoutTex,canvasMeasure,paintTex} from '../../lib/chalkish/src/tex.js';
+import {COLORMAPS,mapScalarToRgba} from '../../lib/chalkish/src/field.js';
 const C={white:'#f4f1e7',muted:'#a6b8ad',grid:'#2a3a31',yellow:'#f0d477',blue:'#8ac8db',red:'#ef9685',green:'#b6d3a0',bg:'#0d1712',dim:'#506358'};
 const W=1000,H=610,FONT='"Neucha", "Shantell Sans", "Open Sans", system-ui, sans-serif';
 // Numbers (ticks, bar values): a face whose decimal point stays visible at 12px, like the
@@ -28,6 +29,9 @@ class Ink {
   text(x,y,text,size=16,color=C.white,align='left'){this.cmd.push({type:'text',x,y,text:String(text),size,color,align});return this;}
   // A formula in the TeX subset of lib/chalkish/src/tex.js, e.g. String.raw`u^{n+1}_i = ${fmtTex(v)}`.
   math(x,y,tex,size=20,color=C.white,align='left'){this.cmd.push({type:'math',x,y,tex:String(tex),size,color,align});return this;}
+  // A measured scalar array, rendered by Chalkish ScalarField in a single draw.
+  // This avoids thousands of separate chalk rectangles for an Euler grid.
+  field(data,columns,rows,{x,y,w,h,min,max,palette='chalk'}={}){this.cmd.push({type:'field',data,columns,rows,x,y,w,h,min,max,palette});return this;}
   title(text,sub=''){this.text(42,31,text,20,C.white);this.cmd.at(-1).maxWidth=835;if(sub){this.text(42,57,sub,14,C.muted);this.cmd.at(-1).maxWidth=915;}return this;}
   badge(x,y,text,color=C.yellow){this.text(x,y,text,15,color);return this;}
 }
@@ -121,6 +125,12 @@ function fmtTex(x,d=4){if(Number.isNaN(x))return '\\text{NaN}';if(!Number.isFini
 function legend(ink,items,y=492,x=72,step=260){items.forEach(([s,c],i)=>{ink.line(x+i*step,y-5,x+27+i*step,y-5,c,2.5);ink.text(x+37+i*step,y,s,15,c);});}
 // Canvas 2D drawing (thumbnails, fallback) with Chalkish's cheap three-pass chalk stroke.
 function drawShape(ctx,p){
+  if(p.type==='field'){
+    const surface=typeof OffscreenCanvas==='function'?new OffscreenCanvas(p.columns,p.rows):document.createElement('canvas');
+    surface.width=p.columns;surface.height=p.rows;const sc=surface.getContext('2d'),pixels=sc.createImageData(p.columns,p.rows);
+    mapScalarToRgba(p.data,pixels.data,COLORMAPS[p.palette]??COLORMAPS.chalk,p.min,p.max);
+    sc.putImageData(pixels,0,0);ctx.save();ctx.imageSmoothingEnabled=false;ctx.drawImage(surface,p.x,p.y,p.w,p.h);ctx.restore();return;
+  }
   ctx.strokeStyle=p.color||C.white;ctx.fillStyle=p.fill||'transparent';ctx.lineWidth=p.width||1.5;ctx.setLineDash(p.dash?[7,6]:[]);ctx.beginPath();
   if(p.type==='line'||p.type==='arrow'){ctx.moveTo(p.x1,p.y1);ctx.lineTo(p.x2,p.y2);}
   if(p.type==='rect')ctx.rect(p.x,p.y,p.w,p.h);
@@ -160,13 +170,16 @@ class Board {
       }catch(e){console.warn('Chalkish initialization failed; using standalone renderer.',e);this.app?.destroy();this.app=null;this.engine='canvas';}}
       this.onEngine(this.engine);this.paint();
       // Canvas text never triggers a web-font download: load both faces, then repaint.
-      Promise.all([document.fonts?.load(`16px ${FONT}`),document.fonts?.load(`16px ${NUMBER_FONT}`,'0.5')]).then(()=>{if(!this.dead)this.paint();},error=>console.error('Board fonts could not be loaded.',error));
+      Promise.all([document.fonts?.load(`16px ${FONT}`),document.fonts?.load(`16px ${NUMBER_FONT}`,'0.5'),
+        // Canvas text does not trigger unicode-range downloads: ask for the Greek subset (ρ, λ, Δ, ε) that the chalk faces lack.
+        document.fonts?.load('16px "Open Sans"','ρλΔε')]).then(()=>{if(!this.dead)this.paint();},error=>console.error('Board fonts could not be loaded.',error));
     });
   }
   // write: draw the board in stroke by stroke (Chalkish Write), unless motion is reduced.
   // One board command as a Chalkish object (null for an empty path).
   build(p,fontScale){
     const L=this.lib;
+    if(p.type==='field')return new L.ScalarField(p.data,p.columns,p.rows,{minX:p.x,minY:p.y,maxX:p.x+p.w,maxY:p.y+p.h,min:p.min,max:p.max,lut:L.COLORMAPS[p.palette]??L.COLORMAPS.chalk,interpolation:'nearest'});
     // Labels are chalk text on the board: board-unit size (enlarged on narrow boards as
     // before), never below the site's 10 px text minimum.
     if(p.type==='text')return new L.TextLabel(p.text,{x:p.x,y:p.y,size:p.size*fontScale,minPixelSize:10,font:`16px ${family(p)}`,align:p.align,baseline:'alphabetic',maxWidth:p.maxWidth||(p.align==='left'?W-p.x-20:undefined),style:{fill:p.color,passes:1}});

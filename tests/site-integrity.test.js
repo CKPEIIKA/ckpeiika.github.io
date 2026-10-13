@@ -15,7 +15,7 @@ const excludedPageDirs = new Set([
   'lib',
   'node_modules',
   'scripts',
-  'test',
+  'tests',
   'todo',
   'vendor',
 ]);
@@ -38,8 +38,9 @@ function isPublishedPage(file) {
   const extension = path.posix.extname(file).toLowerCase();
   if (!['.html', '.md', '.markdown'].includes(extension)) return false;
   if (['README.md', 'AGENTS.md'].includes(path.posix.basename(file))) return false;
-  // Like Jekyll, folders starting with '_' (e.g. demos/_template) are never published.
-  return !file.split('/').some((part) => excludedPageDirs.has(part) || part.startsWith('_'));
+  // Jekyll skips underscore folders unless explicitly included in _config.yml.
+  const explicitlyIncluded = file.startsWith('demos/_template/');
+  return !file.split('/').some((part) => excludedPageDirs.has(part) || (part.startsWith('_') && !explicitlyIncluded));
 }
 
 function liquidTargets(value) {
