@@ -15,7 +15,7 @@ scripts:
 <p class="intro">Можно использовать нейросети, агентов, чит-коды, джиннов, уличную магию.</p>
 <p class="submission-note"><strong>Как сдать:</strong> приложите ZIP-архив вида <code>stxxxxx_номерзадания.zip</code> (например, <code>st117157_0.zip</code>) или отправьте ссылку на GitHub.</p>
 <div class="tablewrap"><table>
-<thead><tr><th>Студент</th><th>Задача 0<br><time datetime="2026-09-16">16.09.2026</time></th><th>Задача 1<br><time datetime="2026-09-23">23.09.2026</time></th><th>Задача 2<br><time datetime="2026-09-30">30.09.2026</time></th><th>Задача 3<br><time datetime="2026-10-07">07.10.2026</time></th><th>Задача 4</th><th>Задача 5</th><th>Задача 6</th><th>Курсовая работа</th></tr></thead>
+<thead><tr><th>Студент</th><th>Задача 0<br><time datetime="2026-09-16">16.09.2026</time></th><th>Задача 1<br><time datetime="2026-09-23">23.09.2026</time></th><th>Задача 2<br><time datetime="2026-09-30">30.09.2026</time></th><th>Задача 3<br><time datetime="2026-10-07">07.10.2026</time></th><th>Задача 4<br><time datetime="2026-10-28">28.10.2026</time></th><th>Задача 5</th><th>Задача 6</th><th>Курсовая работа</th></tr></thead>
 <tbody>
 {% for student in site.data.ml_students %}
 <tr{% if student.row_id != '' %} id="{{ student.row_id | escape }}"{% endif %}{% if student.row_class != '' %} class="{{ student.row_class | escape }}"{% endif %}>
@@ -37,6 +37,7 @@ scripts:
     {% case task_number %}
       {% when 2 %}{% assign task_due_date = '30.09.2026' %}
       {% when 3 %}{% assign task_due_date = '07.10.2026' %}
+      {% when 4 %}{% assign task_due_date = '28.10.2026' %}
     {% endcase %}
     {% assign task_label = 'Задача ' | append: task_number %}
     {% if task_due_date != '' %}{% assign task_label = task_label | append: ' · ' | append: task_due_date %}{% endif %}
