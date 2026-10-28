@@ -13,7 +13,7 @@ st122316,,,assigned,assigned,11,Деградация Li-ion аккумулято
 st117210,,,completed,assigned,12,Износ фрезерного инструмента,unassigned,assigned,assigned,assigned,closed,closed,17,Устойчивость энергосети,12,Геометрические типы дефектов проката,20,Отказ промышленного оборудования (модель AI4I)
 st117207,,,assigned,assigned,13,Деградация подшипника,unassigned,assigned,assigned,assigned,closed,closed,18,Состояния космического аппарата Shuttle,13,Общие режимы гидравлического испытательного стенда,21,Дрейф отклика массива химических сенсоров
 st117158,,,assigned,assigned,14,Остаточный ресурс турбореактивного двигателя,unassigned,assigned,assigned,assigned,closed,closed,19,Прогноз опасного сейсмического события в шахте,14,Компактное представление событий нейтринного детектора,22,Радиолокация ионосферы
-stxxxxx,,,assigned,closed,,,unassigned,closed,assigned,assigned,closed,closed,,,15,Режимы работы промышленной газовой турбины,23,Гидроакустическое различение цилиндра и породы
+st117175,,,assigned,assigned,16,Критическая температура сверхпроводника,unassigned,assigned,assigned,assigned,closed,closed,1,Состояние клапана гидравлической системы,15,Режимы работы промышленной газовой турбины,23,Гидроакустическое различение цилиндра и породы
 stxxxxx,,,assigned,closed,,,unassigned,closed,assigned,assigned,closed,closed,,,16,Главные тепловые режимы жилого здания,24,Потеря захвата промышленным манипулятором UR3
 stxxxxx,,,assigned,closed,,,unassigned,closed,assigned,assigned,closed,closed,,,17,Колебательные режимы вентилятора с дисбалансом,25,Устойчивость четырёхузловой электросети
 stxxxxx,,,assigned,closed,,,unassigned,closed,assigned,assigned,closed,closed,,,18,Скрытая геометрия вибраций дефектных подшипников,1,Аэроакустика аэродинамического профиля
