@@ -69,3 +69,15 @@ test('the assignments page lists problem 2 with its common requirements and 19 v
   assert.deepEqual(ids, Array.from({ length: 19 }, (_, i) => `problem2-variant-${i + 1}`));
   assert.equal((page.match(/<details\b/g) ?? []).length, (page.match(/<\/details>/g) ?? []).length, 'every details element is closed');
 });
+
+test('the assignments page lists problem 4 with its common requirements and 25 variants, each linked from the roster', async () => {
+  const page = await read('pages/ml-assignments.html');
+  assert.match(page, /<details id="task-4" class="assignment-detail">/);
+  const ids = [...page.matchAll(/<details id="(problem4-variant-\d+)"/g)].map((match) => match[1]);
+  assert.deepEqual(ids, Array.from({ length: 25 }, (_, i) => `problem4-variant-${i + 1}`));
+  const roster = await read('_data/ml_students.csv');
+  const [header, ...lines] = roster.trim().split('\n');
+  const column = header.split(',').indexOf('task4_variant');
+  for (const line of lines) assert.match(line.split(',')[column] ?? '', /^\d+$/, 'every roster row has a problem 4 variant');
+  assert.equal((page.match(/<details\b/g) ?? []).length, (page.match(/<\/details>/g) ?? []).length, 'every details element is closed');
+});
