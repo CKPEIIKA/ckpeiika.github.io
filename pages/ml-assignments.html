@@ -27,7 +27,9 @@ scripts:
   {% else %}
   <td data-label="Задача 0 · 16.09.2026"><a class="task0" href="#task-0">Ознакомительная</a></td>
   {% endif %}
-  {% if student.task1_status == 'closed' or student.task1_variant == '' %}
+  {% if student.task1_status == 'completed' %}
+  <td class="task-done" data-label="Задача 1 · 23.09.2026">✓ Выполнена</td>
+  {% elsif student.task1_status == 'closed' or student.task1_variant == '' %}
   <td class="closed" data-label="Задача 1 · 23.09.2026">×</td>
   {% else %}
   <td data-label="Задача 1 · 23.09.2026"><a class="task{% if student.task1_status == 'completed' %} completed{% endif %}" href="#variant-{{ student.task1_variant | escape }}">{{ student.task1_title | escape }}</a></td>
