@@ -64,6 +64,8 @@ scripts:
   <td class="task-done" data-label="Курсовая работа">✓ Выполнена</td>
   {% elsif student.coursework_status == 'unassigned' or student.coursework_status == 'closed' %}
   <td class="closed" data-label="Курсовая работа" aria-label="Курсовая работа пока не назначена">—</td>
+  {% elsif student.coursework_title != '' %}
+  <td data-label="Курсовая работа">{{ student.coursework_title | escape }}</td>
   {% else %}
   <td data-label="Курсовая работа"><a class="task" href="#coursework">Курсовая работа</a></td>
   {% endif %}
