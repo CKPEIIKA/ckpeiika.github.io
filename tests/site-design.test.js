@@ -70,7 +70,7 @@ test('the assignments page lists problem 2 with its common requirements and 19 v
   assert.equal((page.match(/<details\b/g) ?? []).length, (page.match(/<\/details>/g) ?? []).length, 'every details element is closed');
 });
 
-test('the assignments page lists problem 4 with its common requirements and 25 variants, each linked from the roster', async () => {
+test('the assignments page lists problem 4 with its common requirements and 25 variants, with every assigned roster variant present', async () => {
   const page = await read('pages/ml-assignments.html');
   assert.match(page, /<details id="task-4" class="assignment-detail">/);
   const ids = [...page.matchAll(/<details id="(problem4-variant-\d+)"/g)].map((match) => match[1]);
@@ -78,6 +78,9 @@ test('the assignments page lists problem 4 with its common requirements and 25 v
   const roster = await read('_data/ml_students.csv');
   const [header, ...lines] = roster.trim().split('\n');
   const column = header.split(',').indexOf('task4_variant');
-  for (const line of lines) assert.match(line.split(',')[column] ?? '', /^\d+$/, 'every roster row has a problem 4 variant');
+  for (const line of lines) {
+    const variant = line.split(',')[column] ?? '';
+    if (variant !== '') assert.ok(ids.includes(`problem4-variant-${variant}`), `roster variant ${variant} has a problem 4 section`);
+  }
   assert.equal((page.match(/<details\b/g) ?? []).length, (page.match(/<\/details>/g) ?? []).length, 'every details element is closed');
 });

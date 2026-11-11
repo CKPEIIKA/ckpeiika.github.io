@@ -50,11 +50,11 @@ scripts:
   <td class="task-done" data-label="{{ task_label }}">✓ Выполнена</td>
     {% elsif task_status == 'closed' %}
   <td class="closed" data-label="{{ task_label }}">×</td>
-    {% elsif task_number == 2 and student.task2_variant != '' %}
+    {% elsif task_number == 2 and student.task2_variant.size > 0 %}
   <td data-label="{{ task_label }}"><a class="task" href="#problem2-variant-{{ student.task2_variant | escape }}">{{ student.task2_title | escape }}</a></td>
-    {% elsif task_number == 3 and student.task3_variant != '' %}
+    {% elsif task_number == 3 and student.task3_variant.size > 0 %}
   <td data-label="{{ task_label }}"><a class="task" href="#problem3-variant-{{ student.task3_variant | escape }}">{{ student.task3_title | escape }}</a></td>
-    {% elsif task_number == 4 and student.task4_variant != '' %}
+    {% elsif task_number == 4 and student.task4_variant.size > 0 %}
   <td data-label="{{ task_label }}"><a class="task" href="#problem4-variant-{{ student.task4_variant | escape }}">{{ student.task4_title | escape }}</a></td>
     {% else %}
   <td data-label="{{ task_label }}"><a class="task" href="#task-{{ task_number }}">Задача {{ task_number }}</a></td>
@@ -64,7 +64,7 @@ scripts:
   <td class="task-done" data-label="Курсовая работа">✓ Выполнена</td>
   {% elsif student.coursework_status == 'unassigned' or student.coursework_status == 'closed' %}
   <td class="closed" data-label="Курсовая работа" aria-label="Курсовая работа пока не назначена">—</td>
-  {% elsif student.coursework_title != '' %}
+  {% elsif student.coursework_title.size > 0 %}
   <td data-label="Курсовая работа">{{ student.coursework_title | escape }}</td>
   {% else %}
   <td data-label="Курсовая работа"><a class="task" href="#coursework">Курсовая работа</a></td>
