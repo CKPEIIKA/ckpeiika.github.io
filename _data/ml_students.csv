@@ -18,7 +18,7 @@ st117178,,,assigned,assigned,23,Тепловая динамика помещен
 st122869,,,assigned,assigned,18,Модуль объёмного сжатия кристаллов,unassigned,assigned,assigned,assigned,closed,closed,3,Диагностика электропривода по токам,17,Колебательные режимы вентилятора с дисбалансом,25,Устойчивость четырёхузловой электросети,
 st117173,,,assigned,assigned,19,Характерная частота фононов,unassigned,assigned,assigned,assigned,closed,closed,4,Дефекты стальных листов,18,Скрытая геометрия вибраций дефектных подшипников,4,Тепловые нагрузки здания: совместный прогноз,
 st115592,,,completed,assigned,24,Переходный процесс сервопривода,assigned,assigned,assigned,assigned,closed,closed,5,Нормальный и аномальный режим фрезерного станка,19,Необычные радиоисточники и редкий класс пульсаров,6,Деградация судовой газотурбинной установки,Гамильтоновы нейронные сети для задачи двух тел
-st122352,,,completed,assigned,3,Прочность бетона,unassigned,assigned,assigned,assigned,closed,closed,,,,,,,
+st122352,,,completed,assigned,3,Прочность бетона,unassigned,assigned,assigned,assigned,closed,closed,,,20,Тепловые и световые режимы «умного дома»,5,Мощность парогазовой установки,
 stxxxxx,,,assigned,closed,,,unassigned,closed,assigned,assigned,closed,closed,,,21,Независимые факторы в токах электропривода,4,Тепловые нагрузки здания: совместный прогноз,
 stxxxxx,,,assigned,closed,,,unassigned,closed,assigned,assigned,closed,closed,,,22,Низкоразмерная геометрия разрядных кривых аккумулятора,5,Мощность парогазовой установки,
 stxxxxx,,,assigned,closed,,,unassigned,closed,assigned,assigned,closed,closed,,,23,Форма корпуса и режимы гидродинамического сопротивления,6,Деградация судовой газотурбинной установки,
