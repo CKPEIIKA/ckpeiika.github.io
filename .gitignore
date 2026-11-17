@@ -2,3 +2,6 @@
 _site/
 .jekyll-cache/
 .jekyll-metadata
+
+# Local grading registry (scripts/grading.mjs)
+grading/
