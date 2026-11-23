@@ -84,3 +84,22 @@ test('the assignments page lists problem 4 with its common requirements and 25 v
   }
   assert.equal((page.match(/<details\b/g) ?? []).length, (page.match(/<\/details>/g) ?? []).length, 'every details element is closed');
 });
+
+test('the assignments page lists problem 5 (due 18.11.2026) with its common requirements and 25 variants, with every assigned roster variant present', async () => {
+  const page = await read('pages/ml-assignments.html');
+  assert.match(page, /<th>Задача 5<br><time datetime="2026-11-18">18\.11\.2026<\/time><\/th>/);
+  assert.match(page, /<details id="task-5" class="assignment-detail">/);
+  const ids = [...page.matchAll(/<details id="(problem5-variant-\d+)"/g)].map((match) => match[1]);
+  assert.deepEqual(ids, Array.from({ length: 25 }, (_, i) => `problem5-variant-${i + 1}`));
+  const roster = await read('_data/ml_students.csv');
+  const [header, ...lines] = roster.trim().split('\n');
+  const column = header.split(',').indexOf('task5_variant');
+  assert.ok(column > 0, 'the roster has a task5_variant column');
+  for (const line of lines) {
+    const variant = line.split(',')[column] ?? '';
+    if (variant !== '') assert.ok(ids.includes(`problem5-variant-${variant}`), `roster variant ${variant} has a problem 5 section`);
+  }
+  const section = page.slice(page.indexOf('id="task-5-conditions"'));
+  assert.doesNotMatch(section, /href="\/(?!\/)/, 'problem 5 links are absolute https or relative');
+  assert.equal((page.match(/<details\b/g) ?? []).length, (page.match(/<\/details>/g) ?? []).length, 'every details element is closed');
+});

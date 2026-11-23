@@ -9,9 +9,11 @@ import { fileURLToPath } from 'node:url'
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const rosterPath = resolve(root, '_data/ml_students.csv')
 const registryPath = resolve(root, 'grading/registry.csv')
+const studentsPath = resolve(root, 'grading/students.csv')
 
 export const STATUSES = ['todo', 'checked', 'graded']
 export const COLUMNS = ['student_id', 'task', 'status', 'grade', 'repo', 'github', 'variant', 'note', 'updated']
+export const STUDENT_COLUMNS = ['student_id', 'github', 'via', 'note']
 const SYMBOL = { todo: '·', checked: '✓', graded: '★' }
 
 // Minimal CSV for our own files: quoted fields, doubled quotes, commas and newlines inside quotes.
@@ -50,7 +52,7 @@ export function seedFromRoster(roster, today) {
   const out = []
   for (const s of roster) {
     if (!s.student_id || s.student_id === 'stxxxxx') continue
-    for (let n = 0; n <= 4; n++) {
+    for (let n = 0; n <= 5; n++) {
       const status = s[`task${n}_status`]
       if (status !== 'completed' && status !== 'assigned') continue
       out.push({
@@ -92,6 +94,19 @@ export function setStatus(rows, { student, task, status, grade, repo, note }, to
 }
 
 // Which task a repository name belongs to: "ML-task1", "zadanie-1", "problem_2", "задание 3".
+// Per-student facts: GitHub account and how they hand work in (github / zip / other).
+export function setStudent(rows, { student, github, via, note }) {
+  let row = rows.find((r) => r.student_id === student)
+  if (!row) {
+    row = { student_id: student, github: '', via: '', note: '' }
+    rows.push(row)
+  }
+  if (github !== undefined) row.github = github
+  if (via !== undefined) row.via = via
+  if (note !== undefined) row.note = note
+  return row
+}
+
 export function taskOfRepo(name) {
   if (/(?:task|zadanie|задани[ея])[-_ ]?(?:zero|ноль)/i.test(name)) return '0'
   const m = /(?:task|zadanie|problem|задани[ея]|задача)[-_ ]?(\d)\b/i.exec(name)
@@ -152,6 +167,9 @@ const HELP = `grading registry (${registryPath})
   list [status] [--student id] rows, default: everything not graded yet
   set <student> <task> <status> [--grade X] [--repo URL] [--note TEXT]
                                status: ${STATUSES.join(' | ')}; task: 0-4, or "course"
+  student <id> [--github URL] [--via github|zip|...] [--note TEXT]
+                               per-student GitHub account and how work arrives
+  who                          one line per student: GitHub, delivery channel
   links                        look up each student's GitHub account and repos (public API, no token)
   summary                      counts per status
 `
@@ -179,6 +197,21 @@ async function main(argv) {
     const row = setStatus(rows, { student, task, status, grade: f.grade, repo: f.repo, note: f.note }, todayIso())
     writeRegistry(rows)
     console.log(`${row.student_id} T${row.task}: ${row.status}${row.grade ? ` (${row.grade})` : ''}`)
+  } else if (cmd === 'student') {
+    const [student] = f._
+    if (!student) throw new Error('usage: student <id> [--github URL] [--via github|zip|...] [--note TEXT]')
+    const rows = existsSync(studentsPath) ? parseCsv(readFileSync(studentsPath, 'utf8')) : []
+    const row = setStudent(rows, { student, github: f.github, via: f.via, note: f.note })
+    mkdirSync(dirname(studentsPath), { recursive: true })
+    writeFileSync(studentsPath, toCsv(rows, STUDENT_COLUMNS))
+    console.log([row.student_id, row.via, row.github].filter((x) => x !== '').join('  '))
+  } else if (cmd === 'who') {
+    const rows = existsSync(studentsPath) ? parseCsv(readFileSync(studentsPath, 'utf8')) : []
+    const byId = new Map(rows.map((r) => [r.student_id, r]))
+    for (const id of [...new Set(readRegistry().map((r) => r.student_id))].sort()) {
+      const r = byId.get(id) || {}
+      console.log([id.padEnd(9), (r.via || '?').padEnd(7), r.github || '', r.note || ''].join(' ').trimEnd())
+    }
   } else if (cmd === 'links') {
     // Unauthenticated GitHub allows 60 requests an hour; GITHUB_TOKEN (optional) raises that.
     const headers = process.env.GITHUB_TOKEN ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } : {}

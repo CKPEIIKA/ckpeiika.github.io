@@ -2,7 +2,7 @@
 layout: standalone
 title: "ML 2026: индивидуальные задания"
 head_title: Индивидуальные задания — ML 2026
-description: "Индивидуальные задания по машинному обучению: общая задача 0, варианты задачи 1 (регрессия), задачи 2 (классификация) задачи 3 (снижение размерности и кластеризация) и задачи 4 (нейронные сети, PyTorch)."
+description: "Индивидуальные задания по машинному обучению: общая задача 0, варианты задачи 1 (регрессия), задачи 2 (классификация) задачи 3 (снижение размерности и кластеризация) задачи 4 (нейронные сети, PyTorch) и задачи 5 (PINN, нейронные операторы, диффузионные модели, CNN, ResNet, U-Net)."
 nav_parent: pages/ml2026.md
 math: true
 stylesheets:
@@ -15,7 +15,7 @@ scripts:
 <p class="intro">Можно использовать нейросети, агентов, чит-коды, джиннов, уличную магию.</p>
 <p class="submission-note"><strong>Как сдать:</strong> приложите ZIP-архив вида <code>stxxxxx_номерзадания.zip</code> (например, <code>st117157_0.zip</code>) или отправьте ссылку на GitHub.</p>
 <div class="tablewrap"><table>
-<thead><tr><th>Студент</th><th>Задача 0<br><time datetime="2026-09-16">16.09.2026</time></th><th>Задача 1<br><time datetime="2026-09-23">23.09.2026</time></th><th>Задача 2<br><time datetime="2026-09-30">30.09.2026</time></th><th>Задача 3<br><time datetime="2026-10-07">07.10.2026</time></th><th>Задача 4<br><time datetime="2026-10-28">28.10.2026</time></th><th>Задача 5</th><th>Задача 6</th><th>Курсовая работа</th></tr></thead>
+<thead><tr><th>Студент</th><th>Задача 0<br><time datetime="2026-09-16">16.09.2026</time></th><th>Задача 1<br><time datetime="2026-09-23">23.09.2026</time></th><th>Задача 2<br><time datetime="2026-09-30">30.09.2026</time></th><th>Задача 3<br><time datetime="2026-10-07">07.10.2026</time></th><th>Задача 4<br><time datetime="2026-10-28">28.10.2026</time></th><th>Задача 5<br><time datetime="2026-11-18">18.11.2026</time></th><th>Задача 6</th><th>Курсовая работа</th></tr></thead>
 <tbody>
 {% for student in site.data.ml_students %}
 {% if student.student_id == 'stxxxxx' %}{% continue %}{% endif %}
@@ -41,6 +41,7 @@ scripts:
       {% when 2 %}{% assign task_due_date = '30.09.2026' %}
       {% when 3 %}{% assign task_due_date = '07.10.2026' %}
       {% when 4 %}{% assign task_due_date = '28.10.2026' %}
+      {% when 5 %}{% assign task_due_date = '18.11.2026' %}
     {% endcase %}
     {% assign task_label = 'Задача ' | append: task_number %}
     {% if task_due_date != '' %}{% assign task_label = task_label | append: ' · ' | append: task_due_date %}{% endif %}
@@ -56,6 +57,8 @@ scripts:
   <td data-label="{{ task_label }}"><a class="task" href="#problem3-variant-{{ student.task3_variant | escape }}">{{ student.task3_title | escape }}</a></td>
     {% elsif task_number == 4 and student.task4_variant.size > 0 %}
   <td data-label="{{ task_label }}"><a class="task" href="#problem4-variant-{{ student.task4_variant | escape }}">{{ student.task4_title | escape }}</a></td>
+    {% elsif task_number == 5 and student.task5_variant.size > 0 %}
+  <td data-label="{{ task_label }}"><a class="task" href="#problem5-variant-{{ student.task5_variant | escape }}">{{ student.task5_title | escape }}</a></td>
     {% else %}
   <td data-label="{{ task_label }}"><a class="task" href="#task-{{ task_number }}">Задача {{ task_number }}</a></td>
     {% endif %}
@@ -650,8 +653,8 @@ scripts:
 <summary>Общие требования к задаче 4</summary>
 <div class="assignment-content">
 <div class="block"><h3>Обязательные методы и правила</h3><ol>
-<li>Основной инструмент — PyTorch (torch.nn, torch.optim, мини-батчи); достаточно CPU, при наличии GPU его можно использовать. scikit-learn тоже разрешён: конвейеры, метрики, MLPRegressor и MLPClassifier. Сравнить сеть с простой моделью (Ridge или LogisticRegression) и с одним из алгоритмов RandomForest или HistGradientBoosting.</li>
-<li>Написать явный цикл обучения: инициализация, мини-батчи, прямой проход, функция потерь, loss.backward(), optimizer.step(), optimizer.zero_grad(), фиксированные случайные состояния (torch.manual_seed). Проверочную выборку выделять по тем же правилам, что и тестовую: блоками для временных и групповых задач, стратифицированно или случайно для остальных. Early stopping по проверочной ошибке (с patience) и сохранение лучших весов реализовать в цикле.</li>
+<li>Основной инструмент — PyTorch (torch.nn, torch.optim, мини-батчи); достаточно CPU, при наличии GPU его можно использовать. scikit-learn тоже разрешён: конвейеры, метрики, MLPRegressor и MLPClassifier; сеть можно строить на PyTorch или на scikit-learn. Сравнить сеть с простой моделью (Ridge или LogisticRegression) и с одним из алгоритмов RandomForest или HistGradientBoosting.</li>
+<li>Для PyTorch написать явный цикл обучения: инициализация, мини-батчи, прямой проход, функция потерь, loss.backward(), optimizer.step(), optimizer.zero_grad(), фиксированные случайные состояния (torch.manual_seed). Для scikit-learn обучать по эпохам через partial_fit с фиксированным random_state. Проверочную выборку выделять по тем же правилам, что и тестовую: блоками для временных и групповых задач, стратифицированно или случайно для остальных. Early stopping по проверочной ошибке (с patience) и сохранение лучших весов реализовать в цикле.</li>
 <li>Сравнить активации identity, ReLU и tanh при одной архитектуре. Сеть с identity остаётся аффинной моделью и служит контролем без нелинейности.</li>
 <li>Перебрать глубину (например, 1–4 скрытых слоя) и ширину (например, от 8 до 256 нейронов), указать число обучаемых параметров каждой сети. На малых наборах данных найти размер, с которого начинается переобучение.</li>
 <li>Исследовать процесс обучения: оптимизатор (SGD с моментом, Adam или AdamW), скорость обучения (не менее четырёх значений на логарифмической сетке), размер мини-батча, weight decay и, по желанию, dropout или расписание скорости обучения. Менять один фактор при остальных фиксированных и описывать изменения в кривых обучения.</li>
@@ -1123,5 +1126,551 @@ scripts:
 <div class="block callout"><h3>Два предметных графика этого варианта</h3><ol>
 <li>Карта предсказанной вероятности неустойчивости по двум параметрам tau/g при фиксированных остальных.</li>
 <li>ROC и матрица ошибок на отложенной области значений tau.</li>
+</ol></div>
+</div></details>
+<h2 id="task-5-conditions">Задача 5 — современные нейросетевые архитектуры в физике и механике</h2>
+<details id="task-5" class="assignment-detail">
+<summary>Общие требования к задаче 5</summary>
+<div class="assignment-content">
+<div class="block"><h3>Обязательные методы и правила</h3><ol>
+<li>Обучить собственную модель с нуля в PyTorch: все веса должны обучаться на данных варианта. Разрешены стандартные torch.nn, torch.optim, torch.autograd, torchvision и небольшие открытые библиотеки (например, neuralop для FNO); чужие обученные веса не допускаются.</li>
+<li>До работы изучить статью: записать точную библиографическую ссылку, уравнение/физическую постановку, архитектуру, данные и то, что в учебном эксперименте намеренно упрощено. Не заявлять воспроизведение чисел из статьи, если меняются размерность, сетка, набор или вычислительный бюджет.</li>
+<li>Указать происхождение данных. Для аналитических PINN или нейронных операторов допускается собственная генерация по открытому коду/формулам статьи: код и начальные параметры генератора — часть обязательного комплекта данных.</li>
+<li>Показать принцип архитектуры: формулу для PINN-остатка, спектрального слоя FNO, произведения branch/trunk, остаточного блока, U-Net или диффузионного шага, в зависимости от выбранного метода.</li>
+<li>Выполнить минимум один корректный контрольный метод и одну абляцию: сравнить при сопоставимом бюджете и на одинаковых отложенных объектах.</li>
+<li>Проверить качество вне обучения: на новых начальных условиях, нагрузках, траекториях, деталях или целых файлах. Запрещено делить узлы одного поля, соседние фрагменты исходной записи либо виды одного физического изделия между обучением и тестом.</li>
+<li>Предусмотреть Early Stopping, фиксировать random seed, число параметров, число эпох/шагов, потребление памяти и измеренное время CPU-обучения. При исчерпании бюджета корректно завершить расчёт и сообщить ограничения.</li>
+<li>Оценить физическую корректность отдельной величиной: PDE-невязка, баланс, ошибка граничных условий, положение скачка, спектральная ошибка, дефектная область или эксплуатационная цена ошибки. Одной величины MSE/accuracy недостаточно.</li>
+<li>Не использовать предварительно обученную большую модель, GPU-кластер, полную коллекцию PDEBench/PDEArena или неограниченный перебор гиперпараметров. Сначала выполнить тестовую тренировку на 10 % данных.</li>
+<li>Различать физическую диффузию и генеративные диффузионные модели; weighted W-PINN и weak-form wPINN; прямой PINN одной задачи и нейронный оператор семейства задач.</li>
+</ol></div>
+<div class="block"><h3>Минимальные результаты отчёта</h3><ol>
+<li>Краткая постановка с уравнениями или физическим механизмом, начально-граничными условиями, целевой величиной и происхождением данных, плюс кликабельная научная публикация.</li>
+<li>Схема модели, число параметров, ограничения памяти, размер train/validation/test и явное сравнение контрольного метода с обученной сетью.</li>
+<li>Кривые обучения и проверки по эпохам/шагам с отмеченной остановкой; таблица итоговых метрик, CPU-времени и числа параметров.</li>
+<li>Два предметных графика варианта (указаны выше), не заменяемые усреднённой метрикой.</li>
+<li>График абляции: как изменяется физическая и статистическая ошибка при удалении компонента архитектуры/невязки или изменении одного ключевого параметра.</li>
+<li>Для PINN — отдельный график невязки PDE/начальных/граничных условий; для операторов — ошибка на новых функциях и/или разрешениях; для диффузии — разные генерации и соблюдение наблюдений; для классификации — матрица ошибок и ROC/PR; для сегментации — маски и Dice/PR.</li>
+<li>Разбор двух характерных неудачных примеров с физической интерпретацией. Высокая ошибка допускается, если честно измерена и объяснена.</li>
+<li>Итоговая оценка: в каких условиях эта архитектура полезнее простой модели и при каких вычислительных затратах.</li>
+</ol></div>
+<div class="block gost"><p><b>Последний обязательный пункт: автоматически воспроизводимый научный отчёт.</b> Одной документированной командой (<code>python run.py</code> или <code>make report</code>) должны выполняться чтение или воспроизводимое создание данных, разбиение, обучение PyTorch с нуля, контрольный расчёт, абляция, метрики, все графики и таблицы, а затем без ручного копирования сборка <code>report.pdf</code>. Сохраните исходный код, случайные состояния, точные версии зависимостей, ограничения CPU, измеренное время и список источников. Проверяющий может удалить производные файлы и пересобрать отчёт. Текст и оформление — <a href="https://protect.gost.ru/gost/details/7d280e43-7036-4a69-8e6e-d15867028343" target="_blank" rel="noopener">ГОСТ 7.32-2017</a>.</p></div>
+</div></details>
+<details id="problem5-variant-1" class="assignment-detail">
+<summary>Ударная труба Сода: weighted W-PINN <span class="meta">· вариант 1 · PINN / газовая динамика</span></summary>
+<div class="assignment-content">
+<p class="dataset"><strong>Данные:</strong> <a href="https://github.com/clawpack/riemann_book/tree/master/exact_solvers" target="_blank" rel="noopener">Clawpack Riemann Book: точное решение задачи Римана для 1D Euler</a></p>
+<p class="dataset"><strong>Публикация:</strong> <a href="https://doi.org/10.1080/10618562.2023.2285330" target="_blank" rel="noopener">Joshi, Papados, Kumar (2023), Investigation of Low and High-Speed Fluid Dynamics Problems Using Physics-Informed Neural Network</a> · <a href="https://github.com/alexpapados/Physics-Informed-Deep-Learning-Solid-and-Fluid-Mechanics" target="_blank" rel="noopener">код или образец</a></p>
+<div class="desc">Решить 1D уравнения Эйлера идеального газа для задачи Сода. Сравнить обычный PINN и взвешенный W-PINN, рассчитанный на разрывы; не смешивать его со слабой wPINN.</div>
+<div class="block callout"><h3>Источник данных и эталона</h3><p>Открытый вычисляемый эталон, а не архив измерений; код с задачей Сода доступен.</p></div>
+<div class="block"><h3>Связь с публикацией</h3><p>прямой пример: W-PINN для задачи Сода</p></div>
+<div class="block"><h3>Входные данные и физическая постановка</h3><p>Начальные состояния (ρ,u,p): слева (1,0,1), справа (0.125,0,0.1), γ=1.4; сеть (x,t)→(ρ,u,p) либо консервативные переменные с положительным давлением.</p></div>
+<div class="block"><h3>Какую модель обучить в PyTorch</h3><p>Две небольшие полносвязные сети PyTorch 3×32; веса физических и начальных условий, вариант с весами по рецепту W-PINN.</p></div>
+<div class="block"><h3>Контрольная модель или численный эталон</h3><p>Точный решатель Римана Clawpack и обычный PINN на тех же точках.</p></div>
+<div class="block"><h3>Эксперимент и корректное разбиение</h3><p>Фиксированный момент t=0.2, 256 узлов; сравнить профиль плотности, контакт и ударную волну, скорость ударной волны, интегральные законы сохранения и L1 ошибку.</p></div>
+<div class="block"><h3>Обязательная абляция</h3><p>Убрать специальные веса; сравнить 2 варианта взвешивания при одинаковом числе шагов.</p></div>
+<div class="block callout"><h3>Вычислительный предел на обычном компьютере</h3><p>≤3000 внутренних точек, ≤5000 шагов Adam, 3×32, фиксированный максимум CPU-расчёта 2 ч; результат не обязан идеально разрешать скачок.</p></div>
+<div class="block"><h3>Физический исследовательский вопрос</h3><p>Где и почему сильная форма PDE даёт осцилляции или сглаживание разрывов? W-PINN отличается от слабой wPINN.</p></div>
+<div class="block"><h3>Научные ограничения</h3><p>Контактный разрыв и скачок давления — разные физические структуры; точное совпадение разрывов на CPU не гарантируется.</p></div>
+<div class="block callout"><h3>Два обязательных предметных графика</h3><ol>
+<li>Плотность, скорость и давление: точное решение и обе нейросети с увеличением области скачков.</li>
+<li>Ошибки L1 и суммарное изменение массы/импульса/энергии во времени для двух PINN.</li>
+</ol></div>
+</div></details>
+<details id="problem5-variant-2" class="assignment-detail">
+<summary>Разрыв в уравнении Бюргерса: слабая wPINN <span class="meta">· вариант 2 · PINN / законы сохранения</span></summary>
+<div class="assignment-content">
+<p class="dataset"><strong>Данные:</strong> <a href="https://github.com/clawpack/riemann_book/tree/master/exact_solvers" target="_blank" rel="noopener">Clawpack Riemann Book: Burgers exact solver</a></p>
+<p class="dataset"><strong>Публикация:</strong> <a href="https://arxiv.org/abs/2207.08483" target="_blank" rel="noopener">De Ryck, Mishra, Molinaro (2022), wPINNs: Weak Physics Informed Neural Networks for Approximating Entropy Solutions of Hyperbolic Conservation Laws</a> · <a href="https://github.com/clawpack/riemann_book/tree/master/exact_solvers" target="_blank" rel="noopener">код или образец</a></p>
+<div class="desc">Приблизить энтропийное решение невязкого уравнения Бюргерса с разрывными начальными данными. Для экономии вычислений реализовать слабую интегральную невязку по заданному набору пробных функций, а не полный оптимизационный min–max оригинала.</div>
+<div class="block callout"><h3>Источник данных и эталона</h3><p>Воспроизводимый небольшой набор профилей скалярного закона сохранения.</p></div>
+<div class="block"><h3>Связь с публикацией</h3><p>прямой аналог: скалярный закон сохранения с разрывом</p></div>
+<div class="block"><h3>Входные данные и физическая постановка</h3><p>u_t+(u²/2)_x=0; заданные ступенчатые u(x,0), известный точный энтропийный профиль.</p></div>
+<div class="block"><h3>Какую модель обучить в PyTorch</h3><p>Сеть tanh 2×32; слабая невязка по сглаженным пробным функциям и штраф начальных условий.</p></div>
+<div class="block"><h3>Контрольная модель или численный эталон</h3><p>Точный энтропийный решатель и обычная PINN со сильной невязкой.</p></div>
+<div class="block"><h3>Эксперимент и корректное разбиение</h3><p>Проверка при t=0.2 и t=0.4; L1 ошибка, положение скачка, проверка энтропийного условия.</p></div>
+<div class="block"><h3>Обязательная абляция</h3><p>Сильная vs слабая невязка; количество/ширина пробных функций.</p></div>
+<div class="block callout"><h3>Вычислительный предел на обычном компьютере</h3><p>128–256 координат, ≤2000 интегральных точек, ≤4000 шагов, ≤2 ч CPU.</p></div>
+<div class="block"><h3>Физический исследовательский вопрос</h3><p>Когда слабая постановка меняет поведение около ударного разрыва?</p></div>
+<div class="block"><h3>Научные ограничения</h3><p>Это упрощённый учебный вариант wPINN: не выдавать его за точное воспроизведение min–max метода авторов.</p></div>
+<div class="block callout"><h3>Два обязательных предметных графика</h3><ol>
+<li>Энтропийный профиль и прогноз двух PINN; вертикальная линия истинного скачка.</li>
+<li>L1 ошибка и интегральная невязка как функция числа пробных функций.</li>
+</ol></div>
+</div></details>
+<details id="problem5-variant-3" class="assignment-detail">
+<summary>Обратная задача: определить температуропроводность стержня <span class="meta">· вариант 3 · PINN / теплопроводность</span></summary>
+<div class="assignment-content">
+<p class="dataset"><strong>Данные:</strong> <a href="https://deepxde.readthedocs.io/en/latest/demos/pinn_inverse/diffusion.1d.inverse.html" target="_blank" rel="noopener">DeepXDE: обратная задача теплопроводности; пример PINN</a></p>
+<p class="dataset"><strong>Публикация:</strong> <a href="https://doi.org/10.1016/j.jcp.2018.10.045" target="_blank" rel="noopener">Raissi, Perdikaris, Karniadakis (2019), Physics-informed neural networks, Journal of Computational Physics</a> · <a href="https://deepxde.readthedocs.io/en/latest/demos/pinn_inverse/diffusion.1d.inverse.html" target="_blank" rel="noopener">код или образец</a></p>
+<div class="desc">Восстановить коэффициент температуропроводности α по десяти наблюдениям температуры стержня и физическому уравнению.</div>
+<div class="block callout"><h3>Источник данных и эталона</h3><p>Открытый аналог с источником; в учебной задаче использовать указанное ниже однородное уравнение и его аналитическое решение.</p></div>
+<div class="block"><h3>Связь с публикацией</h3><p>классическая публикация: прямая и обратная задача для PDE</p></div>
+<div class="block"><h3>Входные данные и физическая постановка</h3><p>u_t=αu_xx при 0≤x≤1, u(0,t)=u(1,t)=0, u(x,0)=sin(πx). Эталон: u(x,t)=sin(πx)exp(−απ²t), например α=0.1. Синтетические измерения с контролируемым шумом.</p></div>
+<div class="block"><h3>Какую модель обучить в PyTorch</h3><p>PINN tanh 2×32 с обучаемым положительным α, производные через torch.autograd.</p></div>
+<div class="block"><h3>Контрольная модель или численный эталон</h3><p>Оценка α только по экспоненциальному затуханию амплитуды (аппроксимация МНК).</p></div>
+<div class="block"><h3>Эксперимент и корректное разбиение</h3><p>Отложенные времена и узлы; относительная ошибка α и RMS поля.</p></div>
+<div class="block"><h3>Обязательная абляция</h3><p>0 % и 1 % шума; 5 против 10 наблюдений.</p></div>
+<div class="block callout"><h3>Вычислительный предел на обычном компьютере</h3><p>≤1500 коллокаций, 2×32, ≤3500 шагов Adam, ≤1 ч CPU.</p></div>
+<div class="block"><h3>Физический исследовательский вопрос</h3><p>Когда физическая регуляризация позволяет определить параметр из редких данных?</p></div>
+<div class="block"><h3>Научные ограничения</h3><p>Измерения синтетические; идентифицируемость α надо обосновать. В учебной постановке НЕТ источника, тогда как приведённая демонстрация DeepXDE включает источник: нельзя копировать её невязку без изменений.</p></div>
+<div class="block callout"><h3>Два обязательных предметных графика</h3><ol>
+<li>Профили T(x) в 3 момента: эталон и PINN.</li>
+<li>Ход оценки α при обучении и ошибка при различных уровнях шума.</li>
+</ol></div>
+</div></details>
+<details id="problem5-variant-4" class="assignment-detail">
+<summary>Вибрации струны: PINN с гармоническими признаками <span class="meta">· вариант 4 · PINN / волновые процессы</span></summary>
+<div class="assignment-content">
+<p class="dataset"><strong>Данные:</strong> <a href="https://github.com/PredictiveIntelligenceLab/MultiscalePINNs" target="_blank" rel="noopener">MultiscalePINNs: исходный код и генераторы волновых решений</a></p>
+<p class="dataset"><strong>Публикация:</strong> <a href="https://arxiv.org/abs/2012.10047" target="_blank" rel="noopener">Wang, Wang, Perdikaris (2021), On the Eigenvector Bias of Fourier Feature Networks: From Regression to Multi-scale PDEs</a> · <a href="https://github.com/PredictiveIntelligenceLab/MultiscalePINNs" target="_blank" rel="noopener">код или образец</a></p>
+<div class="desc">Решить 1D волновое уравнение для струны и сравнить обычную PINN с добавлением гармонических (Fourier) признаков координаты.</div>
+<div class="block callout"><h3>Источник данных и эталона</h3><p>Открытые постановки и код; можно сгенерировать ограниченный набор опорных точек.</p></div>
+<div class="block"><h3>Связь с публикацией</h3><p>прямой аналог: PINN для многомасштабных волн</p></div>
+<div class="block"><h3>Входные данные и физическая постановка</h3><p>u_tt=c²u_xx, закреплённые концы и сумма 2–3 собственных мод как начальное состояние.</p></div>
+<div class="block"><h3>Какую модель обучить в PyTorch</h3><p>Обычная tanh-PINN 2×32 и PINN с sin/cos-признаками 2×32.</p></div>
+<div class="block"><h3>Контрольная модель или численный эталон</h3><p>Аналитическая сумма мод, а также модель без физической невязки на редких точках.</p></div>
+<div class="block"><h3>Эксперимент и корректное разбиение</h3><p>Невиданное время в заданном интервале; ошибка по модам, фазе и амплитуде.</p></div>
+<div class="block"><h3>Обязательная абляция</h3><p>Одночастотная vs двухчастотная струна; наличие Fourier features.</p></div>
+<div class="block callout"><h3>Вычислительный предел на обычном компьютере</h3><p>Сетка 128×32 только для проверки; ≤1500 коллокаций, ≤3500 шагов, ≤1 ч CPU.</p></div>
+<div class="block"><h3>Физический исследовательский вопрос</h3><p>Когда обычная сеть теряет высокую частоту из-за спектрального смещения?</p></div>
+<div class="block callout"><h3>Два обязательных предметных графика</h3><ol>
+<li>Прогиб струны в три момента: аналитика, обычная PINN и Fourier-PINN.</li>
+<li>Относительная ошибка отдельных мод/амплитуд в зависимости от времени.</li>
+</ol></div>
+</div></details>
+<details id="problem5-variant-5" class="assignment-detail">
+<summary>Плоская линейная упругость: поле перемещений и напряжений <span class="meta">· вариант 5 · PINN / механика твёрдого тела</span></summary>
+<div class="assignment-content">
+<p class="dataset"><strong>Данные:</strong> <a href="https://deepxde.readthedocs.io/en/latest/demos/pinn_forward/elasticity.plate.html" target="_blank" rel="noopener">DeepXDE: упругость на единичном квадрате (elasticity.plate), точное решение</a></p>
+<p class="dataset"><strong>Публикация:</strong> <a href="https://arxiv.org/abs/2003.02751" target="_blank" rel="noopener">Haghighat et al. (2021), A Physics-Informed Deep Learning Framework for Inversion and Surrogate Modeling in Solid Mechanics</a> · <a href="https://github.com/alexpapados/Physics-Informed-Deep-Learning-Solid-and-Fluid-Mechanics" target="_blank" rel="noopener">код или образец</a></p>
+<div class="desc">Решить двумерную линейную упругость на единичном квадрате для заданного точного поля перемещений. Сравнить ошибку по перемещению и по напряжению.</div>
+<div class="block callout"><h3>Источник данных и эталона</h3><p>Точное манифактурное решение u, σ известно (λ=1, μ=0.5, Q=4). У Papados область I без аналитического решения: его код — образец W-PINNs, но не эталон.</p></div>
+<div class="block"><h3>Связь с публикацией</h3><p>прямой аналог: плоская линейная упругость</p></div>
+<div class="block"><h3>Входные данные и физическая постановка</h3><p>Единичный квадрат, λ=1, μ=0.5. Объёмная сила f вычисляется из точного поля u_x=cos(2πx)sin(πy), u_y=sin(πx)·Qy⁴/4, Q=4; граничные условия берутся из него же (пример DeepXDE).</p></div>
+<div class="block"><h3>Какую модель обучить в PyTorch</h3><p>PINN (x,y)→(u_x,u_y); равновесие ∇·σ=0 и закон Гука; 3×32.</p></div>
+<div class="block"><h3>Контрольная модель или численный эталон</h3><p>Точное решение u и σ из примера DeepXDE; PINN без уравнений равновесия, обученная только по граничным точкам.</p></div>
+<div class="block"><h3>Эксперимент и корректное разбиение</h3><p>Сетка 32×32: L2 по u_x, u_y и по σ_xx, σ_yy, σ_xy; невязка равновесия ∇·σ+f и граничная невязка.</p></div>
+<div class="block"><h3>Обязательная абляция</h3><p>Мягкое/жёсткое наложение существенных граничных условий.</p></div>
+<div class="block callout"><h3>Вычислительный предел на обычном компьютере</h3><p>≤1000 внутренних точек и 200 граничных, ≤4000 шагов, 3×32, ≤2 ч CPU.</p></div>
+<div class="block"><h3>Физический исследовательский вопрос</h3><p>Может ли хорошее поле перемещений скрывать плохую оценку напряжений?</p></div>
+<div class="block"><h3>Научные ограничения</h3><p>Работать в переменных Ламе (λ, μ). Называть задачу плоским напряжённым состоянием можно только после пересчёта λ* = 2λμ/(λ+2μ); не смешивать два состояния. Размеры и напряжения приводить к согласованным единицам.</p></div>
+<div class="block callout"><h3>Два обязательных предметных графика</h3><ol>
+<li>Карты u_x и σ_xx: эталон и PINN, общая шкала.</li>
+<li>Сходимость невязки равновесия и ошибки на границе.</li>
+</ol></div>
+</div></details>
+<details id="problem5-variant-6" class="assignment-detail">
+<summary>Поля акустического давления: уравнение Гельмгольца <span class="meta">· вариант 6 · PINN / акустика</span></summary>
+<div class="assignment-content">
+<p class="dataset"><strong>Данные:</strong> <a href="https://deepxde.readthedocs.io/en/latest/demos/pinn_forward/helmholtz.2d.dirichlet.html" target="_blank" rel="noopener">DeepXDE: Helmholtz в квадрате</a></p>
+<p class="dataset"><strong>Публикация:</strong> <a href="https://doi.org/10.1093/gji/ggab434" target="_blank" rel="noopener">A Versatile Framework to Solve the Helmholtz Equation Using Physics-Informed Neural Networks (2022), Geophysical Journal International</a> · <a href="https://deepxde.readthedocs.io/en/latest/demos/pinn_forward/helmholtz.2d.dirichlet.html" target="_blank" rel="noopener">код или образец</a></p>
+<div class="desc">Решить 2D задачу Гельмгольца в однородной области с аналитически заданным полем; сравнить tanh и синусоидальную активации.</div>
+<div class="block callout"><h3>Источник данных и эталона</h3><p>Открытый образец задачи; эталон генерируется аналитически на квадрате.</p></div>
+<div class="block"><h3>Связь с публикацией</h3><p>прямой аналог: решение уравнения Гельмгольца PINN</p></div>
+<div class="block"><h3>Входные данные и физическая постановка</h3><p>Δp+k²p=f(x,y) на квадрате; f и граничные значения получить из гладкого точного решения (метод изготовленного решения).</p></div>
+<div class="block"><h3>Какую модель обучить в PyTorch</h3><p>PINN 3×32; невязка Гельмгольца и граничных значений; сравнить tanh и sin.</p></div>
+<div class="block"><h3>Контрольная модель или численный эталон</h3><p>Аналитическое поле p(x,y).</p></div>
+<div class="block"><h3>Эксперимент и корректное разбиение</h3><p>Равномерная сетка 40×40, пространственная ошибка и физическая невязка.</p></div>
+<div class="block"><h3>Обязательная абляция</h3><p>Два значения волнового числа k, при втором измерить деградацию качества.</p></div>
+<div class="block callout"><h3>Вычислительный предел на обычном компьютере</h3><p>≤1500 коллокаций, 3×32, ≤4000 шагов, ≤2 ч CPU.</p></div>
+<div class="block"><h3>Физический исследовательский вопрос</h3><p>Как рост волнового числа затрудняет обучение PINN?</p></div>
+<div class="block"><h3>Научные ограничения</h3><p>Обязательно фиксировать f и граничные значения одного и того же точного решения; иначе решается другая задача.</p></div>
+<div class="block callout"><h3>Два обязательных предметных графика</h3><ol>
+<li>Карта акустического поля: эталон, PINN и карта ошибки.</li>
+<li>Относительная L2 ошибка при двух волновых числах и двух активациях.</li>
+</ol></div>
+</div></details>
+<details id="problem5-variant-7" class="assignment-detail">
+<summary>Изгиб консольной балки Эйлера—Бернулли <span class="meta">· вариант 7 · PINN / сопротивление материалов</span></summary>
+<div class="assignment-content">
+<p class="dataset"><strong>Данные:</strong> <a href="https://deepxde.readthedocs.io/en/latest/demos/pinn_forward/eulerbeam.html" target="_blank" rel="noopener">DeepXDE: Euler beam, аналитическое решение</a></p>
+<p class="dataset"><strong>Публикация:</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/37725741/" target="_blank" rel="noopener">Physics-Informed Neural Networks for Solving Forward and Inverse Problems in Complex Beam Systems (2024), IEEE Transactions on Neural Networks and Learning Systems</a> · <a href="https://deepxde.readthedocs.io/en/latest/demos/pinn_forward/eulerbeam.html" target="_blank" rel="noopener">код или образец</a></p>
+<div class="desc">Решить краевую задачу изгиба консольной балки со свободным концом методом PINN и проверить производные до четвёртого порядка.</div>
+<div class="block callout"><h3>Источник данных и эталона</h3><p>Открытая постановка и точный прогиб балки.</p></div>
+<div class="block"><h3>Связь с публикацией</h3><p>прямой аналог: изгиб балки Эйлера—Бернулли</p></div>
+<div class="block"><h3>Входные данные и физическая постановка</h3><p>Безразмерная задача w⁽⁴⁾+1=0 с условиями w(0)=w′(0)=w″(1)=w‴(1)=0 из примера DeepXDE.</p></div>
+<div class="block"><h3>Какую модель обучить в PyTorch</h3><p>Небольшая tanh PINN 2×32; производные через autograd; сравнить мягкую и встроенную форму граничных условий.</p></div>
+<div class="block"><h3>Контрольная модель или численный эталон</h3><p>Точная полиномиальная функция прогиба из демонстрации DeepXDE.</p></div>
+<div class="block"><h3>Эксперимент и корректное разбиение</h3><p>Независимые 200 узлов x; прогиб, угол поворота и изгибающий момент.</p></div>
+<div class="block"><h3>Обязательная абляция</h3><p>Два набора весов граничных условий.</p></div>
+<div class="block callout"><h3>Вычислительный предел на обычном компьютере</h3><p>≤300 внутренних точек, ≤2000 шагов Adam, ≤1 ч CPU; четвёртые производные дорогие.</p></div>
+<div class="block"><h3>Физический исследовательский вопрос</h3><p>Почему малый RMSE по прогибу ещё не означает правильный изгибающий момент?</p></div>
+<div class="block callout"><h3>Два обязательных предметных графика</h3><ol>
+<li>Прогиб w(x), наклон w′(x) и момент −EIw″(x).</li>
+<li>Ошибка/невязка в зависимости от весов граничных условий.</li>
+</ol></div>
+</div></details>
+<details id="problem5-variant-8" class="assignment-detail">
+<summary>Течение Коваснея: стационарная вязкая жидкость <span class="meta">· вариант 8 · PINN / гидродинамика</span></summary>
+<div class="assignment-content">
+<p class="dataset"><strong>Данные:</strong> <a href="https://deepxde.readthedocs.io/en/latest/demos/pinn_forward/Kovasznay.flow.html" target="_blank" rel="noopener">DeepXDE: Kovasznay flow</a></p>
+<p class="dataset"><strong>Публикация:</strong> <a href="https://doi.org/10.1016/j.jcp.2018.10.045" target="_blank" rel="noopener">Raissi, Perdikaris, Karniadakis (2019), Physics-informed neural networks, Journal of Computational Physics</a> · <a href="https://deepxde.readthedocs.io/en/latest/demos/pinn_forward/Kovasznay.flow.html" target="_blank" rel="noopener">код или образец</a></p>
+<div class="desc">Обучить PINN для стационарных несжимаемых Навье—Стокса на точном течении Коваснея.</div>
+<div class="block callout"><h3>Источник данных и эталона</h3><p>Аналитические поля u,v,p; граничные значения брать из точного решения.</p></div>
+<div class="block"><h3>Связь с публикацией</h3><p>классическая публикация: прямая и обратная задача для PDE</p></div>
+<div class="block"><h3>Входные данные и физическая постановка</h3><p>Координаты (x,y)→u,v,p на квадрате; Re фиксировано, граничные поля брать из аналитического решения.</p></div>
+<div class="block"><h3>Какую модель обучить в PyTorch</h3><p>Одна сеть PyTorch 3×32, три выхода; уравнения импульса и ∇·u=0.</p></div>
+<div class="block"><h3>Контрольная модель или численный эталон</h3><p>Точное аналитическое решение и аппроксимация без PDE-невязки по граничным точкам.</p></div>
+<div class="block"><h3>Эксперимент и корректное разбиение</h3><p>Ошибка скорости/давления на 32×32 и норма ∇·u.</p></div>
+<div class="block"><h3>Обязательная абляция</h3><p>Проверить добавление/удаление штрафа несжимаемости.</p></div>
+<div class="block callout"><h3>Вычислительный предел на обычном компьютере</h3><p>≤1200 коллокаций, ≤4000 шагов, ≤2 ч CPU.</p></div>
+<div class="block"><h3>Физический исследовательский вопрос</h3><p>Можно ли получить хорошие u,v при нарушении ∇·u=0?</p></div>
+<div class="block"><h3>Научные ограничения</h3><p>Давление определяется с точностью до константы; сравнение проводить после вычитания общего среднего.</p></div>
+<div class="block callout"><h3>Два обязательных предметных графика</h3><ol>
+<li>Векторное поле скорости и карты давления: аналитика/PINN.</li>
+<li>Распределение дивергенции и его норма при двух весах штрафа.</li>
+</ol></div>
+</div></details>
+<details id="problem5-variant-9" class="assignment-detail">
+<summary>Обратная задача Бюргерса: оценка вязкости <span class="meta">· вариант 9 · PINN / идентификация вязкости</span></summary>
+<div class="assignment-content">
+<p class="dataset"><strong>Данные:</strong> <a href="https://github.com/brandstetter-johannes/LPSDA/blob/master/generate/generate_data.py" target="_blank" rel="noopener">Эталон Бюргерса: преобразование Коула—Хопфа или генератор LPSDA (Python)</a></p>
+<p class="dataset"><strong>Публикация:</strong> <a href="https://doi.org/10.1016/j.jcp.2018.10.045" target="_blank" rel="noopener">Raissi, Perdikaris, Karniadakis (2019), Physics-informed neural networks, Journal of Computational Physics</a> · <a href="https://github.com/brandstetter-johannes/LPSDA/blob/master/generate/generate_data.py" target="_blank" rel="noopener">код или образец</a></p>
+<div class="desc">Определить неизвестную вязкость ν из ограниченных наблюдений решения вязкого уравнения Бюргерса.</div>
+<div class="block callout"><h3>Источник данных и эталона</h3><p>Генератор LPSDA (--experiment=Burgers) решает уравнение через преобразование Коула—Хопфа; можно построить эталон самостоятельно. Генератор PDEBench требует JAX и Hydra и не обязателен.</p></div>
+<div class="block"><h3>Связь с публикацией</h3><p>классическая публикация: прямая и обратная задача для PDE</p></div>
+<div class="block"><h3>Входные данные и физическая постановка</h3><p>u_t+u u_x=νu_xx; брать гладкие решения с положительной ν и наблюдениями, выбранными из эталонного поля.</p></div>
+<div class="block"><h3>Какую модель обучить в PyTorch</h3><p>PINN 3×32 с обучаемым log ν для гарантии ν&gt;0.</p></div>
+<div class="block"><h3>Контрольная модель или численный эталон</h3><p>МНК по заданному гладкому шаблону либо оценка без физической невязки.</p></div>
+<div class="block"><h3>Эксперимент и корректное разбиение</h3><p>Невиданные пространственно-временные точки; относительная ошибка ν и поля.</p></div>
+<div class="block"><h3>Обязательная абляция</h3><p>Сравнить 50 и 200 наблюдений и один шумовой уровень.</p></div>
+<div class="block callout"><h3>Вычислительный предел на обычном компьютере</h3><p>≤1500 коллокаций и ≤5000 шагов Adam, ≤2 ч CPU.</p></div>
+<div class="block"><h3>Физический исследовательский вопрос</h3><p>Как редкость измерений влияет на идентификацию параметра?</p></div>
+<div class="block"><h3>Научные ограничения</h3><p>При резких ударных слоях PINN может потерять точность: выбирать умеренную ν и фиксировать режим.</p></div>
+<div class="block callout"><h3>Два обязательных предметных графика</h3><ol>
+<li>u(x,t): эталон/PINN в два момента.</li>
+<li>Траектория оценки ν и ошибка при разных числах датчиков.</li>
+</ol></div>
+</div></details>
+<details id="problem5-variant-10" class="assignment-detail">
+<summary>Пористая среда: 2D закон Дарси <span class="meta">· вариант 10 · Нейронный оператор / FNO</span></summary>
+<div class="assignment-content">
+<p class="dataset"><strong>Данные:</strong> <a href="https://neuraloperator.github.io/stable/auto_examples/models/plot_FNO_darcy.html" target="_blank" rel="noopener">NeuralOperator: Darcy-Flow-small</a></p>
+<p class="dataset"><strong>Публикация:</strong> <a href="https://arxiv.org/abs/2010.08895" target="_blank" rel="noopener">Li et al. (2021), Fourier Neural Operator for Parametric Partial Differential Equations, ICLR</a> · <a href="https://neuraloperator.github.io/stable/auto_examples/models/plot_FNO_darcy.html" target="_blank" rel="noopener">код или образец</a></p>
+<div class="desc">Обучить небольшой Fourier Neural Operator отображению проницаемость a(x,y)→давление/потенциал u(x,y).</div>
+<div class="block callout"><h3>Источник данных и эталона</h3><p>Официальный маленький набор для обучения на CPU; загрузчик load_darcy_flow_small.</p></div>
+<div class="block"><h3>Связь с публикацией</h3><p>FNO для семейств задач Бюргерса и Дарси</p></div>
+<div class="block"><h3>Входные данные и физическая постановка</h3><p>Парные поля проницаемости и решения уравнения −∇·(a∇u)=f на 16×16; независимые реализаций a.</p></div>
+<div class="block"><h3>Какую модель обучить в PyTorch</h3><p>Новый небольшой FNO2d PyTorch/neuralop, 2 блока и не более 8–12 Фурье-мод.</p></div>
+<div class="block"><h3>Контрольная модель или численный эталон</h3><p>Сверточная сеть сравнимого числа параметров или сглаженное давление.</p></div>
+<div class="block"><h3>Эксперимент и корректное разбиение</h3><p>Отложенные поля проницаемости (в официальном наборе 100 тестовых на 16² и 50 на 32²); проверить перенос 16→32 без дообучения.</p></div>
+<div class="block"><h3>Обязательная абляция</h3><p>Отключить спектральный блок или изменить число Фурье-мод.</p></div>
+<div class="block callout"><h3>Вычислительный предел на обычном компьютере</h3><p>Официальный CPU-набор; ≤600 train, ≤100 test, сетка 16², ≤30 эпох, ≤1 ч CPU.</p></div>
+<div class="block"><h3>Физический исследовательский вопрос</h3><p>Когда перенос между разрешениями действительно демонстрирует обучение оператора, а не интерполяцию картинки?</p></div>
+<div class="block callout"><h3>Два обязательных предметных графика</h3><ol>
+<li>Три карты: a(x,y), точное u и предсказание с ошибкой.</li>
+<li>Относительная L2 ошибка при 16² и 32² и разных количествах мод.</li>
+</ol></div>
+</div></details>
+<details id="problem5-variant-11" class="assignment-detail">
+<summary>1D вязкое уравнение Бюргерса: оператор эволюции <span class="meta">· вариант 11 · Нейронный оператор / FNO</span></summary>
+<div class="assignment-content">
+<p class="dataset"><strong>Данные:</strong> <a href="https://github.com/brandstetter-johannes/LPSDA/blob/master/generate/generate_data.py" target="_blank" rel="noopener">Эталон Бюргерса: генератор LPSDA (Python) или собственный решатель</a></p>
+<p class="dataset"><strong>Публикация:</strong> <a href="https://arxiv.org/abs/2010.08895" target="_blank" rel="noopener">Li et al. (2021), Fourier Neural Operator for Parametric Partial Differential Equations, ICLR</a> · <a href="https://github.com/brandstetter-johannes/LPSDA/blob/master/generate/generate_data.py" target="_blank" rel="noopener">код или образец</a></p>
+<div class="desc">На множестве начальных функций обучить FNO отображению u₀(x)→u(x,T).</div>
+<div class="block callout"><h3>Источник данных и эталона</h3><p>Достаточно сгенерировать малый набор самому (LPSDA --experiment=Burgers или NumPy). Генератор PDEBench требует JAX и Hydra; готовые файлы PDEBench скачивать не нужно.</p></div>
+<div class="block"><h3>Связь с публикацией</h3><p>FNO для семейств задач Бюргерса и Дарси</p></div>
+<div class="block"><h3>Входные данные и физическая постановка</h3><p>Независимые начальные поля из открытого генератора PDEBench, решения на периодической сетке.</p></div>
+<div class="block"><h3>Какую модель обучить в PyTorch</h3><p>FNO1d 2 спектральных блока, 8 мод, ширина ≤16.</p></div>
+<div class="block"><h3>Контрольная модель или численный эталон</h3><p>Маленькая 1D CNN сходной параметрической ёмкости.</p></div>
+<div class="block"><h3>Эксперимент и корректное разбиение</h3><p>Тест по невиданным начальным условиям; дополнительная проверка на удвоенной сетке.</p></div>
+<div class="block"><h3>Обязательная абляция</h3><p>Сравнить 4/8/12 мод; отложить более крутые начальные профили.</p></div>
+<div class="block callout"><h3>Вычислительный предел на обычном компьютере</h3><p>≤400 пар, 128 точек, ≤40 эпох и ≤1 ч CPU; скачивать только нужные данные либо генерировать их.</p></div>
+<div class="block"><h3>Физический исследовательский вопрос</h3><p>Сохраняется ли преимущество спектральной архитектуры на крутых фронтах?</p></div>
+<div class="block"><h3>Научные ограничения</h3><p>Сеть обучается оператору по множеству начальных условий; нельзя случайно делить сеточные узлы одного решения между train и test.</p></div>
+<div class="block callout"><h3>Два обязательных предметных графика</h3><ol>
+<li>Начальная функция и два решения в момент T: эталон, FNO, CNN.</li>
+<li>L2 ошибка по крутизне начального профиля и разрешению.</li>
+</ol></div>
+</div></details>
+<details id="problem5-variant-12" class="assignment-detail">
+<summary>Перенос пассивной примеси: одномерная адвекция <span class="meta">· вариант 12 · Нейронный оператор / FNO</span></summary>
+<div class="assignment-content">
+<p class="dataset"><strong>Данные:</strong> <a href="https://github.com/pdebench/PDEBench/tree/main/pdebench/data_gen/data_gen_NLE" target="_blank" rel="noopener">Аналитический сдвиг u₀(x−ct): генератор на NumPy</a></p>
+<p class="dataset"><strong>Публикация:</strong> <a href="https://proceedings.neurips.cc/paper_files/paper/2022/hash/0a9747136d411fb83f0cf81820d44afb-Abstract-Datasets_and_Benchmarks.html" target="_blank" rel="noopener">Takamoto et al. (2022), PDEBench: An Extensive Benchmark for Scientific Machine Learning, NeurIPS</a> · <a href="https://github.com/pdebench/PDEBench/tree/main/pdebench/data_gen/data_gen_NLE" target="_blank" rel="noopener">код или образец</a></p>
+<div class="desc">Обучить сеть переносить произвольный профиль примеси при заданной постоянной скорости: u(x,t)=u₀(x−ct) на периодической сетке.</div>
+<div class="block callout"><h3>Источник данных и эталона</h3><p>Решение — точный периодический сдвиг, генератор пишется на NumPy; PDEBench служит образцом постановки, скачивать его не нужно.</p></div>
+<div class="block"><h3>Связь с публикацией</h3><p>PDEBench сравнивает FNO, U-Net и PINN на полях PDE</p></div>
+<div class="block"><h3>Входные данные и физическая постановка</h3><p>Случайные гладкие u₀(x), c в двух диапазонах; аналитический периодический сдвиг даёт эталон без CFD.</p></div>
+<div class="block"><h3>Какую модель обучить в PyTorch</h3><p>Небольшой FNO1d с координатой и скоростью c как входами.</p></div>
+<div class="block"><h3>Контрольная модель или численный эталон</h3><p>Точная операция сдвига и обычная 1D CNN.</p></div>
+<div class="block"><h3>Эксперимент и корректное разбиение</h3><p>Отложенные формы u₀ и скорости c; проверять фазовый сдвиг и относительную L2 ошибку.</p></div>
+<div class="block"><h3>Обязательная абляция</h3><p>Число мод 4/8; тренировочные скорости и отдельный интервал c вне обучения.</p></div>
+<div class="block callout"><h3>Вычислительный предел на обычном компьютере</h3><p>≤500 траекторий по 128 точек, ≤35 эпох, ≤1 ч CPU.</p></div>
+<div class="block"><h3>Физический исследовательский вопрос</h3><p>Как оператор ведёт себя при невиданной скорости переноса?</p></div>
+<div class="block"><h3>Научные ограничения</h3><p>Периодичность обязательна: при обычных граничных условиях простое циклическое смещение было бы неправильным.</p></div>
+<div class="block callout"><h3>Два обязательных предметных графика</h3><ol>
+<li>u(x,T) для двух скоростей: аналитический сдвиг и модель.</li>
+<li>Ошибка по c и величина фазового сдвига.</li>
+</ol></div>
+</div></details>
+<details id="problem5-variant-13" class="assignment-detail">
+<summary>Осевое усилие стержня от распределённой нагрузки: DeepONet <span class="meta">· вариант 13 · Нейронный оператор / DeepONet</span></summary>
+<div class="assignment-content">
+<p class="dataset"><strong>Данные:</strong> <a href="https://deepxde.readthedocs.io/en/latest/demos/operator/antiderivative_aligned.html" target="_blank" rel="noopener">DeepXDE: antiderivative DeepONet; открытая интегральная задача</a></p>
+<p class="dataset"><strong>Публикация:</strong> <a href="https://doi.org/10.1038/s42256-021-00302-5" target="_blank" rel="noopener">Lu et al. (2021), Learning Nonlinear Operators via DeepONet, Nature Machine Intelligence</a> · <a href="https://deepxde.readthedocs.io/en/latest/demos/operator/antiderivative_aligned.html" target="_blank" rel="noopener">код или образец</a></p>
+<div class="desc">Обучить DeepONet отображать распределённую осевую нагрузку q(x) в усилие N(y) стержня: N′(x)+q(x)=0, N(0)=0. Это оператор интегрирования со знаком минус, близкий открытому примеру DeepONet.</div>
+<div class="block callout"><h3>Источник данных и эталона</h3><p>Открытый пример и доступные малые наборы входных функций/их интегралов; для осевого усилия изменяется знак результата.</p></div>
+<div class="block"><h3>Связь с публикацией</h3><p>DeepONet: интегрирование, адвекция и реакция—диффузия</p></div>
+<div class="block"><h3>Входные данные и физическая постановка</h3><p>Гладкие распределённые нагрузки q(x); значения N(y)=−∫₀ʸq(x)dx из открытого примера интегрирования DeepXDE с заменой знака. Поля безразмерные или q и N приводятся к согласованным Н/м и Н.</p></div>
+<div class="block"><h3>Какую модель обучить в PyTorch</h3><p>Branch- и trunk-сети PyTorch ширины 32–48, размер общего латентного пространства 32.</p></div>
+<div class="block"><h3>Контрольная модель или численный эталон</h3><p>Квадратура трапеций со знаком минус и обычная MLP на фиксированной сетке.</p></div>
+<div class="block"><h3>Эксперимент и корректное разбиение</h3><p>Отдельные ранее не виденные нагрузки и точки y вне узлов сети branch; оценивать также равновесие N′(x)+q(x)=0.</p></div>
+<div class="block"><h3>Обязательная абляция</h3><p>Изменить число датчиков входной функции с 16 до 32.</p></div>
+<div class="block callout"><h3>Вычислительный предел на обычном компьютере</h3><p>≤400 входных функций, 64 выходные точки, ≤80 эпох, ≤1 ч CPU.</p></div>
+<div class="block"><h3>Физический исследовательский вопрос</h3><p>Может ли DeepONet восстанавливать эпюры осевого усилия для нагрузок, не встречавшихся при обучении, и насколько выполняется баланс N′+q=0?</p></div>
+<div class="block callout"><h3>Два обязательных предметных графика</h3><ol>
+<li>Две новые нагрузки q(x) и осевое усилие N(x): квадратура/DeepONet.</li>
+<li>Относительная L2 ошибка в зависимости от числа датчиков branch-сети.</li>
+</ol></div>
+</div></details>
+<details id="problem5-variant-14" class="assignment-detail">
+<summary>Оператор Пуассона: семейство нагрузок <span class="meta">· вариант 14 · Нейронный оператор / PI-DeepONet</span></summary>
+<div class="assignment-content">
+<p class="dataset"><strong>Данные:</strong> <a href="https://deepxde.readthedocs.io/en/latest/demos/operator/poisson.1d.pideeponet.html" target="_blank" rel="noopener">DeepXDE: PI-DeepONet для 1D Poisson</a></p>
+<p class="dataset"><strong>Публикация:</strong> <a href="https://doi.org/10.1126/sciadv.abi8605" target="_blank" rel="noopener">Wang, Wang, Perdikaris (2021), Learning the Solution Operator of Parametric PDEs with Physics-Informed DeepONets, Science Advances</a> · <a href="https://deepxde.readthedocs.io/en/latest/demos/operator/poisson.1d.pideeponet.html" target="_blank" rel="noopener">код или образец</a></p>
+<div class="desc">Обучить физически-информированный DeepONet решать −u″(x)=f(x) с нулевыми граничными значениями для множества правых частей.</div>
+<div class="block callout"><h3>Источник данных и эталона</h3><p>Открытая постановка и генератор решений для различных правых частей f(x).</p></div>
+<div class="block"><h3>Связь с публикацией</h3><p>прямой аналог: параметрические уравнения с физической функцией потерь</p></div>
+<div class="block"><h3>Входные данные и физическая постановка</h3><p>Branch: значения f(x) на 32 датчиках; trunk: координата x; синтетические нагрузки и решение по трёхдиагональной системе. Для невязки в произвольной точке использовать истинную аналитически заданную f(x) (а не один из соседних датчиков).</p></div>
+<div class="block"><h3>Какую модель обучить в PyTorch</h3><p>Две небольшие сети DeepONet; потеря по данным и дополнительная физическая невязка −u″−f.</p></div>
+<div class="block"><h3>Контрольная модель или численный эталон</h3><p>Решатель конечных разностей и тот же DeepONet без физической невязки.</p></div>
+<div class="block"><h3>Эксперимент и корректное разбиение</h3><p>Тестировать на новых функциях f, не на новых узлах старой функции.</p></div>
+<div class="block"><h3>Обязательная абляция</h3><p>Изменить вес физической невязки и число тренировочных нагрузок.</p></div>
+<div class="block callout"><h3>Вычислительный предел на обычном компьютере</h3><p>≤300 функций, 64 узла, ≤60 эпох, физические точки ≤256 на эпоху, ≤2 ч CPU.</p></div>
+<div class="block"><h3>Физический исследовательский вопрос</h3><p>Улучшает ли добавление PDE-остатка перенос на новое распределение нагрузок?</p></div>
+<div class="block callout"><h3>Два обязательных предметных графика</h3><ol>
+<li>Для 2 новых нагрузок: f, точное u и обе сети.</li>
+<li>Относительная L2 ошибка и средняя PDE-невязка в зависимости от веса физики.</li>
+</ol></div>
+</div></details>
+<details id="problem5-variant-15" class="assignment-detail">
+<summary>Реакция и диффузия: оператор от источника к решению <span class="meta">· вариант 15 · Нейронный оператор / DeepONet</span></summary>
+<div class="assignment-content">
+<p class="dataset"><strong>Данные:</strong> <a href="https://github.com/lululxvi/deepxde/blob/master/examples/operator/diff_rec_aligned_pideeponet.py" target="_blank" rel="noopener">DeepXDE: DeepONet diffusion–reaction</a></p>
+<p class="dataset"><strong>Публикация:</strong> <a href="https://doi.org/10.1038/s42256-021-00302-5" target="_blank" rel="noopener">Lu et al. (2021), Learning Nonlinear Operators via DeepONet, Nature Machine Intelligence</a> · <a href="https://github.com/lululxvi/deepxde/blob/master/examples/operator/diff_rec_aligned_pideeponet.py" target="_blank" rel="noopener">код или образец</a></p>
+<div class="desc">По множеству функций-источников/начальных условий обучить DeepONet прогнозировать поле 1D уравнения реакции—диффузии.</div>
+<div class="block callout"><h3>Источник данных и эталона</h3><p>Образец DeepXDE: s_t = D·s_xx + k·s² + u(x), D=k=0.01; данные генерировать самостоятельно из случайных гладких u(x) численной схемой.</p></div>
+<div class="block"><h3>Связь с публикацией</h3><p>DeepONet: интегрирование, адвекция и реакция—диффузия</p></div>
+<div class="block"><h3>Входные данные и физическая постановка</h3><p>Использовать открытый пример DeepXDE, фиксировать коэффициенты и варьировать только входную функцию; генерировать эталоны численной схемой.</p></div>
+<div class="block"><h3>Какую модель обучить в PyTorch</h3><p>DeepONet c двумя небольшими сетями (32–48), вход 32 датчика, выход (x,t).</p></div>
+<div class="block"><h3>Контрольная модель или численный эталон</h3><p>Обычная MLP с координатами и сжатым входом; численная схема.</p></div>
+<div class="block"><h3>Эксперимент и корректное разбиение</h3><p>Разделять по исходным функциям/траекториям, а не по точкам одного решения.</p></div>
+<div class="block"><h3>Обязательная абляция</h3><p>Разные числа датчиков и разная доля тренировочных функций.</p></div>
+<div class="block callout"><h3>Вычислительный предел на обычном компьютере</h3><p>≤200 траекторий 64×16; ≤70 эпох, не более 1–2 ч CPU.</p></div>
+<div class="block"><h3>Физический исследовательский вопрос</h3><p>Действительно ли модель обучает семейство решений, а не запоминает одну траекторию?</p></div>
+<div class="block"><h3>Научные ограничения</h3><p>Коэффициенты, функции-источники и граничные условия должны соответствовать конкретному открытому примеру.</p></div>
+<div class="block callout"><h3>Два обязательных предметных графика</h3><ol>
+<li>Тепловая карта u(x,t): численный эталон и DeepONet.</li>
+<li>Ошибка во времени и при разных числах входных датчиков.</li>
+</ol></div>
+</div></details>
+<details id="problem5-variant-16" class="assignment-detail">
+<summary>Теплопроводность: перенос между начальными полями <span class="meta">· вариант 16 · Нейронный оператор / FNO</span></summary>
+<div class="assignment-content">
+<p class="dataset"><strong>Данные:</strong> <a href="https://deepxde.readthedocs.io/en/stable/demos/pinn_forward/heat.html" target="_blank" rel="noopener">DeepXDE: Heat/Diffusion equation, analytic family</a></p>
+<p class="dataset"><strong>Публикация:</strong> <a href="https://proceedings.neurips.cc/paper_files/paper/2022/hash/0a9747136d411fb83f0cf81820d44afb-Abstract-Datasets_and_Benchmarks.html" target="_blank" rel="noopener">Takamoto et al. (2022), PDEBench: An Extensive Benchmark for Scientific Machine Learning, NeurIPS</a> · <a href="https://deepxde.readthedocs.io/en/stable/demos/pinn_forward/heat.html" target="_blank" rel="noopener">код или образец</a></p>
+<div class="desc">Обучить FNO1d предсказывать температуру через фиксированное время по начальной температуре стержня.</div>
+<div class="block callout"><h3>Источник данных и эталона</h3><p>Семейство гладких начальных условий и аналитическая эволюция в 1D.</p></div>
+<div class="block"><h3>Связь с публикацией</h3><p>PDEBench сравнивает FNO, U-Net и PINN на полях PDE</p></div>
+<div class="block"><h3>Входные данные и физическая постановка</h3><p>Начальные профили — случайные комбинации 3–5 синусоидальных мод при однородных краях; решение — точное экспоненциальное затухание мод.</p></div>
+<div class="block"><h3>Какую модель обучить в PyTorch</h3><p>FNO1d 2 слоя, 8 мод, ширина ≤16.</p></div>
+<div class="block"><h3>Контрольная модель или численный эталон</h3><p>Сверточная сеть 1D и точное аналитическое выражение.</p></div>
+<div class="block"><h3>Эксперимент и корректное разбиение</h3><p>Отложенные комбинации мод; отдельно проверить более высокую моду, отсутствовавшую в обучении.</p></div>
+<div class="block"><h3>Обязательная абляция</h3><p>Изменить k_max=4/8/12; сравнить ошибки по частотам.</p></div>
+<div class="block callout"><h3>Вычислительный предел на обычном компьютере</h3><p>≤500 функций, 128 узлов, 40 эпох, ≤1 ч CPU.</p></div>
+<div class="block"><h3>Физический исследовательский вопрос</h3><p>Какие частоты теплового поля теряет модель при сокращении Фурье-мод?</p></div>
+<div class="block"><h3>Научные ограничения</h3><p>Это учебная адаптация PDEBench к аналитической теплопроводности; не заявлять прямое повторение опубликованного эксперимента.</p></div>
+<div class="block callout"><h3>Два обязательных предметных графика</h3><ol>
+<li>Сигнал начальной и конечной температуры: точное поле, FNO и CNN.</li>
+<li>Спектральная ошибка амплитуды температурных мод как функция номера гармоники.</li>
+</ol></div>
+</div></details>
+<details id="problem5-variant-17" class="assignment-detail">
+<summary>2D реакция—диффузия: прогноз пространственных структур <span class="meta">· вариант 17 · U-Net / поля PDE</span></summary>
+<div class="assignment-content">
+<p class="dataset"><strong>Данные:</strong> <a href="https://github.com/pdebench/PDEBench/tree/main/pdebench/data_gen" target="_blank" rel="noopener">PDEBench: 2D diffusion-reaction generator</a></p>
+<p class="dataset"><strong>Публикация:</strong> <a href="https://proceedings.neurips.cc/paper_files/paper/2022/hash/0a9747136d411fb83f0cf81820d44afb-Abstract-Datasets_and_Benchmarks.html" target="_blank" rel="noopener">Takamoto et al. (2022), PDEBench: An Extensive Benchmark for Scientific Machine Learning, NeurIPS</a> · <a href="https://github.com/pdebench/PDEBench/tree/main/pdebench/data_gen" target="_blank" rel="noopener">код или образец</a></p>
+<div class="desc">На компактных траекториях двухкомпонентной системы реакции—диффузии предсказать следующее двумерное поле.</div>
+<div class="block callout"><h3>Источник данных и эталона</h3><p>Генератор PDEBench (gen_diff_react.py) настраивается через Hydra и требует h5py; допускается собственный решатель на NumPy (FitzHugh—Nagumo или Грея—Скотта). Генерировать только малые сетки.</p></div>
+<div class="block"><h3>Связь с публикацией</h3><p>PDEBench сравнивает FNO, U-Net и PINN на полях PDE</p></div>
+<div class="block"><h3>Входные данные и физическая постановка</h3><p>2 канала концентраций на 32² из локального уменьшенного генератора PDEBench; пару времени t→t+Δt.</p></div>
+<div class="block"><h3>Какую модель обучить в PyTorch</h3><p>Небольшая U-Net из 2 уровней, ширина 8–16 каналов.</p></div>
+<div class="block"><h3>Контрольная модель или численный эталон</h3><p>Одна свёрточная сеть без пропускных соединений той же ширины.</p></div>
+<div class="block"><h3>Эксперимент и корректное разбиение</h3><p>Траектории разделять целиком; проверять покомпонентную RMSE и длительный прогноз на 5–10 шагов.</p></div>
+<div class="block"><h3>Обязательная абляция</h3><p>U-Net со skip connections и без них; ошибки многократного прогноза.</p></div>
+<div class="block callout"><h3>Вычислительный предел на обычном компьютере</h3><p>≤200 траекторий, сетка 32², ≤30 эпох, ≤2 ч CPU вместе с генерацией.</p></div>
+<div class="block"><h3>Физический исследовательский вопрос</h3><p>Насколько пропускные соединения сохраняют мелкомасштабные пространственные структуры?</p></div>
+<div class="block"><h3>Научные ограничения</h3><p>Не скачивать готовые файлы PDEBench: они очень большие. Условия и коэффициенты брать из конкретного открытого генератора или решателя.</p></div>
+<div class="block callout"><h3>Два обязательных предметных графика</h3><ol>
+<li>Два исходных поля и карты предсказания/ошибки через 1 и 5 шагов.</li>
+<li>RMSE для обоих компонентов как функция числа последовательных шагов.</li>
+</ol></div>
+</div></details>
+<details id="problem5-variant-18" class="assignment-detail">
+<summary>Семейство задач Римана: свёрточный прогноз волн <span class="meta">· вариант 18 · U-Net / газовая динамика</span></summary>
+<div class="assignment-content">
+<p class="dataset"><strong>Данные:</strong> <a href="https://github.com/clawpack/riemann_book/blob/master/exact_solvers/euler.py" target="_blank" rel="noopener">Clawpack exact Riemann solver: набор Euler shock tubes</a></p>
+<p class="dataset"><strong>Публикация:</strong> <a href="https://proceedings.neurips.cc/paper_files/paper/2022/hash/0a9747136d411fb83f0cf81820d44afb-Abstract-Datasets_and_Benchmarks.html" target="_blank" rel="noopener">Takamoto et al. (2022), PDEBench: An Extensive Benchmark for Scientific Machine Learning, NeurIPS</a> · <a href="https://github.com/clawpack/riemann_book/blob/master/exact_solvers/euler.py" target="_blank" rel="noopener">код или образец</a></p>
+<div class="desc">На множестве 1D задач Римана для идеального газа обучить U-Net1d выдавать профиль ρ,u,p в фиксированный момент.</div>
+<div class="block callout"><h3>Источник данных и эталона</h3><p>Самостоятельно воспроизводимо сгенерировать различные левое/правое состояния.</p></div>
+<div class="block"><h3>Связь с публикацией</h3><p>PDEBench сравнивает FNO, U-Net и PINN на полях PDE</p></div>
+<div class="block"><h3>Входные данные и физическая постановка</h3><p>Вход: поля начальных состояний на 128 узлах; цель: точное решение Римана при t=0.2 для разных положительных (ρL,pL,ρR,pR) при uL=uR=0 и γ=1.4. Область выбрать так, чтобы волны не достигали её краёв.</p></div>
+<div class="block"><h3>Какую модель обучить в PyTorch</h3><p>U-Net1d из 2 уровней с 8–16 каналами; обеспечить физически допустимые ρ,p на выходе.</p></div>
+<div class="block"><h3>Контрольная модель или численный эталон</h3><p>Обычная 1D CNN той же параметрической ёмкости; точный решатель только как эталон.</p></div>
+<div class="block"><h3>Эксперимент и корректное разбиение</h3><p>Тестировать на полностью новых левых/правых состояниях; считать погрешность положения ударной волны и контактного разрыва.</p></div>
+<div class="block"><h3>Обязательная абляция</h3><p>U-Net без skip connections и с ними; сравнить L1 и осцилляции около скачков.</p></div>
+<div class="block callout"><h3>Вычислительный предел на обычном компьютере</h3><p>≤300 задач, 128 узлов, ≤40 эпох, ≤1 ч CPU; Clawpack генерирует эталон.</p></div>
+<div class="block"><h3>Физический исследовательский вопрос</h3><p>Может ли U-Net предсказать положение разрывов без явного решения задачи Римана?</p></div>
+<div class="block"><h3>Научные ограничения</h3><p>PDEBench использует U-Net для родственных CFD-полей; конкретный точный Euler-суррогат — учебная адаптация.</p></div>
+<div class="block callout"><h3>Два обязательных предметных графика</h3><ol>
+<li>ρ,u,p в задаче, не встречавшейся в обучении: эталон, CNN, U-Net.</li>
+<li>L1 ошибка и смещение ударной волны как функция отношения pL/pR.</li>
+</ol></div>
+</div></details>
+<details id="problem5-variant-19" class="assignment-detail">
+<summary>Долгосрочный прогноз неустойчивости Курамото—Сивашинского <span class="meta">· вариант 19 · Диффузионное уточнение / PDE-Refiner</span></summary>
+<div class="assignment-content">
+<p class="dataset"><strong>Данные:</strong> <a href="https://github.com/brandstetter-johannes/LPSDA" target="_blank" rel="noopener">Brandstetter et al.: открытый генератор Kuramoto–Sivashinsky для PDE-Refiner</a></p>
+<p class="dataset"><strong>Публикация:</strong> <a href="https://arxiv.org/abs/2308.05732" target="_blank" rel="noopener">Lippe et al. (2023), PDE-Refiner: Achieving Accurate Long Rollouts with Neural PDE Solvers, NeurIPS</a> · <a href="https://github.com/brandstetter-johannes/LPSDA" target="_blank" rel="noopener">код или образец</a></p>
+<div class="desc">Обучить короткий оператор следующего шага и добавить 2–3 итерации коррекции по мотивам PDE-Refiner. Измерить устойчивость многократного прогноза.</div>
+<div class="block callout"><h3>Источник данных и эталона</h3><p>Команда из README LPSDA: python generate/generate_data.py --experiment=KS --L=64 --nt=500 (число траекторий уменьшить); эту постановку используют авторы PDE-Refiner.</p></div>
+<div class="block"><h3>Связь с публикацией</h3><p>прямой аналог: итеративное диффузионное уточнение временного прогноза</p></div>
+<div class="block"><h3>Входные данные и физическая постановка</h3><p>Периодические решения 1D уравнения Курамото—Сивашинского из открытой постановки; использовать воспроизводимые локальные короткие траектории.</p></div>
+<div class="block"><h3>Какую модель обучить в PyTorch</h3><p>Лёгкая 1D CNN с 2 шагами добавления шума/итеративного уточнения; не полная большая авторская архитектура.</p></div>
+<div class="block"><h3>Контрольная модель или численный эталон</h3><p>Та же CNN, обученная только на среднеквадратичной ошибке следующего шага.</p></div>
+<div class="block"><h3>Эксперимент и корректное разбиение</h3><p>Разные начальные поля для обучения и теста; оценить L2, корреляцию и спектр энергии при последовательном прогнозе.</p></div>
+<div class="block"><h3>Обязательная абляция</h3><p>0 против 2 и 3 шагов уточнения при одинаковом числе тренировочных примеров.</p></div>
+<div class="block callout"><h3>Вычислительный предел на обычном компьютере</h3><p>≤200 траекторий по 64 узла, короткие горизонты ≤20 шагов, ≤40 эпох, ≤2 ч CPU.</p></div>
+<div class="block"><h3>Физический исследовательский вопрос</h3><p>Улучшает ли итеративное уточнение устойчивость, а не только одношаговую RMSE?</p></div>
+<div class="block"><h3>Научные ограничения</h3><p>Учебный маломасштабный аналог PDE-Refiner, не попытка воспроизвести заявленные авторами численные результаты.</p></div>
+<div class="block callout"><h3>Два обязательных предметных графика</h3><ol>
+<li>Пространственно-временная карта одного прогноза: эталон/CNN/refiner.</li>
+<li>Ошибка, корреляция и спектральная энергия как функция горизонта прогноза.</li>
+</ol></div>
+</div></details>
+<details id="problem5-variant-20" class="assignment-detail">
+<summary>Бюргерс по редким датчикам: условная диффузия <span class="meta">· вариант 20 · Диффузионная модель / генеративный метод</span></summary>
+<div class="assignment-content">
+<p class="dataset"><strong>Данные:</strong> <a href="https://github.com/brandstetter-johannes/LPSDA/blob/master/generate/generate_data.py" target="_blank" rel="noopener">DiffusionPDE (оригинальный генератор на MATLAB) и LPSDA (Python)</a></p>
+<p class="dataset"><strong>Публикация:</strong> <a href="https://arxiv.org/abs/2406.17763" target="_blank" rel="noopener">Huang et al. (2024), DiffusionPDE: Generative PDE-Solving under Partial Observation, NeurIPS</a> · <a href="https://github.com/generativepde/DiffusionPDE/tree/main/dataset_generation" target="_blank" rel="noopener">код или образец</a></p>
+<div class="desc">Восстановить пространственно-временное поле решения уравнения Бюргерса по редким значениям u(x,t), сравнив условную диффузионную модель с обычной CNN.</div>
+<div class="block callout"><h3>Источник данных и эталона</h3><p>Оригинальный генератор Бюргерса в DiffusionPDE написан на MATLAB (burgers1.m): его можно переписать на Python или взять генератор LPSDA (--experiment=Burgers). Не скачивать полные авторские модели и архивы.</p></div>
+<div class="block"><h3>Связь с публикацией</h3><p>прямой аналог: реконструкция решения Бюргерса по частичным наблюдениям</p></div>
+<div class="block"><h3>Входные данные и физическая постановка</h3><p>Небольшие решения Бюргерса из генератора DiffusionPDE, уменьшить до 64×16; из каждой новой траектории раскрывать только 10 % случайно выбранных узлов.</p></div>
+<div class="block"><h3>Какую модель обучить в PyTorch</h3><p>Условная мини-DDPM на torch.nn.Conv2d, 20–50 уровней шума; обучать с нуля, на входе поле измерений + маска + зашумлённый ответ.</p></div>
+<div class="block"><h3>Контрольная модель или численный эталон</h3><p>Детерминированная CNN/U-Net на тех же наблюдениях; простая интерполяция.</p></div>
+<div class="block"><h3>Эксперимент и корректное разбиение</h3><p>Тестировать на совершенно новых траекториях; RMSE, ошибка PDE-невязки и соблюдение измерений; минимум 3 сэмпла на случай.</p></div>
+<div class="block"><h3>Обязательная абляция</h3><p>5 % vs 10 % наблюдений; есть/нет маски; разброс генерируемых ответов.</p></div>
+<div class="block callout"><h3>Вычислительный предел на обычном компьютере</h3><p>≤200 траекторий, поля ≤64×16, ≤30 эпох, 10–20 шагов генерации, ≤2 ч CPU для облегчённой модели.</p></div>
+<div class="block"><h3>Физический исследовательский вопрос</h3><p>Что даёт моделирование нескольких возможных решений при редких данных?</p></div>
+<div class="block"><h3>Научные ограничения</h3><p>Диффузия — генеративный процесс удаления шума, не коэффициент физической диффузии. Это учебный вариант, а не точная реплика полного DiffusionPDE.</p></div>
+<div class="block callout"><h3>Два обязательных предметных графика</h3><ol>
+<li>Поле u(x,t): эталон, наблюдаемые точки, одна реконструкция DDPM и CNN.</li>
+<li>RMSE и ошибка соблюдения измерений от доли наблюдений; три примера генерации.</li>
+</ol></div>
+</div></details>
+<details id="problem5-variant-21" class="assignment-detail">
+<summary>Диагностика повреждений подшипника по вибросигналу <span class="meta">· вариант 21 · CNN / ResNet1D</span></summary>
+<div class="assignment-content">
+<p class="dataset"><strong>Данные:</strong> <a href="https://engineering.case.edu/bearingdatacenter/download-data-file" target="_blank" rel="noopener">CWRU Bearing Data Center</a></p>
+<p class="dataset"><strong>Публикация:</strong> <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12064821/" target="_blank" rel="noopener">Ni et al. (2025), Discrete wavelet integrated convolutional residual network for bearing fault diagnosis under noise and variable operating conditions</a> · <a href="https://engineering.case.edu/bearingdatacenter/download-data-file" target="_blank" rel="noopener">код или образец</a></p>
+<div class="desc">Обучить собственную небольшую остаточную свёрточную сеть различать исправный подшипник и три места повреждения.</div>
+<div class="block callout"><h3>Источник данных и эталона</h3><p>Скачивать только 12 kHz drive-end файлы для выбранных размеров дефекта и нагрузок.</p></div>
+<div class="block"><h3>Связь с публикацией</h3><p>прямой аналог: остаточная CNN и перенос CWRU между нагрузками; без вейвлетов в учебном варианте</p></div>
+<div class="block"><h3>Входные данные и физическая постановка</h3><p>Неперекрывающиеся окна 512 отсчётов сигнала drive-end при общей частоте 12 кГц. Данные повреждений брать из 12-kHz серии; нормальные записи могут быть 48 кГц, поэтому сначала понизить их до 12 кГц с антиалиасинговой фильтрацией. Классы: исправен, внутреннее кольцо, внешнее кольцо, тело качения.</p></div>
+<div class="block"><h3>Какую модель обучить в PyTorch</h3><p>ResNet1D: 3 остаточных блока по 8–16 каналов, глобальное усреднение и классификатор.</p></div>
+<div class="block"><h3>Контрольная модель или численный эталон</h3><p>Обычная 1D CNN без остаточных соединений и RMS/эксцесс + логистическая регрессия.</p></div>
+<div class="block"><h3>Эксперимент и корректное разбиение</h3><p>Файлы и уровни нагрузки держать целиком: один режим нагрузки — только тест; не делить соседние окна файла. Проверить, что классификатор не распознаёт частоту дискретизации вместо дефекта.</p></div>
+<div class="block"><h3>Обязательная абляция</h3><p>Сеть с residual connections и без них; оценить чувствительность к шуму.</p></div>
+<div class="block callout"><h3>Вычислительный предел на обычном компьютере</h3><p>≤2000 окон по 512, ≤30 эпох, ≤1 ч CPU.</p></div>
+<div class="block"><h3>Физический исследовательский вопрос</h3><p>Помогает ли остаточная архитектура переносу на новую нагрузку?</p></div>
+<div class="block"><h3>Научные ограничения</h3><p>Файлы CWRU по классам и нагрузкам нельзя смешивать на уровне окон: это приводит к утечке.</p></div>
+<div class="block callout"><h3>Два обязательных предметных графика</h3><ol>
+<li>Типичные осциллограммы и амплитудные спектры четырёх состояний.</li>
+<li>Матрица ошибок и макро-F1 по нагрузкам, в том числе отложенной.</li>
+</ol></div>
+</div></details>
+<details id="problem5-variant-22" class="assignment-detail">
+<summary>Шум двигателя автомобиля: многомасштабная свёртка <span class="meta">· вариант 22 · CNN / InceptionTime</span></summary>
+<div class="assignment-content">
+<p class="dataset"><strong>Данные:</strong> <a href="https://zenodo.org/records/11191164" target="_blank" rel="noopener">UCR FordA, Zenodo</a></p>
+<p class="dataset"><strong>Публикация:</strong> <a href="https://arxiv.org/abs/1909.04939" target="_blank" rel="noopener">Ismail Fawaz et al. (2020), InceptionTime: Finding AlexNet for Time Series Classification, Data Mining and Knowledge Discovery</a> · <a href="https://zenodo.org/records/11191164" target="_blank" rel="noopener">код или образец</a></p>
+<div class="desc">Обучить облегчённую сеть с Inception-блоком на временных рядах шума двигателя FordA.</div>
+<div class="block callout"><h3>Источник данных и эталона</h3><p>Набор двигателя: 500 отсчётов шума, ~27,5 МБ в формате .ts.</p></div>
+<div class="block"><h3>Связь с публикацией</h3><p>прямой аналог: Inception-модули на временных рядах UCR</p></div>
+<div class="block"><h3>Входные данные и физическая постановка</h3><p>Каждая запись — 500 измерений, метка наличия признака неисправности. Test — официальный (1320 записей) целиком; из официального train взять случайную подвыборку ≤2000 записей.</p></div>
+<div class="block"><h3>Какую модель обучить в PyTorch</h3><p>Один или два InceptionTime-подобных блока с ядрами 5, 11, 21 (не ансамбль из пяти больших сетей).</p></div>
+<div class="block"><h3>Контрольная модель или численный эталон</h3><p>Обычная 1D CNN с одним размером ядра и kNN по исходному ряду.</p></div>
+<div class="block"><h3>Эксперимент и корректное разбиение</h3><p>Не менять официальный train/test; показатели F1, balanced accuracy, ROC-AUC.</p></div>
+<div class="block"><h3>Обязательная абляция</h3><p>Изменить длины свёрточных ядер и выключить многомасштабную ветвь.</p></div>
+<div class="block callout"><h3>Вычислительный предел на обычном компьютере</h3><p>≤2000 train, 500 отсчётов, ≤35 эпох, ≤1 ч CPU.</p></div>
+<div class="block"><h3>Физический исследовательский вопрос</h3><p>Какие характерные длительности временных структур объясняют выигрыш многомасштабной свёртки?</p></div>
+<div class="block callout"><h3>Два обязательных предметных графика</h3><ol>
+<li>Характерные временные ряды двух классов, спектральные различия.</li>
+<li>ROC для CNN/Inception и F1 при разных наборах длин ядер.</li>
+</ol></div>
+</div></details>
+<details id="problem5-variant-23" class="assignment-detail">
+<summary>Контроль производства пластин кремния по сигналам оборудования <span class="meta">· вариант 23 · CNN / ResNet1D</span></summary>
+<div class="assignment-content">
+<p class="dataset"><strong>Данные:</strong> <a href="https://zenodo.org/records/11198387" target="_blank" rel="noopener">UCR Wafer, Zenodo</a></p>
+<p class="dataset"><strong>Публикация:</strong> <a href="https://arxiv.org/abs/1611.06455" target="_blank" rel="noopener">Wang, Yan, Oates (2017), Time Series Classification from Scratch with Deep Neural Networks, IJCNN</a> · <a href="https://zenodo.org/records/11198387" target="_blank" rel="noopener">код или образец</a></p>
+<div class="desc">По временному сигналу датчика производственного процесса обнаружьте аномальную пластину.</div>
+<div class="block callout"><h3>Источник данных и эталона</h3><p>Данные процесса производства микросхем: 152 отсчёта, 11,9 МБ.</p></div>
+<div class="block"><h3>Связь с публикацией</h3><p>прямой аналог: сверточные и остаточные сети для временных рядов UCR</p></div>
+<div class="block"><h3>Входные данные и физическая постановка</h3><p>Официальный UCR Wafer: 1000 обучающих и 6164 тестовых последовательности по 152 отсчёта, выраженный дисбаланс классов.</p></div>
+<div class="block"><h3>Какую модель обучить в PyTorch</h3><p>Небольшая ResNet1D с двумя остаточными блоками, обучаемая с нуля.</p></div>
+<div class="block"><h3>Контрольная модель или численный эталон</h3><p>Логистическая регрессия по ряду и 1D CNN без остаточных связей.</p></div>
+<div class="block"><h3>Эксперимент и корректное разбиение</h3><p>Только официальный train/test; порог подбирать внутри train, основной показатель PR-AUC/F1.</p></div>
+<div class="block"><h3>Обязательная абляция</h3><p>Остаточные связи включены/выключены; class_weight vs без весов.</p></div>
+<div class="block callout"><h3>Вычислительный предел на обычном компьютере</h3><p>≤1000 train, 152 отсчёта, ≤35 эпох, ≤1 ч CPU.</p></div>
+<div class="block"><h3>Физический исследовательский вопрос</h3><p>Почему обычная accuracy недостаточна при редких нарушениях технологического процесса?</p></div>
+<div class="block callout"><h3>Два обязательных предметных графика</h3><ol>
+<li>Средние сигналы исправных/дефектных пластин и разброс.</li>
+<li>PR/ROC кривые, матрица ошибок, F1 при разных порогах.</li>
+</ol></div>
+</div></details>
+<details id="problem5-variant-24" class="assignment-detail">
+<summary>Дефекты проката стали: глубокая сеть с остаточными связями <span class="meta">· вариант 24 · CNN / ResNet2D</span></summary>
+<div class="assignment-content">
+<p class="dataset"><strong>Данные:</strong> <a href="https://faculty.neu.edu.cn/songkc/en/zdylm/263270/list/index.htm" target="_blank" rel="noopener">NEU Surface Defect database — источник авторов</a></p>
+<p class="dataset"><strong>Публикация:</strong> <a href="https://www.mdpi.com/2076-3417/13/9/5260" target="_blank" rel="noopener">A Transfer Residual Neural Network Based on ResNet-50 for Detection of Steel Surface Defects (2023), Applied Sciences</a> · <a href="https://faculty.neu.edu.cn/songkc/en/zdylm/263270/list/index.htm" target="_blank" rel="noopener">код или образец</a></p>
+<div class="desc">Распознать шесть видов дефектов поверхности горячекатаной стальной полосы и изучить роль остаточных связей.</div>
+<div class="block callout"><h3>Источник данных и эталона</h3><p>1800 изображений 200×200 шести типов дефектов стали. Если страница авторов недоступна, воспользоваться зеркалом набора (например, на Kaggle) и указать его в отчёте.</p></div>
+<div class="block"><h3>Связь с публикацией</h3><p>прямой аналог: ResNet на NEU; в статье transfer learning, в учебной версии малую ResNet обучают с нуля</p></div>
+<div class="block"><h3>Входные данные и физическая постановка</h3><p>1800 серых изображений 200²; уменьшить до 64², провести стратифицированное разделение на train/val/test.</p></div>
+<div class="block"><h3>Какую модель обучить в PyTorch</h3><p>Небольшая ResNet с 3 остаточными блоками ширины 16; обучить с нуля, без предобученных весов.</p></div>
+<div class="block"><h3>Контрольная модель или численный эталон</h3><p>Обычная 2D CNN той же примерно ёмкости, традиционная модель по гистограмме градиентов (необязательно).</p></div>
+<div class="block"><h3>Эксперимент и корректное разбиение</h3><p>Не использовать изображения test для нормализации; основная метрика macro-F1, матрица ошибок.</p></div>
+<div class="block"><h3>Обязательная абляция</h3><p>Малые повороты/отражения как аугментации только для train; наличие residual connections.</p></div>
+<div class="block callout"><h3>Вычислительный предел на обычном компьютере</h3><p>≤1800 изображений 64², ≤30 эпох, ≤1–2 ч CPU.</p></div>
+<div class="block"><h3>Физический исследовательский вопрос</h3><p>Какие морфологические дефекты внешне похожи и как глубина/остаточные связи меняют их различимость?</p></div>
+<div class="block"><h3>Научные ограничения</h3><p>Изображения — уже вырезанные дефектные области; это классификация, а не поиск дефектов на полном листе. В подтверждающей статье используются предварительно обученные веса, в данном задании это запрещено и сравнение численных результатов с авторами недопустимо.</p></div>
+<div class="block callout"><h3>Два обязательных предметных графика</h3><ol>
+<li>Сетка из характерных изображений шести классов.</li>
+<li>Нормированная матрица ошибок и макро-F1 с аугментацией/без неё.</li>
+</ol></div>
+</div></details>
+<details id="problem5-variant-25" class="assignment-detail">
+<summary>Точечные трещины электрического коммутатора: сегментация <span class="meta">· вариант 25 · CNN / U-Net</span></summary>
+<div class="assignment-content">
+<p class="dataset"><strong>Данные:</strong> <a href="https://www.vicos.si/resources/kolektorsdd/" target="_blank" rel="noopener">KolektorSDD — официальный ViCoS Lab</a></p>
+<p class="dataset"><strong>Публикация:</strong> <a href="https://doi.org/10.1007/s10845-019-01476-x" target="_blank" rel="noopener">Tabernik et al. (2019), Segmentation-Based Deep-Learning Approach for Surface-Defect Detection</a> · <a href="https://www.vicos.si/resources/kolektorsdd/" target="_blank" rel="noopener">код или образец</a></p>
+<div class="desc">Обучить маленькую U-Net находить области трещин на поверхности промышленной детали при сильном дисбалансе пикселей.</div>
+<div class="block callout"><h3>Источник данных и эталона</h3><p>399 снимков на 50 изделий, 52 с дефектами (исходный размер около 500×1240); пиксельные маски и три фиксированные части доступны на странице набора. Лицензия CC BY-NC-SA 4.0: только некоммерческое использование.</p></div>
+<div class="block"><h3>Связь с публикацией</h3><p>прямой пример: сегментация дефектов по размеченным изображениям KolektorSDD</p></div>
+<div class="block"><h3>Входные данные и физическая постановка</h3><p>399 изображений и маски; небольшие поля 128×256 или кропы так, чтобы не потерять тонкие трещины. Группировка по 50 физическим изделиям.</p></div>
+<div class="block"><h3>Какую модель обучить в PyTorch</h3><p>U-Net 2 уровня с 8–16 каналами, функции потерь BCE и Dice (или BCE+Dice).</p></div>
+<div class="block"><h3>Контрольная модель или численный эталон</h3><p>Обычная полностью свёрточная сеть без пропускных соединений; предсказание «нет дефекта».</p></div>
+<div class="block"><h3>Эксперимент и корректное разбиение</h3><p>Разделять по изделию (все 8 видов одного изделия вместе); приводить Dice и pixel PR-AUC, а также число пропущенных дефектов на изображение.</p></div>
+<div class="block"><h3>Обязательная абляция</h3><p>BCE против BCE+Dice; важность skip connections.</p></div>
+<div class="block callout"><h3>Вычислительный предел на обычном компьютере</h3><p>≤399 изображений; 128×256, ≤25 эпох, ≤2 ч CPU; взять готовые 3 folds при возможности, не смешивая изделие.</p></div>
+<div class="block"><h3>Физический исследовательский вопрос</h3><p>Можно ли высокую пиксельную accuracy получить, не найдя ни одной трещины?</p></div>
+<div class="block"><h3>Научные ограничения</h3><p>Тонкие трещины могут исчезнуть при уменьшении разрешения; проверять долю сохранённой разметки после ресайза. Положительных снимков всего 52 (около 17 в каждой части), поэтому разброс Dice между частями велик: показать его.</p></div>
+<div class="block callout"><h3>Два обязательных предметных графика</h3><ol>
+<li>Исходное изображение, истинная маска и предсказанная маска для 3 изделий.</li>
+<li>Dice и число пропущенных дефектов при разных функциях потерь.</li>
 </ol></div>
 </div></details>

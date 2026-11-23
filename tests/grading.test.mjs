@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { parseCsv, toCsv, seedFromRoster, mergeRows, setStatus, matrix, taskOfRepo, applyGithub } from '../scripts/grading.mjs'
+import { parseCsv, toCsv, seedFromRoster, mergeRows, setStatus, matrix, taskOfRepo, applyGithub, setStudent, STUDENT_COLUMNS } from '../scripts/grading.mjs'
 
 test('csv round-trips quotes, commas and newlines', () => {
   const rows = [{ student_id: 'st1', task: '1', status: 'todo', grade: '', repo: '', github: '', variant: 'a, "b"', note: 'x\ny', updated: '2026-11-17' }]
@@ -53,4 +53,13 @@ test('applyGithub links the matching task, keeps an existing link and reports th
   const unmatched = applyGithub(rows, 'st1', [{ name: 'ML-task1', html_url: 'u1' }, { name: 'task2', html_url: 'u2' }, { name: 'ml-mechanics-hw2', html_url: 'u3' }, { name: '2023-cpp-autumn', html_url: 'u4' }], 'd')
   assert.deepEqual(unmatched, ['u3'])
   assert.deepEqual(rows.map((r) => [r.repo, r.github ?? '']), [['u1', 'https://github.com/st1'], ['kept', 'https://github.com/st1'], ['', '']])
+})
+
+test('setStudent adds a student once and updates only the given fields', () => {
+  const rows = []
+  setStudent(rows, { student: 'st1', github: 'https://github.com/st1', via: 'github' })
+  setStudent(rows, { student: 'st1', via: 'zip' })
+  assert.equal(rows.length, 1)
+  assert.deepEqual(rows[0], { student_id: 'st1', github: 'https://github.com/st1', via: 'zip', note: '' })
+  assert.deepEqual(parseCsv(toCsv(rows, STUDENT_COLUMNS)), rows)
 })
