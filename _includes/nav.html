@@ -1,7 +1,7 @@
 <nav class="nav-inline" aria-label="Разделы сайта">
   <p>
     <a href="{{ '/index.html' | relative_url }}"{% if page.url == '/' or page.url == '/index.html' %} aria-current="page"{% endif %}>🏠 Главная</a>
-    {% assign menu_paths = "pages/resources.md,pages/eucken.md,pages/cfd2026.md,pages/physico-chemical-gas-dynamics-2026.md,pages/ml2026.md" | split: "," %}
+    {% assign menu_paths = "pages/resources.md,pages/eucken.md,pages/paper-reviews.md,pages/cfd2026.md,pages/physico-chemical-gas-dynamics-2026.md,pages/ml2026.md" | split: "," %}
     {% for menu_path in menu_paths %}
       {% assign p = site.pages | where: "path", menu_path | first %}
       {% if p %}
