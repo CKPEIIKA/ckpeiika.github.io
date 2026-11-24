@@ -66,7 +66,7 @@ test('the assignments page lists problem 2 with its common requirements and 20 v
   const page = await read('pages/ml-assignments.html');
   assert.match(page, /<details id="task-2" class="assignment-detail">/, 'the roster link #task-2 has a target');
   const ids = [...page.matchAll(/<details id="(problem2-variant-\d+)"/g)].map((match) => match[1]);
-  assert.deepEqual(ids, Array.from({ length: 20 }, (_, i) => `problem2-variant-${i + 1}`));
+  assert.deepEqual(ids, Array.from({ length: 21 }, (_, i) => `problem2-variant-${i + 1}`));
   assert.equal((page.match(/<details\b/g) ?? []).length, (page.match(/<\/details>/g) ?? []).length, 'every details element is closed');
 });
 
