@@ -5,3 +5,6 @@ _site/
 
 # Local grading registry (scripts/grading.mjs)
 grading/
+
+# Local assistant notes
+/.claude-memory.md

@@ -1,5 +1,7 @@
 # AGENTS.md — Bulletproof GitHub Pages JavaScript
 
+If `.claude-memory.md` exists locally, read it for project history and user preferences relevant to the current task.
+
 Build tiny, fast, durable browser applications that run directly on GitHub Pages.
 
 The production environment is:
